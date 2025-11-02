@@ -102,7 +102,6 @@ def check_json(response: str) -> Tuple[bool, dict]:
         return (True, response)
     except:
         err_msg = traceback.format_exc()
-        print(err_msg, file=sys.stderr)
         return (False, err_msg)
 
 

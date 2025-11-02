@@ -1,22 +1,9 @@
-import json
 import traceback
-from typing import Tuple
 from _thread import start_new_thread
 from queue import Queue
 import time
-from random import randint
-import sys
-import requests
-from langchain_community.vectorstores import Neo4jVector
-from langchain_huggingface import HuggingFaceEmbeddings
-from neo4j import GraphDatabase
-import os 
 
-embedding_function = HuggingFaceEmbeddings(
-    model_name='Alibaba-NLP/gte-large-en-v1.5',
-    model_kwargs={'trust_remote_code': True,
-                  'device':'cpu'}
-)  # device_map="auto"
+from performance_monitor import instrument_module_functions
 
 
 def process_document(content: str, metadata: dict = None) -> dict:
@@ -88,10 +75,11 @@ def test_c():
         test_b()
     except:
         error_msg = traceback.format_exc()
-        print(error_msg)
-        print(len(error_msg))
     u = 10
 
 
+instrument_module_functions(globals(), include_private=True)
+
+
 if __name__ == "__main__":
-    print(result)
+    pass

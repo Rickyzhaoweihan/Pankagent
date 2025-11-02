@@ -1,42 +1,44 @@
-import json
+
 import traceback
 from typing import Tuple, List
 from _thread import start_new_thread
 from queue import Queue
 import time
-from random import randint
 import sys
-import requests
-from langchain_community.vectorstores import Neo4jVector
-from langchain_huggingface import HuggingFaceEmbeddings
-from neo4j import GraphDatabase
-import os 
 import re
 
+from performance_monitor import instrument_module_functions
+
 # Global variable to store all cypher queries for the current human query
-current_cypher_queries: List[str] = []
+current_cypher_queries: List[dict] = []
 
 def reset_cypher_queries():
     """Reset the cypher queries list for a new human query"""
     global current_cypher_queries
     current_cypher_queries = []
 
-def add_cypher_query(cypher_query: str):
-    """Add a cypher query to the current list"""
+def add_cypher_query(cypher_query: str, returned_data: bool = True):
+    """
+    Add a cypher query to the current list.
+    
+    Args:
+        cypher_query: The Cypher query string
+        returned_data: True if the query returned non-empty results
+    """
     global current_cypher_queries
     if cypher_query and cypher_query.strip():
-        current_cypher_queries.append(cypher_query.strip())
+        current_cypher_queries.append({
+            'query': cypher_query.strip(),
+            'returned_data': returned_data
+        })
 
 def get_all_cypher_queries() -> List[str]:
     """Get all cypher queries for the current human query"""
-    return current_cypher_queries.copy()
+    return [q['query'] for q in current_cypher_queries]
 
-
-embedding_function = HuggingFaceEmbeddings(
-    model_name='Alibaba-NLP/gte-large-en-v1.5',
-    model_kwargs={'trust_remote_code': True},
-)  # device_map="auto"
-
+def get_queries_with_data() -> List[str]:
+    """Get only cypher queries that returned data"""
+    return [q['query'] for q in current_cypher_queries if q['returned_data']]
 
 def process_document(content: str, metadata: dict = None) -> dict:
     result = {
@@ -69,7 +71,7 @@ def run_cypher_2(command: str, parameters = None, timeout: int = 60):
 
 
 
-__all__ = ['run_functions', 'reset_cypher_queries', 'add_cypher_query', 'get_all_cypher_queries']
+__all__ = ['run_functions', 'reset_cypher_queries', 'add_cypher_query', 'get_all_cypher_queries', 'get_queries_with_data']
 
 
 def run_functions(functions: list[dict]) -> str:
@@ -109,14 +111,12 @@ def test_c():
         test_b()
     except:
         error_msg = traceback.format_exc()
-        print(error_msg)
-        print(len(error_msg))
     u = 10
 
 
 if __name__ == "__main__":
     # Test Pankbase API functionality
-    print(0)
+    pass
 
 def template_chat_one_round(input: str, index: int) -> str:
 	q = Queue()
@@ -150,7 +150,6 @@ def _Template_Tool_Call_one_round(input: str, q: Queue) -> str:
 		q.put((True, text))
 	except Exception:
 		err_msg = traceback.format_exc()
-		print(err_msg, file=sys.stderr)
 		if (len(err_msg) > 2000):
 			first = err_msg[:1000]
 			second = err_msg[-1000:]
@@ -204,14 +203,12 @@ def _pankbase_chat_one_round(input: str, q: Queue) -> None:
 			# Add cypher query to global list
 			
 		else:
-			print("nomatch")
 			cypher_query = ''
 
 		text = f"\n\n{text}"
 		q.put((True, text, cypher_query))
 	except Exception:
 		err_msg = traceback.format_exc()
-		print(err_msg, file=sys.stderr)
 		if (len(err_msg) > 2000):
 			first = err_msg[:1000]
 			second = err_msg[-1000:]
@@ -244,16 +241,17 @@ def glkb_chat_one_round(input: str, index: int) -> str:
 
 def _glkb_chat_one_round(input: str, q: Queue) -> None:
 	try:
-		sys.path.append('GLKB_agent_ai_assistant/GLKB_agent_ai_assistant')
-		from GLKB_agent_ai_assistant.GLKB_agent_ai_assistant.ai_assistant import chat_one_round_glkb as glkb_chat
+		sys.path.append('GLKBAgent')
+		from GLKBAgent.ai_assistant import chat_one_round_glkb as glkb_chat
 		_, text = glkb_chat([], input)
 		q.put((True, text))
 	except Exception:
 		err_msg = traceback.format_exc()
-		print(err_msg, file=sys.stderr)
 		if (len(err_msg) > 2000):
 			first = err_msg[:1000]
 			second = err_msg[-1000:]
 			err_msg = first + '  ... Middle part hidden due to length limit ...  ' + second
 		q.put((False, err_msg))
 
+
+instrument_module_functions(globals(), include_private=True)

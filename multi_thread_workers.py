@@ -63,16 +63,11 @@ def map_infinite_retry(func, inputs: list, max_workers: int = 0, print_progress:
                 results[index] = func(inputs[index])
                 finished.put(None)
             except Exception as e:
-                print("Error occurred: " + str(e))
                 tasks.put(index)
     for i in range(max_workers):
         start_new_thread(worker, ())
-    cnt = 0
     while True:
         sleep(0.01)
-        cnt += 1
-        if (print_progress and cnt % 1000 == 0):
-            print(f"{finished.qsize()} / {len(inputs)} finished")
         if (finished.qsize() == len(inputs)):
             break
     return results

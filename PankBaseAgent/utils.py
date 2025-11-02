@@ -1,23 +1,37 @@
 import json
 import traceback
-from typing import Tuple
 from _thread import start_new_thread
 from queue import Queue
 import time
-from random import randint
 import sys
 import requests
-from langchain_community.vectorstores import Neo4jVector
-from langchain_huggingface import HuggingFaceEmbeddings
-from neo4j import GraphDatabase
 import os 
 from utils import add_cypher_query
 
-embedding_function = HuggingFaceEmbeddings(
-    model_name='Alibaba-NLP/gte-large-en-v1.5',
-    model_kwargs={'trust_remote_code': True,
-                  'device':'cpu'}
-)  # device_map="auto"
+from performance_monitor import instrument_module_functions
+from profiling_tools import profile_to_file
+
+_TEXT2CYPHER_AGENT = None
+_PANKBASE_SESSION: requests.Session | None = None
+
+
+def _get_text2cypher_agent():
+    global _TEXT2CYPHER_AGENT
+    if _TEXT2CYPHER_AGENT is None:
+        os.environ['NEO4J_SCHEMA_PATH'] = 'text_to_cypher/data/input/neo4j_schema.json'
+        sys.path.append('text_to_cypher/src')
+        from .text_to_cypher.src.text2cypher_agent import Text2CypherAgent
+        _TEXT2CYPHER_AGENT = Text2CypherAgent()
+    return _TEXT2CYPHER_AGENT
+
+
+def _get_pankbase_session() -> requests.Session:
+    global _PANKBASE_SESSION
+    if _PANKBASE_SESSION is None:
+        session = requests.Session()
+        session.headers.update({'Content-Type': 'application/json'})
+        _PANKBASE_SESSION = session
+    return _PANKBASE_SESSION
 
 
 def process_document(content: str, metadata: dict = None) -> dict:
@@ -109,66 +123,118 @@ def clean_cypher_for_json(cypher: str) -> str:
     cleaned = cleaned.replace('"', '\"').replace("'", '\"')
     return cleaned
 
-def _pankbase_api_query(input: str, q: Queue) -> None:
+def _pankbase_api_query_core(input: str, q: Queue) -> None:
     try:
+        agent = _get_text2cypher_agent()
         
-        os.environ['NEO4J_SCHEMA_PATH'] = 'text_to_cypher/data/input/neo4j_schema.json'
-        sys.path.append('text_to_cypher/src')
-        
-        from .text_to_cypher.src.text2cypher_agent import Text2CypherAgent
-
-        agent = Text2CypherAgent()
-
+        # Use refinement with test-time scaling (adaptive approach)
+        # First try simple generation
         cypher_result = agent.respond(input)
+        
+        # Import validator to check quality
+        from .text_to_cypher.src.cypher_validator import validate_cypher
+        validation = validate_cypher(cypher_result)
+        
+        # If score is low, use iterative refinement
+        if validation['score'] < 90:
+            refinement_result = agent.respond_with_refinement(input, max_iterations=5)
+            cypher_result = refinement_result['cypher']
+            
+            # Log refinement metrics to JSONL
+            try:
+                from .text_to_cypher.src.refinement_logger import log_refinement_metrics
+                log_refinement_metrics(input, refinement_result)
+            except Exception as e:
+                pass
+            
+            # Log refinement details to text log
+            with open('log.txt', 'a') as log_file:
+                log_file.write(f"Query: {input}\n")
+                log_file.write(f"Refinement used: Best from iteration {refinement_result['iteration']}\n")
+                log_file.write(f"Score: {refinement_result['score']}/100\n")
+                log_file.write(f"All attempts:\n")
+                for attempt in refinement_result['all_attempts']:
+                    log_file.write(f"  Iteration {attempt['iteration']}: score={attempt['score']}\n")
+                log_file.write(f"Final Cypher: {cypher_result}\n")
+                log_file.write("##########################\n")
+        else:
+            with open('log.txt', 'a') as log_file:
+                log_file.write(f"Query: {input}\n")
+                log_file.write(f"Score: {validation['score']}/100 (no refinement needed)\n")
+                log_file.write(f"Cypher: {cypher_result}\n")
+                log_file.write("##########################\n")
         
         cleaned_cypher = clean_cypher_for_json(cypher_result)
 
-        print(f"DEBUG: Sending Cypher query: {cleaned_cypher}")
-        
-        
-        with open('log.txt', 'a', ) as log_file:
-            log_file.write(f"{input}\n{cleaned_cypher}\n##########################\n")
-        
-        add_cypher_query(cleaned_cypher)
-        response = requests.post(
-            'HTTPS://vcr7lwcrnh.execute-api.us-east-1.amazonaws.com/development/api',
-            headers={'Content-Type': 'application/json'},
+        session = _get_pankbase_session()
+        response = session.post(
+            #'HTTPS://vcr7lwcrnh.execute-api.us-east-1.amazonaws.com/development/api',
+            'https://nzi5e9mb0f.execute-api.us-east-1.amazonaws.com/development/pank2-neo4j-api-development',
             json={'query': cleaned_cypher},
             timeout=60
         )
-        
-        # print(f"DEBUG: Response status code: {response.status_code}")
-        # print(f"DEBUG: Response headers: {response.headers}")
-        print(f"DEBUG: Response text: {response.text}")
-        
+
         response.raise_for_status()
-        
+
         if not response.text.strip():
+            add_cypher_query(cleaned_cypher, returned_data=False)  # Empty response
             q.put((False, "Empty response from Pankbase API"))
             return
-        
-        # Check if response starts with "Error:" (API error format)
+
         if response.text.strip().startswith("Error:"):
+            add_cypher_query(cleaned_cypher, returned_data=False)  # Error response
             q.put((False, f"Pankbase API Error: {response.text}"))
             return
-            
+
         try:
             result = response.json()
+            
+            # Check if result has actual data
+            # The response structure is: {"results": "...", "query": "...", "error": null}
+            # Empty results show as: {"results": "No results", ...}
+            has_data = True
+            if isinstance(result, dict):
+                results_value = result.get('results', '')
+                # Check if results is "No results" (case-insensitive)
+                if isinstance(results_value, str) and results_value.strip().lower() == "no results":
+                    has_data = False
+                # Also check if results is empty string
+                elif isinstance(results_value, str) and not results_value.strip():
+                    has_data = False
+                # Check for empty nodes and edges: "nodes, edges\n[], []" or "nodes, edges\n[],[]"
+                elif isinstance(results_value, str):
+                    # Normalize whitespace and check for empty arrays pattern
+                    normalized = ' '.join(results_value.split())
+                    # Check for both "[], []" and "[][]" patterns (with or without space)
+                    if 'nodes, edges' in normalized.lower() and ('[], []' in normalized or '[][]' in normalized.replace(' ', '')):
+                        has_data = False
+            
+            # Track query with data status
+            add_cypher_query(cleaned_cypher, returned_data=has_data)
+            
             combined = {
                 "cypher_query": cleaned_cypher,
                 "api_result": result
             }
             q.put((True, json.dumps(combined, ensure_ascii=False)))
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
+            add_cypher_query(cleaned_cypher, returned_data=False)  # Invalid JSON
             q.put((False, f"Invalid JSON response from API: {response.text}"))
-    except Exception as e:
+    except Exception:
         err_msg = traceback.format_exc()
-        print(err_msg, file=sys.stderr)
         if (len(err_msg) > 2000):
             first = err_msg[:1000]
             second = err_msg[-1000:]
             err_msg = first + ' ...  ' + second
         q.put((False, err_msg))
+
+
+def _pankbase_api_query(input: str, q: Queue) -> None:
+    profile_to_file(
+        _pankbase_api_query_core,
+        args=(input, q),
+        output_path="logs/pankbase_line_profile.txt",
+    )
 
 def test_a():
     a = 0
@@ -188,9 +254,10 @@ def test_c():
         test_b()
     except:
         error_msg = traceback.format_exc()
-        print(error_msg)
-        print(len(error_msg))
     u = 10
+
+
+instrument_module_functions(globals(), include_private=True, exclude={'_pankbase_api_query_core'})
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ from copy import deepcopy
 import json
 
 
-MAX_ITER = 2
+MAX_ITER = 1
 PRINT_FUNC_CALL = True
 PRINT_FUNC_RESULT = True
 set_log_enable(True)
@@ -13,7 +13,7 @@ set_log_enable(True)
 
 # pseudo code:
 
-# MAX_ITER = 2
+# MAX_ITER = 1
 # messages = []
 # model = <the_ai_assistant>  # This is you
 #
@@ -54,22 +54,10 @@ def chat_one_round_pankbase(messages_history: list[dict], question: str) -> Tupl
         if (function_call_num == MAX_ITER):
             assert (False)  # Currently not handle this error
         function_call_num += 1
-        if (PRINT_FUNC_CALL):
-            print('\033[92m', end='')
-            print('\nCalling Functions: \n')
-            print(json.dumps(response, indent=2, ensure_ascii=False))
-            print()
-            print('\033[0m', end='')
-        print("??????????????????????????????????????????????????")
         functions_result = run_functions(response['functions'])
-        if (PRINT_FUNC_RESULT):
-            print('\033[93m', end='')
-            print('\nFunction results: \n')
-            print(functions_result)
-            print('\033[0m', end='')
         new_message = '====== From System ======\nThe results of function callings:\n' + functions_result + '\n'
         if (function_call_num == MAX_ITER):
-            new_message += 'You already called functions 2 continuous times. Next message you must return to user.'
+            new_message += 'You already called functions 1 time. Next message you must return to user.'
         else:
             func_num = MAX_ITER - function_call_num
             new_message += f'You can call functions {func_num} more times, after this you need to return to user.'
@@ -80,7 +68,7 @@ def chat_forever():
     messages = []
     while True:
         question = input('Your question: ')
-        messages, response = chat_one_round(messages, question)
+        messages, response = chat_one_round_pankbase(messages, question)
         print(f'\nResponse:\n\n{response}\n')
 
 

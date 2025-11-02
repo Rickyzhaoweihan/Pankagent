@@ -1,3 +1,1336 @@
-Find information about the gene CFTR, including its Ensembl ID.
-MATCH (g:gene {name: "CFTR"}) WITH collect(DISTINCT g) AS nodes, [] AS edges RETURN nodes, edges;
+Query: Find gene with name CFTR
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene) WHERE g.name = 'CFTR'
+WITH collect(DISTINCT g) AS nodes, [] AS edges RETURN nodes, edges;
+##########################
+Query: Find gene with name CFTR
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene) WHERE g.name = 'CFTR'
+WITH collect(DISTINCT g) AS nodes, [] AS edges RETURN nodes, edges;
+##########################
+Query: Get all genes that are effector genes for type 1 diabetes
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Get SNPs that have QTL_for relationships with gene CFTR
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (sn:snp)-[r:QTL_for]->(g:gene) WHERE g.name = 'CFTR'
+WITH collect(DISTINCT sn)+collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Get all SNPs that have QTL_for relationships with gene CFTR
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (sn:snp)-[r:QTL_for]->(g:gene) WHERE g.name = 'CFTR'
+WITH collect(DISTINCT sn)+collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Find gene with name TP53
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene) WHERE g.name = 'TP53' WITH collect(DISTINCT g) AS nodes, [] AS edges RETURN nodes, edges;
+##########################
+Query: Find all pathways associated with gene TP53
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene)-[r:function_annotation]->(go:gene_ontology) WHERE g.name = 'TP53' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Get all Gene Ontology annotations for gene TP53
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene)-[r:function_annotation]->(go:gene_ontology) WHERE g.name = 'TP53'
+WITH collect(DISTINCT g)+collect(DISTINCT go) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Use 'type 1 diabetes' instead of 'Type 1 Diabetes (should be lowercase)'
+  2. Invalid value 'TP53' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Check if TP53 is an effector gene for type 1 diabetes
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Use 'type 1 diabetes' instead of 'Type 1 Diabetes (should be lowercase)'
+  2. Invalid value 'TP53' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Check if TP53 is an effector gene for type 1 diabetes
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Use 'type 1 diabetes' instead of 'Type 1 Diabetes (should be lowercase)'
+  2. Invalid value 'TP53' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Check if TP53 is an effector gene for type 1 diabetes
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Use 'type 1 diabetes' instead of 'Type 1 Diabetes (should be lowercase)'
+  2. Invalid value 'TP53' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Check if TP53 is an effector gene for type 1 diabetes
+
+Query: Check if TP53 is an effector gene for type 1 diabetes
+Refinement used: Best from iteration 1
+Score: 65/100
+All attempts:
+  Iteration 1: score=65
+  Iteration 2: score=65
+  Iteration 3: score=65
+  Iteration 4: score=65
+  Iteration 5: score=65
+Final Cypher: MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Get all genes that are effector genes for type 1 diabetes
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Find gene with name INS
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene) WHERE g.name = 'INS'
+WITH collect(DISTINCT g) AS nodes, [] AS edges RETURN nodes, edges;
+##########################
+Query: Get functions annotated to gene INS through function_annotation relationships
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (:gene)-[r:function_annotation]->(fo:gene_ontology) WHERE fo.name = 'INS'
+WITH collect(DISTINCT fo) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Find gene with name TP53
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene) WHERE g.name = 'TP53' WITH collect(DISTINCT g) AS nodes, [] AS edges RETURN nodes, edges;
+##########################
+Query: Find genes regulated by TP53
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene)-[r:regulation]->(m:gene) WHERE m.name = 'TP53' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Get all genes that are effector genes for type 1 diabetes
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Find gene with name TP53
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene) WHERE g.name = 'TP53' WITH collect(DISTINCT g) AS nodes, [] AS edges RETURN nodes, edges;
+##########################
+Query: Get all molecular functions, biological processes, or cellular components linked to TP53
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene)-[r:function_annotation]->(go:gene_ontology) WHERE g.name = 'TP53' WITH collect(DISTINCT go) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' WITH collect(DISTINCT d) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Invalid value 'TP53' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ Correct disease naming convention
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Get all diseases associated with gene TP53
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Use 'type 1 diabetes' instead of 'Type 1 Diabetes (should be lowercase)'
+  2. Invalid value 'TP53' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Get all relationships where TP53 has a mechanistic role in type 1 diabetes
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' WITH collect(DISTINCT d) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Invalid value 'TP53' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ Correct disease naming convention
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Get all diseases associated with gene TP53
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Use 'type 1 diabetes' instead of 'Type 1 Diabetes (should be lowercase)'
+  2. Invalid value 'TP53' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Get all relationships where TP53 has a mechanistic role in type 1 diabetes
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' WITH collect(DISTINCT d) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Invalid value 'TP53' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ Correct disease naming convention
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Get all diseases associated with gene TP53
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Use 'type 1 diabetes' instead of 'Type 1 Diabetes (should be lowercase)'
+  2. Invalid value 'TP53' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Get all relationships where TP53 has a mechanistic role in type 1 diabetes
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' WITH collect(DISTINCT d) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Invalid value 'TP53' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ Correct disease naming convention
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Get all diseases associated with gene TP53
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Use 'type 1 diabetes' instead of 'Type 1 Diabetes (should be lowercase)'
+  2. Invalid value 'TP53' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Get all relationships where TP53 has a mechanistic role in type 1 diabetes
+
+Query: Get all diseases associated with gene TP53
+Refinement used: Best from iteration 1
+Score: 65/100
+All attempts:
+  Iteration 1: score=65
+  Iteration 2: score=65
+  Iteration 3: score=65
+  Iteration 4: score=65
+  Iteration 5: score=65
+Final Cypher: MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' WITH collect(DISTINCT d) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Get all relationships where TP53 has a mechanistic role in type 1 diabetes
+Refinement used: Best from iteration 1
+Score: 65/100
+All attempts:
+  Iteration 1: score=65
+  Iteration 2: score=65
+  Iteration 3: score=65
+  Iteration 4: score=65
+  Iteration 5: score=65
+Final Cypher: MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'TP53' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Find gene with name PTPN22
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene) WHERE g.name = 'PTPN22' WITH collect(DISTINCT g) AS nodes, [] AS edges RETURN nodes, edges;
+##########################
+Query: Get SNPs that have QTL_for relationships with gene PTPN22
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (sn:snp)-[r:QTL_for]->(g:gene) WHERE g.name = 'PTPN22'
+WITH collect(DISTINCT sn)+collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'PTPN22' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Use 'type 1 diabetes' instead of 'Type 1 Diabetes (should be lowercase)'
+  2. Invalid value 'PTPN22' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Check if gene PTPN22 is an effector gene for type 1 diabetes
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'PTPN22' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Use 'type 1 diabetes' instead of 'Type 1 Diabetes (should be lowercase)'
+  2. Invalid value 'PTPN22' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Check if gene PTPN22 is an effector gene for type 1 diabetes
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'PTPN22' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Use 'type 1 diabetes' instead of 'Type 1 Diabetes (should be lowercase)'
+  2. Invalid value 'PTPN22' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Check if gene PTPN22 is an effector gene for type 1 diabetes
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'PTPN22' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 65/100
+
+ERRORS (must fix):
+  1. Use 'type 1 diabetes' instead of 'Type 1 Diabetes (should be lowercase)'
+  2. Invalid value 'PTPN22' for disease.name. Valid values: ['type 1 diabetes']. Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  disease:
+    - id (String)
+    - name (String)
+      Valid values: ['type 1 diabetes']
+      Note: MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  effector_gene_of (gene→disease):
+    - evidence (String)
+    - effector_gene_list_url (String)
+    - data_version (String)
+    - data_source_url (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Check if gene PTPN22 is an effector gene for type 1 diabetes
+
+Query: Check if gene PTPN22 is an effector gene for type 1 diabetes
+Refinement used: Best from iteration 1
+Score: 65/100
+All attempts:
+  Iteration 1: score=65
+  Iteration 2: score=65
+  Iteration 3: score=65
+  Iteration 4: score=65
+  Iteration 5: score=65
+Final Cypher: MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE g.name = 'PTPN22' AND d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Find gene with name INS
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene) WHERE g.name = 'INS'
+WITH collect(DISTINCT g) AS nodes, [] AS edges RETURN nodes, edges;
+##########################
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:expression_level_in]->(ct:cell_type) WHERE g.name = 'INS'
+WITH collect(DISTINCT ct) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+
+Validation feedback:
+Validation Score: 80/100
+
+ERRORS (must fix):
+  1. Invalid value 'INS' for cell_type.name. Valid values: ['Acinar Cell', 'Alpha Cell', 'Beta Cell', 'Delta Cell', 'Ductal Cell', 'Endothelial Cell', 'Macrophage Cell', 'Stellate Cell']. Note: Case-sensitive. Use exact spelling as shown.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  cell_type:
+    - id (String)
+    - name (String)
+      Valid values: ['Acinar Cell', 'Alpha Cell', 'Beta Cell', 'Delta Cell', 'Ductal Cell', 'Endothelial Cell', 'Macrophage Cell', 'Stellate Cell']
+      Note: Case-sensitive. Use exact spelling as shown.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  expression_level_in (gene→cell_type):
+    - NonDiabetic__expression_mean (Float)
+    - NonDiabetic__expression_min (Float)
+    - NonDiabetic__expression_25_quantile (Float)
+    - NonDiabetic__expression_median (Float)
+    - NonDiabetic__expression_75_quantile (Float)
+    - NonDiabetic__expression_max (Float)
+    - Type1Diabetic__expression_mean (Float)
+    - Type1Diabetic__expression_min (Float)
+    - Type1Diabetic__expression_25_quantile (Float)
+    - Type1Diabetic__expression_median (Float)
+    - Type1Diabetic__expression_75_quantile (Float)
+    - Type1Diabetic__expression_max (Float)
+    - All__expression_mean (Float)
+    - All__expression_min (Float)
+    - All__expression_25_quantile (Float)
+    - All__expression_median (Float)
+    - All__expression_75_quantile (Float)
+    - All__expression_max (Float)
+    - data_version (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Get all cell types that have expression_level_in relationships with gene INS
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:expression_level_in]->(ct:cell_type) WHERE g.name = 'INS' WITH collect(DISTINCT ct) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges
+
+Validation feedback:
+Validation Score: 80/100
+
+ERRORS (must fix):
+  1. Invalid value 'INS' for cell_type.name. Valid values: ['Acinar Cell', 'Alpha Cell', 'Beta Cell', 'Delta Cell', 'Ductal Cell', 'Endothelial Cell', 'Macrophage Cell', 'Stellate Cell']. Note: Case-sensitive. Use exact spelling as shown.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  cell_type:
+    - id (String)
+    - name (String)
+      Valid values: ['Acinar Cell', 'Alpha Cell', 'Beta Cell', 'Delta Cell', 'Ductal Cell', 'Endothelial Cell', 'Macrophage Cell', 'Stellate Cell']
+      Note: Case-sensitive. Use exact spelling as shown.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  expression_level_in (gene→cell_type):
+    - NonDiabetic__expression_mean (Float)
+    - NonDiabetic__expression_min (Float)
+    - NonDiabetic__expression_25_quantile (Float)
+    - NonDiabetic__expression_median (Float)
+    - NonDiabetic__expression_75_quantile (Float)
+    - NonDiabetic__expression_max (Float)
+    - Type1Diabetic__expression_mean (Float)
+    - Type1Diabetic__expression_min (Float)
+    - Type1Diabetic__expression_25_quantile (Float)
+    - Type1Diabetic__expression_median (Float)
+    - Type1Diabetic__expression_75_quantile (Float)
+    - Type1Diabetic__expression_max (Float)
+    - All__expression_mean (Float)
+    - All__expression_min (Float)
+    - All__expression_25_quantile (Float)
+    - All__expression_median (Float)
+    - All__expression_75_quantile (Float)
+    - All__expression_max (Float)
+    - data_version (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Get all cell types that have expression_level_in relationships with gene INS
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:expression_level_in]->(ct:cell_type) WHERE g.name = 'INS' WITH collect(DISTINCT ct) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges
+
+Validation feedback:
+Validation Score: 80/100
+
+ERRORS (must fix):
+  1. Invalid value 'INS' for cell_type.name. Valid values: ['Acinar Cell', 'Alpha Cell', 'Beta Cell', 'Delta Cell', 'Ductal Cell', 'Endothelial Cell', 'Macrophage Cell', 'Stellate Cell']. Note: Case-sensitive. Use exact spelling as shown.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  cell_type:
+    - id (String)
+    - name (String)
+      Valid values: ['Acinar Cell', 'Alpha Cell', 'Beta Cell', 'Delta Cell', 'Ductal Cell', 'Endothelial Cell', 'Macrophage Cell', 'Stellate Cell']
+      Note: Case-sensitive. Use exact spelling as shown.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  expression_level_in (gene→cell_type):
+    - NonDiabetic__expression_mean (Float)
+    - NonDiabetic__expression_min (Float)
+    - NonDiabetic__expression_25_quantile (Float)
+    - NonDiabetic__expression_median (Float)
+    - NonDiabetic__expression_75_quantile (Float)
+    - NonDiabetic__expression_max (Float)
+    - Type1Diabetic__expression_mean (Float)
+    - Type1Diabetic__expression_min (Float)
+    - Type1Diabetic__expression_25_quantile (Float)
+    - Type1Diabetic__expression_median (Float)
+    - Type1Diabetic__expression_75_quantile (Float)
+    - Type1Diabetic__expression_max (Float)
+    - All__expression_mean (Float)
+    - All__expression_min (Float)
+    - All__expression_25_quantile (Float)
+    - All__expression_median (Float)
+    - All__expression_75_quantile (Float)
+    - All__expression_max (Float)
+    - data_version (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Get all cell types that have expression_level_in relationships with gene INS
+
+Refinement prompt:
+Previous Cypher attempt:
+MATCH (g:gene)-[r:expression_level_in]->(ct:cell_type) WHERE g.name = 'INS' WITH collect(DISTINCT ct) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges
+
+Validation feedback:
+Validation Score: 80/100
+
+ERRORS (must fix):
+  1. Invalid value 'INS' for cell_type.name. Valid values: ['Acinar Cell', 'Alpha Cell', 'Beta Cell', 'Delta Cell', 'Ductal Cell', 'Endothelial Cell', 'Macrophage Cell', 'Stellate Cell']. Note: Case-sensitive. Use exact spelling as shown.
+
+PASSED CHECKS:
+  ✓ WITH clause properly structured with collect()
+  ✓ All relationships have variable names
+  ✓ Correct return format with nodes and edges
+  ✓ All collect() use DISTINCT
+  ✓ All collected variables are defined in MATCH
+  ✓ Query has appropriate WHERE constraints
+  ✓ All properties appear valid
+  ✓ All relationships have correct source/target node types
+
+Detailed Properties for Query Entities:
+
+Node Properties:
+
+  cell_type:
+    - id (String)
+    - name (String)
+      Valid values: ['Acinar Cell', 'Alpha Cell', 'Beta Cell', 'Delta Cell', 'Ductal Cell', 'Endothelial Cell', 'Macrophage Cell', 'Stellate Cell']
+      Note: Case-sensitive. Use exact spelling as shown.
+
+  gene:
+    - id (String)
+    - id_version (Int)
+    - description (String)
+    - count (Int)
+    - chr (String)
+
+Relationship Properties:
+
+  expression_level_in (gene→cell_type):
+    - NonDiabetic__expression_mean (Float)
+    - NonDiabetic__expression_min (Float)
+    - NonDiabetic__expression_25_quantile (Float)
+    - NonDiabetic__expression_median (Float)
+    - NonDiabetic__expression_75_quantile (Float)
+    - NonDiabetic__expression_max (Float)
+    - Type1Diabetic__expression_mean (Float)
+    - Type1Diabetic__expression_min (Float)
+    - Type1Diabetic__expression_25_quantile (Float)
+    - Type1Diabetic__expression_median (Float)
+    - Type1Diabetic__expression_75_quantile (Float)
+    - Type1Diabetic__expression_max (Float)
+    - All__expression_mean (Float)
+    - All__expression_min (Float)
+    - All__expression_25_quantile (Float)
+    - All__expression_median (Float)
+    - All__expression_75_quantile (Float)
+    - All__expression_max (Float)
+    - data_version (String)
+    - data_source (String)
+
+Please fix the issues and regenerate the Cypher query.
+Remember:
+1. Every relationship needs a variable name like [r:type] not [:type]
+2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;
+3. Use 'type 1 diabetes' for disease name
+4. Use ONLY the property names listed above - they are case-sensitive
+
+Original question: Get all cell types that have expression_level_in relationships with gene INS
+
+Query: Get all cell types that have expression_level_in relationships with gene INS
+Refinement used: Best from iteration 1
+Score: 80/100
+All attempts:
+  Iteration 1: score=80
+  Iteration 2: score=80
+  Iteration 3: score=80
+  Iteration 4: score=80
+  Iteration 5: score=80
+Final Cypher: MATCH (g:gene)-[r:expression_level_in]->(ct:cell_type) WHERE g.name = 'INS'
+WITH collect(DISTINCT ct) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Find gene with name CFTR
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene) WHERE g.name = 'CFTR'
+WITH collect(DISTINCT g) AS nodes, [] AS edges RETURN nodes, edges;
+##########################
+Query: Get all genes that have interaction or regulation relationships with CFTR
+Score: 95/100 (no refinement needed)
+Cypher: MATCH (g:gene)-[r:general_binding|regulation]->(:gene {name: 'CFTR'}) WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Get all genes that are effector genes for type 1 diabetes
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene)-[r:effector_gene_of]->(d:disease) WHERE d.name = 'type 1 diabetes' WITH collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+##########################
+Query: Find gene with name CFTR
+Score: 100/100 (no refinement needed)
+Cypher: MATCH (g:gene) WHERE g.name = 'CFTR'
+WITH collect(DISTINCT g) AS nodes, [] AS edges RETURN nodes, edges;
 ##########################

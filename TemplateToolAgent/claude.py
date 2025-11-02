@@ -42,11 +42,11 @@ def chat(messages: list) -> Tuple[bool, str]:
     while max_trail > 0:
         try:
             response = client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o-2024-11-20",
                 temperature=0.6,
                 max_tokens=4000,
                 top_p=1.0,
-                messages=messages
+                messages=messages,
             )
 
             content = response.choices[0].message.content
@@ -98,4 +98,3 @@ if __name__ == "__main__":
     messages, response = chat_and_get_formatted([
         {"role": "user", "content": "====== From User ======\nWhat is TP53?"}
     ])
-    print("Response:\n", response)

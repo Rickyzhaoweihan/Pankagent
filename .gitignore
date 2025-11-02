@@ -1,9 +1,68 @@
-*.DS_Store
-logs/
+# Python
 __pycache__/
-config.py
-*/.env 
-*.env
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
 
-*/__pycache__
-*__pycache__
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# OS
+.DS_Store
+Thumbs.db
+*.DS_Store
+
+# Logs
+logs/
+*.log
+log.txt
+*.jsonl
+claude_log.txt
+performance.log
+pankbase_line_profile.txt
+
+# Secrets & Config (NEVER COMMIT THESE!)
+config.py
+.env
+*.key
+*.pem
+*.secret
+
+# Cache & Temporary
+__MACOSX/
+.cache/
+*.tmp
+*.temp
+
+# Test outputs
+test_output/
+.pytest_cache/
+
+# Model files (too large for git)
+*.bin
+*.safetensors
+*.gguf
+models/
+checkpoints/
+
+# Data files (may contain sensitive info)
+data/output/
+*.db
+*.sqlite

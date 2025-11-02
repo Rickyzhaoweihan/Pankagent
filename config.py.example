@@ -1,0 +1,10 @@
+# PanKgraph AI Assistant - Configuration Template
+# Copy this file to config.py and fill in your actual values
+
+# Anthropic Claude API Key (Required)
+# Get from: https://console.anthropic.com/
+API_KEY='your-anthropic-api-key-here'
+
+# OpenAI API Key (Required)
+# Get from: https://platform.openai.com/api-keys
+OPENAI_API_KEY='your-openai-api-key-here'

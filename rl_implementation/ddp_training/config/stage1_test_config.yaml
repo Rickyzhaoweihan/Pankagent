@@ -1,0 +1,107 @@
+# Stage 1 Test Configuration
+# Small-scale testing with reduced parameters
+
+# =============================================================================
+# Model Paths
+# =============================================================================
+cypher_model_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/models/qwen2.5-coder-14b
+orchestrator_model_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/models/qwen2.5-14b
+
+# Schema path
+schema_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/legacy/PankBaseAgent/text_to_cypher/data/input/kg_schema.json
+
+# Neo4j API
+neo4j_url: "https://nzi5e9mb0f.execute-api.us-east-1.amazonaws.com/production/pankgraph-neo4j"
+
+# =============================================================================
+# Output Paths (Test)
+# =============================================================================
+checkpoint_dir: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/stage1_ddp_test/checkpoints
+log_dir: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/stage1_ddp_test/logs
+
+# =============================================================================
+# GPU Allocation (8 H100s)
+# =============================================================================
+# 
+# GPUs 0-3: Orchestrator (4 modes, inference only via vLLM)
+#   - GPU 0: Question Generator mode
+#   - GPU 1: Data Quality Evaluator mode
+#   - GPU 2: Answer Synthesizer mode
+#   - GPU 3: Answer Quality Evaluator mode
+#
+# GPU 4: Cypher Generator inference (vLLM, separate process)
+# GPU 5: Cypher Generator training (single GPU, LoRA)
+#
+orchestrator_gpu_question: 0
+orchestrator_gpu_data_eval: 1
+orchestrator_gpu_synthesis: 2
+orchestrator_gpu_answer_eval: 3
+
+cypher_inference_gpu: 4
+cypher_training_gpus: [5]
+
+# =============================================================================
+# Training Parameters (REDUCED FOR TESTING)
+# =============================================================================
+num_epochs: 2
+questions_per_epoch: 8
+batch_size: 4
+save_frequency: 1
+log_frequency: 1
+
+# =============================================================================
+# LoRA Configuration
+# =============================================================================
+lora_rank: 32
+lora_alpha: 64
+lora_dropout: 0.05
+
+# =============================================================================
+# Optimizer Settings
+# =============================================================================
+learning_rate: 1.0e-5
+weight_decay: 0.01
+max_grad_norm: 1.0
+warmup_steps: 10
+
+# =============================================================================
+# PPO Settings
+# =============================================================================
+clip_ratio: 0.2
+entropy_coeff: 0.01
+use_kl_penalty: false
+ppo_epochs: 1
+mini_batch_size: 2
+
+grpo_baseline: mean
+normalize_advantages: true
+
+# =============================================================================
+# Model/Inference Settings
+# =============================================================================
+max_model_len: 8192
+gpu_memory_utilization: 0.85
+max_num_seqs: 32
+max_new_tokens: 512
+temperature: 0.7
+
+max_prompt_length: 4096
+max_response_length: 512
+max_steps: 3
+
+# =============================================================================
+# Precision and Memory
+# =============================================================================
+use_bf16: true
+gradient_checkpointing: true
+
+# =============================================================================
+# Curriculum Learning (SIMPLIFIED FOR TESTING)
+# =============================================================================
+curriculum:
+  easy:
+    epochs: 2
+    max_hops: 1
+    node_types: [gene, disease]
+    relationship_types: [associated_with]
+

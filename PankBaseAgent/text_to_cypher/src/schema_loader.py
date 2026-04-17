@@ -18,10 +18,14 @@ import json, os
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-from dotenv import load_dotenv
-
-load_dotenv()
-_SCHEMA_PATH = (Path(__file__).resolve().parent.parent / "data" / "input" / "neo4j_schema.json")
+# Optional dotenv support - gracefully handle if not installed
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not installed, continue without it
+# Schema path: PanKgraph ADA schema verified against local Neo4j (port 8687)
+_SCHEMA_PATH = (Path(__file__).resolve().parent.parent / "data" / "input" / "neo4j_schema_ada.json")
 
 _HINTS_PATH = (Path(__file__).resolve().parent.parent / "data" / "input" / "schema_hints.json")
 
@@ -43,7 +47,12 @@ def get_schema() -> Dict[str, Any]:
     global _cached_schema
     if _cached_schema is None:
         with _SCHEMA_PATH.open() as f:
-            _cached_schema = json.load(f)
+            data = json.load(f)
+            # Handle nested "knowledge_graph_schema" wrapper (from RL implementation format)
+            if "knowledge_graph_schema" in data:
+                _cached_schema = data["knowledge_graph_schema"]
+            else:
+                _cached_schema = data
     return _cached_schema
 
 def get_schema_hints() -> Optional[Dict[str, Any]]:
@@ -87,32 +96,33 @@ def get_simplified_schema() -> Dict[str, Any]:
             for rel, spec in schema.get("edge_types", {}).items()
         }
 
-        # Ensure QTL_for is always included if missing
-        if "QTL_for" not in relationships:
-            relationships["QTL_for"] = {
-                "source": "snp",
-                "target": "gene"
-            }
-
         # Define preferred lookup keys for quick name matching
         preferred_lookup = {
             "gene": ["name", "id"],
-            "ontology": ["name", "id"],
-            "cell_type": ["name", "id"],
+            "anatomical_structure": ["name", "category"],
             "disease": ["name", "id"],
-            "snp": ["id"],
-            "OCR": []
+            "gene_ontology": ["name", "id"],
+            "kegg": ["name", "id"],
+            "reactome": ["name", "id"],
+            "snv": ["id"],
+            "OCR_peak": ["id"],
+            "donor": ["id", "diabetes_type"],
         }
 
         # Add brief contextual notes for special node types and relationships
         Notes = {
-            "ontology": "Ontology nodes (e.g., diseases, GO terms, cell types) can be queried by 'name' or 'id'.",
-            "gene": "Gene nodes correspond to Ensembl/GENCODE identifiers and may include 'id' or 'name'.",
-            "snp": "SNP nodes represent variants and are primarily identified by rsID (snp.id).",
-            "QTL_for": (
-                "QTL_for connects SNPs to genes showing variant-expression associations. "
-                "Use pattern: (s:snp)-[:QTL_for]->(g:gene). Commonly used in eQTL and fine-mapping analyses."
-            )
+            "gene": "Gene nodes correspond to Ensembl/GENCODE identifiers. Query by name or id.",
+            "snv": "Variant nodes (SNV, deletion, insertion, indel). Query by id (rsID).",
+            "anatomical_structure": "Replaces old cell_type. Includes tissues, regions, and cell types. Query by name.",
+            "OCR_peak": "Open chromatin region peaks with genomic coordinates (chr, start_loc, end_loc).",
+            "part_of_QTL_signal": (
+                "part_of_QTL_signal connects variants to genes (eQTL). "
+                "Use pattern: (s:snv)-[:part_of_QTL_signal]->(g:gene). Properties: pip, tissue_name, gene_name."
+            ),
+            "semicolon_rels": (
+                "Relationship names with semicolons must be backtick-escaped in Cypher: "
+                "[r:`function_annotation;GO`], [r:`pathway_annotation;KEGG`], [r:`pathway_annotation;reactome`]"
+            ),
         }
 
         _cached_simple = {
@@ -143,13 +153,16 @@ def get_minimal_schema_for_llm() -> str:
         # Define which node types have which critical properties
         node_props = {
             "gene": ["name", "id"],
-            "cell_type": ["name", "id"],
+            "anatomical_structure": ["name", "category"],
             "disease": ["name", "id"],
             "gene_ontology": ["name", "id"],
-            "snp": ["id"],
-            "OCR": []
+            "kegg": ["name", "id"],
+            "reactome": ["name", "id"],
+            "snv": ["id"],
+            "OCR_peak": ["id", "chr", "start_loc", "end_loc"],
+            "donor": ["id", "diabetes_type", "derived_diabetes_status", "t1d_stage", "aab_state", "hla_status", "age", "gender", "Race", "bmi", "hba1c_percentage", "c_peptide_ng_ml"],
         }
-        
+
         # Build compact node list
         node_parts = []
         for label, spec in schema.get("node_types", {}).items():
@@ -159,48 +172,49 @@ def get_minimal_schema_for_llm() -> str:
                 node_parts.append(f"{simple_label}({','.join(props)})")
             else:
                 node_parts.append(simple_label)
-        
+
         # Define critical filterable properties for edges
         edge_filter_props = {
-            "DEG_in": ["Log2FoldChange", "UpOrDownRegulation", "P_value", "Adjusted_P_value"],
-            "expression_level_in": ["NonDiabetic__expression_mean", "Type1Diabetic__expression_mean", "All__expression_mean"],
-            "QTL_for": ["pip", "slope", "nominal_p"],
-            "OCR_activity": ["OCR_GeneActivityScore_mean", "type_1_diabetes__OCR_GeneActivityScore_mean"]
+            "T1D_DEG_in": ["Log2FoldChange", "UpOrDownRegulation", "P_value", "Adjusted_P_value"],
+            "gene_detected_in": ["mean_donor_logCPM", "median_pct_cells_expressing", "cell_type"],
+            "gene_enriched_in": ["log2FoldChange", "padj", "cell_type_label", "rank_in_cell_type"],
+            "part_of_QTL_signal": ["pip", "slope", "nominal_p", "tissue_name", "gene_name"],
+            "gene_activity_score_in": ["OCR_GeneActivityScore_mean", "type_1_diabetes__OCR_GeneActivityScore_mean"],
+            "part_of_GWAS_signal": ["pip", "p_value", "locus_name", "lead_status"],
         }
-        
+
         # Build compact edge list with source→target and critical properties
         edge_parts = []
         for rel, spec in schema.get("edge_types", {}).items():
-            simple_rel = rel.split(";")[-1]
             source = spec.get("source_node_type", "?")
             target = spec.get("target_node_type", "?")
-            
+
+            # For relationship names with semicolons, use backtick syntax hint
+            display_rel = rel
+
             # Add filterable properties if defined
-            filter_props = edge_filter_props.get(simple_rel, [])
+            filter_props = edge_filter_props.get(rel, [])
             if filter_props:
-                edge_parts.append(f"{simple_rel}({source}→{target})[{','.join(filter_props)}]")
+                edge_parts.append(f"{display_rel}({source}→{target})[{','.join(filter_props)}]")
             else:
-                edge_parts.append(f"{simple_rel}({source}→{target})")
-        
-        # Ensure QTL_for is included
-        if not any("QTL_for" in e for e in edge_parts):
-            qtl_props = edge_filter_props.get("QTL_for", [])
-            edge_parts.append(f"QTL_for(snp→gene)[{','.join(qtl_props)}]")
-        
+                edge_parts.append(f"{display_rel}({source}→{target})")
+
         # Build the compact schema string
         nodes_str = "Nodes: " + ", ".join(node_parts)
         edges_str = "Edges: " + ", ".join(edge_parts)
-        
+
         # Add brief usage notes
         notes = """
 Notes:
-- Lookup nodes: Use .name or .id (e.g., gene.name='CFTR', disease.name='type 1 diabetes')
-- Filter DEG: deg.UpOrDownRegulation='up' or 'down', deg.Log2FoldChange>threshold, deg.P_value<0.05
-- Filter expression: edge.NonDiabetic__expression_mean>value or edge.Type1Diabetic__expression_mean>value
-- Filter QTL: qtl.pip>0.5 (posterior inclusion probability), qtl.nominal_p<threshold
-- Disease name: ALWAYS use 'type 1 diabetes' (lowercase, full spelling, not T1D/Type 1 Diabetes)
-- Gene/cell type: Use exact names from data (e.g., 'beta cell', 'INS', 'CFTR')"""
-        
+- Lookup nodes: gene.name='CFTR', disease.name='type 1 diabetes', anatomical_structure.name='pancreas'
+- Relationship names with semicolons MUST be backtick-escaped: [`function_annotation;GO`], [`pathway_annotation;KEGG`], [`pathway_annotation;reactome`]
+- Filter T1D DEG: r.UpOrDownRegulation='Upregulated in T1D' or 'Downregulated in T1D'
+- SNP-gene QTL: (s:snv)-[r:part_of_QTL_signal]->(g:gene), filter r.pip>0.5, r.tissue_name='Islet'
+- Disease name: ALWAYS use 'type 1 diabetes' (lowercase, full spelling, not T1D)
+- Node labels: gene (not Gene), snv (not snp), OCR_peak (not OCR), anatomical_structure (not cell_type)
+- anatomical_structure replaces old cell_type. Examples: query by name or by ID (e.g., CL_0000169)
+- Donor queries: use exact property values. diabetes_type='Diabetes (Type I)' for T1D donors, 'Diabetes (Type II)' for T2D, 'Control Without Diabetes' for controls. aab_state uses CONTAINS (e.g. d.aab_state CONTAINS 'GADA positive'). hla_status one of: 'DR3/DR4','DR3/X','DR4/X','X/DR3','X/DR4','X/X'. Example: MATCH (d:donor) WHERE d.diabetes_type = 'Diabetes (Type I)' WITH collect(DISTINCT d) AS nodes, [] AS edges RETURN nodes, edges;"""
+
         _cached_minimal = nodes_str + "\n" + edges_str + "\n" + notes
     
     return _cached_minimal

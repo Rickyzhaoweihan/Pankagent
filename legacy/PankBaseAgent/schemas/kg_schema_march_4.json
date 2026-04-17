@@ -1,0 +1,1067 @@
+{
+  "knowledge_graph_schema": {
+    "description": "Comprehensive biomedical knowledge graph focused on Type 1 Diabetes research (excluding article nodes and related edges)",
+    "domain": "Biomedical Research - Type 1 Diabetes",
+    "node_types": {
+      "sequence_variant;snp;variants": {
+        "description": "Single nucleotide polymorphisms (SNPs) from NCBI database",
+        "properties": {
+          "id": {
+            "type": "String",
+            "examples": [
+              "rs689",
+              "rs1272"
+            ]
+          },
+          "link": "String",
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "4/7/25",
+              "8/5/21",
+              "8/5/25"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "GWAS_Catalog",
+              "GWAS_other",
+              "Other SNPs",
+              "dbSNP",
+              "ncbi"
+            ]
+          },
+          "chr": {
+            "type": "String",
+            "examples": [
+              "1.0",
+              "2.0"
+            ]
+          },
+          "start_loc": "Int",
+          "end_loc": "Int",
+          "ref": {
+            "type": "String",
+            "examples": [
+              "A",
+              "C"
+            ]
+          },
+          "alt": {
+            "type": "String",
+            "examples": [
+              "A",
+              "C"
+            ]
+          },
+          "variant_suspect_reason": {
+            "type": "String",
+            "all_unique_values": [
+              "1kg_failed",
+              "Paralog",
+              "unspecified"
+            ]
+          },
+          "freq": "String",
+          "HGVS_name": "String",
+          "non_synonymous_frameshift": {
+            "type": "String",
+            "all_unique_values": [
+              "False",
+              "True"
+            ]
+          },
+          "non_synonymous_missense": {
+            "type": "String",
+            "all_unique_values": [
+              "False",
+              "True"
+            ]
+          },
+          "non_synonymous_nonsense": {
+            "type": "String",
+            "all_unique_values": [
+              "False",
+              "True"
+            ]
+          },
+          "in_3prime_UTR": {
+            "type": "String",
+            "all_unique_values": [
+              "False",
+              "True"
+            ]
+          },
+          "in_5prime_UTR": {
+            "type": "String",
+            "all_unique_values": [
+              "False",
+              "True"
+            ]
+          },
+          "in_acceptor_splice_site": {
+            "type": "String",
+            "all_unique_values": [
+              "False",
+              "True"
+            ]
+          },
+          "in_donor_splice_site": {
+            "type": "String",
+            "all_unique_values": [
+              "False",
+              "True"
+            ]
+          },
+          "in_intron": {
+            "type": "String",
+            "all_unique_values": [
+              "False",
+              "True"
+            ]
+          },
+          "in_3prime_gene_region": {
+            "type": "String",
+            "all_unique_values": [
+              "False",
+              "True"
+            ]
+          },
+          "in_5prime_gene_region": {
+            "type": "String",
+            "all_unique_values": [
+              "False",
+              "True"
+            ]
+          },
+          "common_SNP": {
+            "type": "String",
+            "all_unique_values": [
+              "False",
+              "True"
+            ]
+          },
+          "type": {
+            "type": "String",
+            "all_unique_values": [
+              "Other SNPs",
+              "sequence_indel",
+              "sequence_insertion",
+              "sequence_snp",
+              "sequence_variant"
+            ]
+          }
+        },
+        "labels": [
+          "sequence_variant",
+          "snp",
+          "variants"
+        ],
+        "files": [
+          {
+            "file": "aaaCode/snp.node.csv",
+            "sample_count": 5000
+          },
+          {
+            "file": "Data/GWAS/GWAS_snp_id.node.csv",
+            "sample_count": 1643
+          },
+          {
+            "file": "Data/QTL/opencypher/QTL_snp.node.csv",
+            "sample_count": 5000
+          }
+        ]
+      },
+      "coding_elements;gene": {
+        "description": "Genes from Ensembl database with genomic coordinates and annotations",
+        "properties": {
+          "id": "String",
+          "id_version": "Int",
+          "description": {
+            "type": "String",
+            "examples": [
+              "TEC",
+              "tec"
+            ]
+          },
+          "chr": {
+            "type": "String",
+            "examples": [
+              "4",
+              "5"
+            ]
+          },
+          "start_loc": "Int",
+          "end_loc": "Int",
+          "strand": {
+            "type": "String",
+            "all_unique_values": [
+              "-1",
+              "1"
+            ]
+          },
+          "name": {
+            "type": "String",
+            "examples": [
+              "F7",
+              "KL"
+            ]
+          },
+          "GC_percentage": "Float",
+          "type": {
+            "type": "String",
+            "examples": [
+              "TEC",
+              "rRNA"
+            ]
+          },
+          "link": "String",
+          "gencode_annotation": {
+            "type": "String",
+            "all_unique_values": [
+              "GENCODE basic"
+            ]
+          },
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "GRCh38.p14"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "Ensembl"
+            ]
+          }
+        },
+        "labels": [
+          "coding_elements",
+          "gene"
+        ],
+        "files": [
+          {
+            "file": "Data/Ensemble/opencypher/Ensembl_genes.node.csv",
+            "sample_count": 5000
+          }
+        ]
+      },
+      "OCR": {
+        "description": "Node type: OCR",
+        "properties": {
+          "id": "String",
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "2025_05_28"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "PanKbase"
+            ]
+          }
+        },
+        "labels": [
+          "OCR"
+        ],
+        "files": [
+          {
+            "file": "Data/GeneActivityScore/opencypher/scATACseq_OCR_super.node.csv",
+            "sample_count": 5000
+          }
+        ]
+      },
+      "gene_ontology;ontology": {
+        "description": "Genes from Ensembl database with genomic coordinates and annotations",
+        "properties": {
+          "id": "String",
+          "name": {
+            "type": "String",
+            "examples": [
+              "axon",
+              "M band"
+            ]
+          },
+          "description": "String",
+          "link": "String",
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "GRCh38.p14"
+            ]
+          }
+        },
+        "labels": [
+          "gene_ontology",
+          "ontology"
+        ],
+        "files": [
+          {
+            "file": "Data/GO/opencypher/go.node.csv",
+            "sample_count": 5000
+          }
+        ]
+      },
+      "disease;ontology": {
+        "description": "Diseases from MONDO ontology, particularly Type 1 Diabetes",
+        "properties": {
+          "url": {
+            "type": "String",
+            "all_unique_values": [
+              "http://purl.obolibrary.org/obo/MONDO_0005147"
+            ]
+          },
+          "id": {
+            "type": "String",
+            "all_unique_values": [
+              "MONDO_0005147"
+            ]
+          },
+          "definition": {
+            "type": "String",
+            "all_unique_values": [
+              "A chronic condition characterized by minimal or absent production of insulin by the pancreas."
+            ]
+          },
+          "name": {
+            "type": "String",
+            "all_unique_values": [
+              "type 1 diabetes"
+            ]
+          },
+          "synonyms": {
+            "type": "String",
+            "all_unique_values": [
+              "type 1 diabetes mellitus"
+            ]
+          },
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "4_29_25"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "NCBO"
+            ]
+          }
+        },
+        "labels": [
+          "disease",
+          "ontology"
+        ],
+        "files": [
+          {
+            "file": "Data/Effector_gene/T1D.node.csv",
+            "sample_count": 1
+          }
+        ]
+      },
+      "cell_type;ontology": {
+        "description": "Cell types from Cell Ontology, particularly pancreatic cell types",
+        "properties": {
+          "url": "String",
+          "id": "String",
+          "definition": "String",
+          "name": {
+            "type": "String",
+            "examples": [
+              "Beta Cell",
+              "Alpha Cell"
+            ]
+          },
+          "synonyms": {
+            "type": "String",
+            "examples": [
+              "PaSC",
+              "acinar cell"
+            ]
+          },
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "4/29/25"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "NCBO"
+            ]
+          }
+        },
+        "labels": [
+          "cell_type",
+          "ontology"
+        ],
+        "files": [
+          {
+            "file": "Data/Expression/open_cypher/cell_line.node.csv",
+            "sample_count": 8
+          }
+        ]
+      }
+    },
+    "edge_types": {
+      "effector_gene_of": {
+        "description": "Genes that are causal or almost certainly causal for Type 1 Diabetes based on genetic evidence",
+        "source_node_type": "gene",
+        "target_node_type": "disease",
+        "properties": {
+          "start": "String",
+          "end": {
+            "type": "String",
+            "all_unique_values": [
+              "MONDO_0005147"
+            ]
+          },
+          "evidence": "String",
+          "effector_gene_list_url": {
+            "type": "String",
+            "all_unique_values": [
+              "https://t1d.hugeamp.org/research.html?pageid=Atla_T1D_568",
+              "https://t1d.hugeamp.org/research.html?pageid=T1D_UVa_168",
+              "https://t1d.hugeamp.org/research.html?pageid=t1d_effector_genes"
+            ]
+          },
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "2025-10-24"
+            ]
+          },
+          "data_source_url": "String",
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "Type 1 diabetes effector gene predictions (Gaulton KJ, 2021)",
+              "Type 1 diabetes predicted effector genes (Atla G et al. 2022)",
+              "Type 1 diabetes predicted effector genes (Onengut-Gumuscu S and Rich SS, 2022)"
+            ]
+          }
+        },
+        "files": [
+          {
+            "file": "aaaCode/effector_gene/oldeffector_gene.edge.csv",
+            "sample_count": 257
+          },
+          {
+            "file": "aaaCode/effector_gene/effector_gene.edge.csv",
+            "sample_count": 257
+          },
+          {
+            "file": "aaaCode/effector_gene/modified_effector_gene.edge.csv",
+            "sample_count": 257
+          },
+          {
+            "file": "Data/Effector_gene/json_no_special_effector_gene.edge.csv",
+            "sample_count": 257
+          }
+        ]
+      },
+      "physical_interaction": {
+        "description": "Relationship type: physical_interaction",
+        "source_node_type": "gene",
+        "target_node_type": "gene",
+        "properties": {
+          "start": "String",
+          "end": "String",
+          "biogrid_interaction_id": "Int",
+          "Entrez_ID_A": "Int",
+          "Entrez_ID_B": "Int",
+          "biogrid_id_interactor_a": "Int",
+          "biogrid_id_interactor_b": "Int",
+          "official_symbol_interactor_a": {
+            "type": "String",
+            "examples": [
+              "T",
+              "AR"
+            ]
+          },
+          "official_symbol_interactor_b": {
+            "type": "String",
+            "examples": [
+              "T",
+              "AR"
+            ]
+          },
+          "experimental_system": {
+            "type": "String",
+            "examples": [
+              "PCA",
+              "FRET"
+            ]
+          },
+          "experimental_system_type": {
+            "type": "String",
+            "all_unique_values": [
+              "physical"
+            ]
+          },
+          "author": "String",
+          "publication_source": "String",
+          "organism_id_interactor_a": "Int",
+          "organism_id_interactor_b": "Int",
+          "throughput": {
+            "type": "String",
+            "all_unique_values": [
+              "High Throughput",
+              "High Throughput|Low Throughput",
+              "Low Throughput"
+            ]
+          },
+          "score": "Float",
+          "modification": "String",
+          "qualifications": {
+            "type": "String",
+            "examples": [
+              ".",
+              "e"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "BIOGRID"
+            ]
+          }
+        },
+        "files": [
+          {
+            "file": "Data/BioGrid/opencypher/BIOGRID_with_ENSG_slim.edge.csv",
+            "sample_count": 926919
+          }
+        ]
+      },
+      "genetic_interaction": {
+        "description": "Relationship type: genetic_interaction",
+        "source_node_type": "gene",
+        "target_node_type": "gene",
+        "properties": {
+          "start": "String",
+          "end": "String",
+          "biogrid_interaction_id": "Int",
+          "Entrez_ID_A": "Int",
+          "Entrez_ID_B": "Int",
+          "biogrid_id_interactor_a": "Int",
+          "biogrid_id_interactor_b": "Int",
+          "official_symbol_interactor_a": {
+            "type": "String",
+            "examples": [
+              "AR",
+              "FH"
+            ]
+          },
+          "official_symbol_interactor_b": {
+            "type": "String",
+            "examples": [
+              "AR",
+              "C5"
+            ]
+          },
+          "experimental_system": "String",
+          "experimental_system_type": {
+            "type": "String",
+            "all_unique_values": [
+              "genetic"
+            ]
+          },
+          "author": "String",
+          "publication_source": "String",
+          "organism_id_interactor_a": "Int",
+          "organism_id_interactor_b": "Int",
+          "throughput": {
+            "type": "String",
+            "all_unique_values": [
+              "High Throughput",
+              "High Throughput|Low Throughput",
+              "Low Throughput"
+            ]
+          },
+          "score": "Float",
+          "modification": {
+            "type": "String",
+            "all_unique_values": []
+          },
+          "qualifications": {
+            "type": "String",
+            "examples": [
+              "shRNA",
+              "figure 2."
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "BIOGRID"
+            ]
+          }
+        },
+        "files": [
+          {
+            "file": "Data/BioGrid/opencypher/BIOGRID_with_ENSG_slim.edge.csv",
+            "sample_count": 17226
+          }
+        ]
+      },
+      "OCR_locate_in": {
+        "description": "Relationship type: OCR_locate_in",
+        "source_node_type": "open_chromatin_region",
+        "target_node_type": "gene",
+        "properties": {
+          "start": "String",
+          "end": "String",
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "2025_05_28"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "PanKbase"
+            ]
+          }
+        },
+        "files": [
+          {
+            "file": "Data/GeneActivityScore/opencypher/scATACseq_OCR_super.edge.csv",
+            "sample_count": 18013
+          }
+        ]
+      },
+      "OCR_activity": {
+        "description": "Open chromatin region activity scores in different cell types and disease states",
+        "source_node_type": "open_chromatin_region",
+        "target_node_type": "cell_type",
+        "properties": {
+          "start": "String",
+          "end": "String",
+          "OCR_GeneActivityScore_mean": "Float",
+          "OCR_GeneActivityScore_median": "Float",
+          "non_diabetic__OCR_GeneActivityScore_mean": "Float",
+          "non_diabetic__OCR_GeneActivityScore_median": "Float",
+          "AAB_pos__OCR_GeneActivityScore_mean": "Float",
+          "AAB_pos__OCR_GeneActivityScore_median": "Float",
+          "type_1_diabetes__OCR_GeneActivityScore_mean": "Float",
+          "type_1_diabetes__OCR_GeneActivityScore_median": "Float",
+          "type_2_diabetes__OCR_GeneActivityScore_mean": "Float",
+          "type_2_diabetes__OCR_GeneActivityScore_median": "Float",
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "2025_05_28"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "PanKbase"
+            ]
+          }
+        },
+        "files": [
+          {
+            "file": "Data/GeneActivityScore/opencypher/scATACseq_GeneActivityScore.edge.csv",
+            "sample_count": 126091
+          }
+        ]
+      },
+      "function_annotation": {
+        "description": "Gene Ontology annotations linking genes to their molecular functions, biological processes, and cellular components",
+        "source_node_type": "gene",
+        "target_node_type": "gene_ontology",
+        "properties": {
+          "start": "String",
+          "end": "String",
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "GRCh38.p14"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "Ensembl"
+            ]
+          }
+        },
+        "files": [
+          {
+            "file": "Data/GO/opencypher/go.edge.csv",
+            "sample_count": 262622
+          }
+        ]
+      },
+      "part_of_GWAS_signal": {
+        "description": "Relationship type: part_of_GWAS_signal",
+        "source_node_type": "snp",
+        "target_node_type": "disease",
+        "properties": {
+          "start": {
+            "type": "String",
+            "examples": [
+              "rs689",
+              "rs1873"
+            ]
+          },
+          "end": {
+            "type": "String",
+            "all_unique_values": [
+              "MONDO_0005147"
+            ]
+          },
+          "locus_name": "String",
+          "credible_set_id": "String",
+          "lead_status": {
+            "type": "String",
+            "all_unique_values": [
+              "lead",
+              "nonlead"
+            ]
+          },
+          "pip": "Float",
+          "p_value": "Float",
+          "lbf": "Float",
+          "effect_allele": {
+            "type": "String",
+            "examples": [
+              "A",
+              "C"
+            ]
+          },
+          "non_effect_allele": {
+            "type": "String",
+            "examples": [
+              "A",
+              "C"
+            ]
+          },
+          "pip_rank": "Int",
+          "credible_set_size": "Int",
+          "credible_set_purity": "Float",
+          "method": {
+            "type": "String",
+            "all_unique_values": [
+              "GWAS"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "GWAS_finemapping_V1"
+            ]
+          },
+          "data_source_url": {
+            "type": "String",
+            "all_unique_values": [
+              "https://pubmed.ncbi.nlm.nih.gov/34012112/"
+            ]
+          },
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "10/18/2025"
+            ]
+          }
+        },
+        "files": [
+          {
+            "file": "Data/GWAS/GWAS.edge.csv",
+            "sample_count": 1608
+          }
+        ]
+      },
+      "expression_level_in": {
+        "description": "Relationship type: expression_level_in",
+        "source_node_type": "gene",
+        "target_node_type": "cell_type",
+        "properties": {
+          "start": "String",
+          "end": {
+            "type": "String",
+            "all_unique_values": [
+              "CL_0000169",
+              "CL_0000171",
+              "CL_0000173",
+              "CL_0002064",
+              "CL_0002079"
+            ]
+          },
+          "NonDiabetic__expression_mean": "Float",
+          "NonDiabetic__expression_min": "Float",
+          "NonDiabetic__expression_25_quantile": "Float",
+          "NonDiabetic__expression_median": "Float",
+          "NonDiabetic__expression_75_quantile": "Float",
+          "NonDiabetic__expression_max": "Float",
+          "Type1Diabetic__expression_mean": "Float",
+          "Type1Diabetic__expression_min": "Float",
+          "Type1Diabetic__expression_25_quantile": "Float",
+          "Type1Diabetic__expression_median": "Float",
+          "Type1Diabetic__expression_75_quantile": "Float",
+          "Type1Diabetic__expression_max": "Float",
+          "All__expression_mean": "Float",
+          "All__expression_min": "Float",
+          "All__expression_25_quantile": "Float",
+          "All__expression_median": "Float",
+          "All__expression_75_quantile": "Float",
+          "All__expression_max": "Float",
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "V3.3"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "PanKbase"
+            ]
+          }
+        },
+        "files": [
+          {
+            "file": "Data/Expression/open_cypher/20250606_scRNAseq_pseudobulk_RUVseq.edge.csv",
+            "sample_count": 60284
+          }
+        ]
+      },
+      "DEG_in": {
+        "description": "Relationship type: DEG_in",
+        "source_node_type": "gene",
+        "target_node_type": "cell_type",
+        "properties": {
+          "start": "String",
+          "end": {
+            "type": "String",
+            "all_unique_values": [
+              "CL_0000169",
+              "CL_0000171",
+              "CL_0000173",
+              "CL_0002064",
+              "CL_0002079"
+            ]
+          },
+          "UpOrDownRegulation": {
+            "type": "String",
+            "all_unique_values": [
+              "Downregulated in T1D",
+              "Upregulated in T1D"
+            ]
+          },
+          "Log2FoldChange": "Float",
+          "SE_of_Log2FoldChange": "Float",
+          "P_value": "Float",
+          "Adjusted_P_value": "Float",
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "2025-05-28"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "PanKbase"
+            ]
+          }
+        },
+        "files": [
+          {
+            "file": "Data/Expression/open_cypher/20250606_DEG.edge.csv",
+            "sample_count": 1956
+          }
+        ]
+      },
+      "signal_COLOC_with": {
+        "description": "Relationship type: signal_COLOC_with",
+        "source_node_type": "gene",
+        "target_node_type": "disease",
+        "properties": {
+          "start": "String",
+          "end": {
+            "type": "String",
+            "all_unique_values": [
+              "MONDO_0005147"
+            ]
+          },
+          "QTL_locus_name": {
+            "type": "String",
+            "examples": [
+              "CFTR",
+              "SBK1"
+            ]
+          },
+          "GWAS_locus_name": {
+            "type": "String",
+            "examples": [
+              "CD69",
+              "CFTR"
+            ]
+          },
+          "QTL_signal_id": "String",
+          "GWAS_signal_id": "String",
+          "nsnp": "Int",
+          "GWAS_lead_vars": {
+            "type": "String",
+            "examples": [
+              "rs231972",
+              "rs1701704"
+            ]
+          },
+          "QTL_lead_vars": {
+            "type": "String",
+            "examples": [
+              "rs177069",
+              "rs180743"
+            ]
+          },
+          "PP.H0.abf": "Float",
+          "PP.H1.abf": "Float",
+          "PP.H2.abf": "Float",
+          "PP.H3.abf": "Float",
+          "PP.H4.abf": "Float",
+          "coloc_dataset": {
+            "type": "String",
+            "all_unique_values": [
+              "t1d_eQTL-gtex_coloc",
+              "t1d_eQTL-inspire_coloc",
+              "t1d_exonQTL-inspire_coloc",
+              "t1d_sQTL-gtex_coloc"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "HIRN_T1D_QTL_GWAS"
+            ]
+          },
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "v1.0"
+            ]
+          }
+        },
+        "files": [
+          {
+            "file": "Data/Coloc/opencypher/coloc.edge.csv",
+            "sample_count": 24
+          }
+        ]
+      },
+      "part_of_QTL_signal": {
+        "description": "Quantitative trait loci associations between genetic variants and gene expression",
+        "source_node_type": "snp",
+        "target_node_type": "gene",
+        "properties": {
+          "start": {
+            "type": "String",
+            "examples": [
+              "rs555",
+              "rs569"
+            ]
+          },
+          "end": "String",
+          "tissue_name": {
+            "type": "String",
+            "all_unique_values": [
+              "Islet",
+              "Pancreas"
+            ]
+          },
+          "tissue_id": {
+            "type": "String",
+            "all_unique_values": [
+              "UBERON_0000006",
+              "UBERON_0001264"
+            ]
+          },
+          "credible_set": "String",
+          "gene_name": {
+            "type": "String",
+            "examples": [
+              "C3",
+              "C5"
+            ]
+          },
+          "credibleset": {
+            "type": "String",
+            "examples": [
+              "1",
+              "2"
+            ]
+          },
+          "pip": "Float",
+          "nominal_p": "Float",
+          "lbf": "Float",
+          "effect_allele": {
+            "type": "String",
+            "all_unique_values": [
+              "A",
+              "C",
+              "G",
+              "T"
+            ]
+          },
+          "other_allele": {
+            "type": "String",
+            "all_unique_values": [
+              "A",
+              "C",
+              "G",
+              "T"
+            ]
+          },
+          "slope": "Float",
+          "n_snp": "Int",
+          "purity": "Float",
+          "data_version": {
+            "type": "String",
+            "all_unique_values": [
+              "02/03/25"
+            ]
+          },
+          "data_source": {
+            "type": "String",
+            "all_unique_values": [
+              "GTEx; SusieR",
+              "INSPIRE; SusieR",
+              "exon; INSPIRE",
+              "splicing; GTEx"
+            ]
+          }
+        },
+        "files": [
+          {
+            "file": "Data/QTL/opencypher/1_sQTL-gtex-susie.edge.csv",
+            "sample_count": 2426
+          },
+          {
+            "file": "Data/QTL/opencypher/1_eQTL-gtex-susie.edge.csv",
+            "sample_count": 8245
+          },
+          {
+            "file": "Data/QTL/opencypher/1_eQTL-inspire-susie.edge.csv",
+            "sample_count": 5620
+          },
+          {
+            "file": "Data/QTL/opencypher/1_exonQTL-inspire-susie.edge.csv",
+            "sample_count": 6965
+          }
+        ]
+      }
+    },
+    "total_files": 24,
+    "total_node_files": 8,
+    "total_edge_files": 16,
+    "note": "Article nodes and edges directly linked to articles have been excluded from this schema"
+  }
+}

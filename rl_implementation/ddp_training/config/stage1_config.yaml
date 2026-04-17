@@ -1,0 +1,157 @@
+# Stage 1 Training Configuration
+# Cypher Generator Only (Orchestrator frozen for inference)
+
+# =============================================================================
+# Model Paths
+# =============================================================================
+# Cypher Generator: Qwen2.5-Coder-14B-SFT (code-specialized, SFT fine-tuned)
+cypher_model_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/models/qwen2.5-coder-14b
+# Orchestrator: Qwen2.5-14B (general-purpose LLM for question gen, evaluation, synthesis)
+orchestrator_model_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/models/qwen2.5-14b
+
+# Schema path
+schema_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/legacy/PankBaseAgent/text_to_cypher/data/input/kg_schema.json
+
+# Neo4j API
+neo4j_url: "https://nzi5e9mb0f.execute-api.us-east-1.amazonaws.com/production/pankgraph-neo4j"
+
+# =============================================================================
+# Output Paths
+# =============================================================================
+checkpoint_dir: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/stage1_ddp/checkpoints
+log_dir: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/stage1_ddp/logs
+# Rollout store for persisting training data (JSONL format, append mode)
+rollout_store_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/stage1_ddp/rollouts.jsonl
+
+# Experience buffer for learned patterns (JSON format)
+experience_buffer_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/stage1_ddp/experience_buffer.json
+
+# Entity samples for question generation seeding (extracted from database)
+entity_samples_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/entity_samples.json
+
+# Entity seeding settings for diverse question generation
+use_entity_seeding: true  # Enable entity-based question seeding
+use_experience_keywords: true  # Use keywords from successful patterns
+
+# =============================================================================
+# Adaptive Entity Sampling (replaces uniform sampling)
+# =============================================================================
+# Uses Thompson Sampling with degree-based priors to select entities that are
+# more likely to produce answerable questions. Learns from answerability feedback.
+use_adaptive_sampling: true
+entity_degrees_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/entity_degrees.json
+adaptive_sampler_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/adaptive_sampler_state.json
+adaptive_sampler_degree_weight: 0.1  # Prior weight for degree (higher = stronger bias toward high-degree entities)
+adaptive_sampler_slack_threshold: 3  # Consecutive failures before full penalty (gives slack for Cypher errors)
+
+# =============================================================================
+# GPU Allocation (3-GPU Setup)
+# =============================================================================
+# 
+# GPU 0: Orchestrator vLLM server -> port 8001
+# GPU 1: Cypher Generator vLLM server -> port 8002
+# GPU 2: Cypher Generator training (single GPU + LoRA rank=128)
+#
+cypher_training_gpus: [0]  # After CUDA_VISIBLE_DEVICES=2, this maps to physical GPU 2
+
+# =============================================================================
+# vLLM Server Configuration
+# =============================================================================
+# All orchestrator modes use the same server (same model, different prompts)
+# These can be overridden by environment variables (ORCH_QUESTION_PORT, etc.)
+server_host: localhost
+orchestrator_port_question: 8001
+orchestrator_port_data_eval: 8001
+orchestrator_port_synthesis: 8001
+orchestrator_port_answer_eval: 8001
+cypher_inference_port: 8002
+
+# API settings
+api_timeout: 180.0  # Reasonable timeout for small batches
+max_retries: 3
+batch_size: 8  # Max prompts per batch API request (matches questions_per_epoch)
+
+# =============================================================================
+# Training Parameters
+# =============================================================================
+num_epochs: 45
+questions_per_epoch: 8  # Small for quick iteration - increase later
+batch_size: 8
+save_frequency: 5
+log_frequency: 1
+
+# =============================================================================
+# LoRA Configuration
+# =============================================================================
+# Using larger rank for RL (harder task needs more capacity)
+# Only targets attention layers (q_proj, k_proj, v_proj, o_proj)
+# NOT MLP layers (gate_proj, up_proj, down_proj) which are too large
+# With H100 80GB, rank=128 fits comfortably with gradient checkpointing
+lora_rank: 128  # Reduced from 128 to save ~150M params of memory
+lora_alpha: 256
+lora_dropout: 0.05
+
+# =============================================================================
+# Optimizer Settings
+# =============================================================================
+learning_rate: 1.0e-5
+weight_decay: 0.01
+max_grad_norm: 1.0
+warmup_steps: 100
+
+# =============================================================================
+# PPO Settings
+# =============================================================================
+clip_ratio: 0.2
+entropy_coeff: 0.0  # Disabled - saves ~9GB memory, minimal impact on Cypher generation
+use_kl_penalty: false
+kl_coeff: 0.1
+ppo_epochs: 1
+mini_batch_size: 8  # Process in chunks of 4 for gradient accumulation (saves memory while being efficient)
+
+# GRPO advantage estimation
+grpo_baseline: mean
+normalize_advantages: true
+
+# =============================================================================
+# Model/Inference Settings (Single GPU per model)
+# =============================================================================
+max_model_len: 8192
+gpu_memory_utilization: 0.90  # Leave headroom for single GPU
+max_num_seqs: 64  # Reasonable concurrency for single GPU
+max_num_batched_tokens: 131072  # 32 sequences × 4096 tokens
+max_new_tokens: 1024
+temperature: 0.7
+
+# Sequence lengths (reduced for memory efficiency with 14B model)
+max_prompt_length: 2048
+max_response_length: 512
+max_steps: 5  # Max Cypher query steps per question
+
+# =============================================================================
+# Precision and Memory
+# =============================================================================
+use_bf16: true
+gradient_checkpointing: true
+
+# =============================================================================
+# Curriculum Learning
+# =============================================================================
+# Stage 1: Easy (epochs 1-10), Medium (epochs 11-25), Hard (epochs 26-45)
+curriculum:
+  easy:
+    epochs: 10
+    max_hops: 1
+    node_types: [gene, disease]
+    relationship_types: [associated_with]
+  medium:
+    epochs: 15
+    max_hops: 2
+    node_types: [gene, disease, snp, cell_type]
+    relationship_types: [associated_with, regulates, located_in]
+  hard:
+    epochs: 20
+    max_hops: 3
+    node_types: null  # All types
+    relationship_types: null  # All types
+

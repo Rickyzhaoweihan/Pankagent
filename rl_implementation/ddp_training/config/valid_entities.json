@@ -1,0 +1,56 @@
+{
+    "description": "Valid entity names that exist in the PankBase knowledge graph. Use ONLY these exact names in questions.",
+    "last_updated": "2025-12-02",
+    
+    "cell_types": [
+        "Acinar Cell",
+        "Alpha Cell", 
+        "Beta Cell",
+        "Delta Cell",
+        "Ductal Cell"
+    ],
+    
+    "cell_types_note": "IMPORTANT: Cell types like 'Macrophage', 'Stellate Cell', 'Endothelial Cell' do NOT exist in this database!",
+    
+    "diseases": [
+        "type 1 diabetes",
+        "type 2 diabetes"
+    ],
+    
+    "sample_gene_ontology_terms": [
+        "methyltransferase activity",
+        "histone H3K9 monomethyltransferase activity",
+        "chromatin remodeling",
+        "DNA-binding transcription repressor activity",
+        "RNA polymerase II cis-regulatory region sequence-specific DNA binding",
+        "protein binding",
+        "signal transduction",
+        "cell adhesion",
+        "protein ubiquitination",
+        "transcription coactivator activity",
+        "nucleoplasm",
+        "cytosol",
+        "protein import into peroxisome matrix"
+    ],
+    
+    "go_terms_note": "Note: GO terms must be EXACT matches. 'transcription' alone won't work - use full terms like 'positive regulation of transcription by RNA polymerase II'",
+    
+    "valid_relationships": [
+        "DEG_in (gene → cell_type) - differentially expressed genes",
+        "expression_level_in (gene → cell_type) - expression levels",
+        "function_annotation (gene → gene_ontology) - functional annotations",
+        "effector_gene_of (gene → disease) - effector genes",
+        "part_of_GWAS_signal (snp → disease) - GWAS associations",
+        "physical_interaction (gene → gene) - protein interactions",
+        "OCR_activity (OCR → cell_type) - chromatin accessibility"
+    ],
+    
+    "tips": [
+        "Use exact cell type names: 'Alpha Cell' not 'alpha cell' or 'Alpha Cells'",
+        "DEG_in works better than expression_level_in for finding expressed genes",
+        "Ask about specific GO terms, not general concepts like 'transcription'",
+        "Questions about genes + diseases (effector_gene_of) tend to succeed",
+        "Questions about genes + function annotations (function_annotation) tend to succeed"
+    ]
+}
+

@@ -1,0 +1,89 @@
+# Small-scale test configuration for collaborative training
+# Use this for testing the training loop with minimal resources
+# Strategy 2: Sequential Within-Epoch Updates
+
+# Paths
+schema_path: "legacy/PankBaseAgent/schemas/kg_schema copy.json"
+checkpoint_dir: "outputs/checkpoints/test_small_scale"
+log_dir: "outputs/logs/test_small_scale"
+# Validation questions path (optional)
+# The parquet files contain training data, not validation questions
+# For proper validation, create a JSON file with questions like:
+#   ["Question 1?", "Question 2?", ...]
+# Or use the parquet file's questions extracted to JSON
+val_questions_path: null
+
+# Neo4j API
+neo4j_url: "https://nzi5e9mb0f.execute-api.us-east-1.amazonaws.com/production/pankgraph-neo4j"
+
+# Training parameters (SMALL SCALE)
+num_epochs: 2  # 2 epochs for testing (to test Orch update)
+questions_per_epoch: 8  # Divisible by 4 workers (no padding needed)
+experiment_name: "test_small_scale"
+
+# PPO config paths
+cypher_ppo_config_path: "rl_implementation/config/ppo_collaborative.yaml"
+orchestrator_ppo_config_path: "rl_implementation/config/orchestrator_ppo.yaml"
+
+# =============================================================================
+# GPU Allocation Configuration - Sequential Mode (Test)
+# =============================================================================
+gpu_allocation:
+  total_gpus: 8
+  nnodes: 1
+  mode: "sequential"  # Use sequential model swapping
+  
+  rollout:
+    cypher_gpus: 4
+    orch_gpus: 4
+  
+  training:
+    gpus: 8  # All GPUs for training phase
+
+# =============================================================================
+# Orchestrator Update Schedule (Test: Update every epoch)
+# =============================================================================
+orchestrator_schedule:
+  warmup_epochs: 0          # No warmup for testing
+  alternating_end_epoch: 0  # Skip alternating phase
+  warmup_frequency: 0
+  alternating_frequency: 1
+  joint_frequency: 1        # Update every epoch for testing
+
+# EMA settings (test)
+ema:
+  enabled: true
+  decay: 0.99
+  decay_on_drift: 0.995
+  update_after_orch_train: true
+
+# Curriculum settings (start with easy)
+curriculum:
+  initial_stage: "easy"
+  window_size: 100
+curriculum_enabled: false  # Disable curriculum for testing
+
+# Checkpoint settings
+checkpoint_frequency: 1  # Save after every epoch for testing
+max_checkpoints: 2
+
+# Logging
+log_level: "DEBUG"  # More verbose logging for testing
+log_to_file: true
+log_to_console: true
+
+# Testing flags
+test_mode: true  # Enable test mode features
+skip_validation: true  # Skip validation for faster testing
+debug_mode: true  # Enable debug outputs
+
+# =============================================================================
+# Rollout Logging Configuration
+# =============================================================================
+# Controls what rollout information is logged for inspection
+rollout_logging:
+  enabled: true           # Enable sample rollout logging
+  sample_per_epoch: 3     # Number of rollouts to log per epoch
+  save_samples: true      # Save samples to JSON files for detailed inspection
+  # Saved to: {log_dir}/rollout_samples/epoch_XXXX_samples.json
+

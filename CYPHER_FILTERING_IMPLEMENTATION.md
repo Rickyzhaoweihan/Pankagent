@@ -104,7 +104,7 @@ print(f"DEBUG: Query returned data: {has_data}")
 // Query without data:
 {
   "results": "No results",
-  "query": "MATCH (s:snp)-[q:QTL_for]->...",
+  "query": "MATCH (s:snp)-[q:part_of_QTL_signal]->...",
   "error": null
 }
 ```
@@ -219,7 +219,7 @@ Cypher queries sent to FormatAgent: [query1, query2]
 ```
 Query 1: MATCH (g:gene) WHERE g.name='CFTR' ... → Returns 1 node
 Query 2: MATCH (g:gene)-[e:effector_gene_of]->... → Returns 2 edges
-Query 3: MATCH (s:snp)-[q:QTL_for]->(g:gene) ... → Returns empty (no QTL data)
+Query 3: MATCH (s:snp)-[q:part_of_QTL_signal]->(g:gene) ... → Returns empty (no QTL data)
 ```
 
 **Tracking**:
@@ -290,7 +290,7 @@ DEBUG: Sending Cypher query: MATCH (g:gene) WHERE g.name='CFTR' ...
 DEBUG: Response text: {"nodes": [...], "edges": []}
 DEBUG: Query returned data: True
 
-DEBUG: Sending Cypher query: MATCH (s:snp)-[q:QTL_for]->...
+DEBUG: Sending Cypher query: MATCH (s:snp)-[q:part_of_QTL_signal]->...
 DEBUG: Response text: {"nodes": [], "edges": []}
 DEBUG: Query returned data: False
 

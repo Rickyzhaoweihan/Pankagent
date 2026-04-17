@@ -1,75 +1,106 @@
-from .claude import *
-from .utils import *
-from typing import Tuple
-from copy import deepcopy
+"""PankBaseAgent — thin wrapper around the query-planner skill.
+
+The query-planner skill handles:
+  1. Claude-based planning (chain vs parallel)
+  2. text2cypher translation (vLLM, all steps in parallel)
+  3. Cypher combination (WITH carry-forward for chains)
+  4. Neo4j API execution
+
+This module exposes the same ``chat_one_round_pankbase`` interface that
+``utils.py`` and ``main.py`` expect.
+"""
+
+from __future__ import annotations
+
 import json
+import os
+import sys
+from typing import Dict, Tuple
+
+# Structured streaming events
+_repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
+from stream_events import emit
+
+# ---------------------------------------------------------------------------
+# Import the query-planner skill
+# ---------------------------------------------------------------------------
+
+_repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_qp_scripts_dir = os.path.join(_repo_root, "skills", "query-planner", "scripts")
+if _qp_scripts_dir not in sys.path:
+    sys.path.insert(0, _qp_scripts_dir)
+
+from qp_query_planner import run_query_planner_pipeline  # noqa: E402
 
 
-MAX_ITER = 1
-PRINT_FUNC_CALL = True
-PRINT_FUNC_RESULT = True
-set_log_enable(True)
+def chat_one_round_pankbase(
+    messages_history: list[dict],
+    question: str,
+) -> Tuple[list[dict], str, Dict]:
+    """Run the query-planner pipeline and return results in the legacy format.
 
+    Returns:
+        (messages_history, response_json_str, planning_data)
 
-# pseudo code:
+    ``response_json_str`` is a JSON string with keys:
+        - source: "pankbase"
+        - planning: reasoning from the plan
+        - plan_type: "chain" | "parallel"
+        - queries_executed: list of Cypher queries that were sent to Neo4j
+        - raw_results: list of {query, result} dicts
+    """
+    question = question.strip() or "<empty>"
 
-# MAX_ITER = 1
-# messages = []
-# model = <the_ai_assistant>  # This is you
-#
-# def user_input(question: str) -> str:
-#     function_call_num = 0
-#     messages.append({"role": "user", "content": question})
-#     while True:
-#         output = model.get_response(messages)
-#         if (output.is_to_user):
-#             messages.append({"role": "assistant", "content": output})
-#             return output.text
-#         else:
-#             # to system
-#             if (function_call_num == MAX_ITER):
-#                 assert (False)  # This should not happen, because you should not do function callings when it reaches MAX_ITER
-#             function_call_num += 1
-#             messages.append({"role": "assistant", "content": output})
-#             functions_list = output.functions
-#             function_results = run_functions(functions_list)
-#             messages.append({"role": "user", "content": function_results})
+    # Run the full pipeline
+    results, plan = run_query_planner_pipeline(question)
 
+    # Build planning_data for the experience buffer / logging
+    planning_data: Dict = {
+        "draft": plan.get("reasoning", ""),
+        "plan_type": plan.get("plan_type", "unknown"),
+        "num_queries": len(results),
+        "queries": [
+            {"name": "neo4j_compound_cypher", "input": r.get("query", "")}
+            for r in results
+        ],
+        "steps": plan.get("steps", []),
+    }
 
-def chat_one_round_pankbase(messages_history: list[dict], question: str) -> Tuple[list[dict], str]:
-    '''
-    return (messages_history, response)
-    '''
-    question = question.strip()
-    if (question == ''):
-        question = '<empty>'
-    question = '====== From User ======\n' + question
-    messages = deepcopy(messages_history)
-    messages.append({"role": "user", "content": question})
-    function_call_num = 0
-    while True:
-        messages, response = chat_and_get_formatted(messages)
-        if (response['to'] == 'user'):
-            return (messages, response['text'])
-        if (function_call_num == MAX_ITER):
-            assert (False)  # Currently not handle this error
-        function_call_num += 1
-        functions_result = run_functions(response['functions'])
-        new_message = '====== From System ======\nThe results of function callings:\n' + functions_result + '\n'
-        if (function_call_num == MAX_ITER):
-            new_message += 'You already called functions 1 time. Next message you must return to user.'
-        else:
-            func_num = MAX_ITER - function_call_num
-            new_message += f'You can call functions {func_num} more times, after this you need to return to user.'
-        messages.append({"role": "user", "content": new_message})
+    # Emit structured summary event
+    emit("pankbase_summary", {
+        "plan_type": plan.get("plan_type", "unknown"),
+        "reasoning": plan.get("reasoning", ""),
+        "num_steps": len(plan.get("steps", [])),
+        "num_queries": len(results),
+        "queries": [r.get("query", "")[:200] for r in results],
+        "test_time_scaling": True,
+    })
+
+    # Build response in the same shape the downstream FormatAgent / main.py expects
+    raw_response = {
+        "source": "pankbase",
+        "planning": plan.get("reasoning", ""),
+        "plan_type": plan.get("plan_type", "unknown"),
+        "queries_executed": [r.get("query", "") for r in results],
+        "raw_results": results,
+    }
+
+    # Build a minimal messages list so callers that inspect messages still work
+    messages = list(messages_history)
+    messages.append({"role": "user", "content": f"====== From User ======\n{question}"})
+    messages.append({"role": "assistant", "content": json.dumps(raw_response, ensure_ascii=False)})
+
+    return messages, json.dumps(raw_response, ensure_ascii=False), planning_data
 
 
 def chat_forever():
-    messages = []
+    messages: list[dict] = []
     while True:
-        question = input('Your question: ')
-        messages, response = chat_one_round_pankbase(messages, question)
-        print(f'\nResponse:\n\n{response}\n')
+        question = input("Your question: ")
+        messages, response, _ = chat_one_round_pankbase(messages, question)
+        emit("pankbase_interactive_response", {"response": response[:2000]})
 
 
 if __name__ == "__main__":

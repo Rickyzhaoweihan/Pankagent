@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import json
+import re
 import sys
 
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 
 from .text2cypher_utils import get_env_variable
 from .schema_loader import get_schema, get_schema_hints, get_simplified_schema, get_minimal_schema_for_llm
@@ -14,44 +14,91 @@ from .cypher_validator import validate_cypher, format_validation_report
 
 load_dotenv()
 
-SYSTEM_RULES = (
-    "Generate Cypher statement to query a biomedical graph database.\n"
-    "Use only the provided relationship types and properties in the schema.\n"
-    "\n"
-    "CRITICAL RULES:\n"
-    "1. Every relationship MUST have a variable name: WRONG: [:regulation] RIGHT: [r:regulation]\n"
-    "2. Always return format: WITH collect(DISTINCT nodes...) AS nodes, collect(DISTINCT edges...) AS edges RETURN nodes, edges;\n"
-    "3. Disease name: ALWAYS use 'type 1 diabetes' (lowercase, never T1D or Type 1 Diabetes)\n"
-    "4. Name ALL variables in MATCH clause\n"
-    "5. Use DISTINCT in all collect()\n"
-    "6. ALWAYS use WHERE constraints to filter results (by name, id, or properties)\n"
-    "   - If query mentions specific entities (gene name, SNP name, etc.), add WHERE clause\n"
-    "   - Avoid unconstrained queries that return ALL nodes (e.g., MATCH (sn:snp) without WHERE)\n"
-    "   - Use properties like .name, .id, or relationship properties to filter\n"
-    "\n"
-    "GOOD EXAMPLES:\n"
-    "Query: 'Find gene with name INS'\n"
-    "MATCH (g:gene) WHERE g.name = 'INS'\n"
-    "WITH collect(DISTINCT g) AS nodes, [] AS edges\n"
-    "RETURN nodes, edges;\n"
-    "\n"
-    "Query: 'Get SNPs that have QTL_for relationships with gene MAFA'\n"
-    "MATCH (sn:snp)-[r:QTL_for]->(g:gene) WHERE g.name = 'MAFA'\n"
-    "WITH collect(DISTINCT sn)+collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges\n"
-    "RETURN nodes, edges;\n"
-    "\n"
-    "Query: 'Get upregulated genes in Alpha Cell'\n"
-    "MATCH (g:gene)-[deg:DEG_in]->(ct:cell_type) WHERE ct.name = 'Alpha Cell' AND deg.UpOrDownRegulation = 'up'\n"
-    "WITH collect(DISTINCT g)+collect(DISTINCT ct) AS nodes, collect(DISTINCT deg) AS edges\n"
-    "RETURN nodes, edges;\n"
-    "\n"
-    "BAD EXAMPLES:\n"
-    "WRONG: MATCH (sn:snp)-[r:QTL_for]->(g:gene) (no WHERE - returns ALL SNPs!)\n"
-    "WRONG: MATCH (g:gene)-[:function_annotation]->(fo:gene_ontology) (missing variable name)\n"
-    "WRONG: MATCH (g:gene) (no WHERE - returns ALL genes!)\n"
-    "\n"
-    "Schema:\n{schema}\n"
-)
+SYSTEM_RULES = """You are a Cypher query generator for PanKgraph ADA (biomedical KG).
+
+TASK: Generate ONE simple Cypher query per step.
+- Look at conversation history for previous results
+- Use previous results to guide your query
+- Generate focused, specific queries
+
+INTENT CHECK (CRITICAL):
+- Before generating a query, verify that any supposed gene name is an ACTUAL gene symbol (e.g., CFTR, INS, MAFA, TP53), not a common English word used as a concept.
+- Common words like "diversity", "impact", "expression", "regulation" are NOT gene names.
+- If the input asks about a concept (e.g., "gene diversity across cell types"), generate a query that captures that concept (e.g., T1D_DEG_in or gene_detected_in across anatomical_structure nodes).
+
+SYNTAX:
+- Relationships need variables: [r:type] not [:type]
+- Always filter with properties or WHERE - never return all nodes
+- Return: WITH collect(DISTINCT x)+collect(DISTINCT y) AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+- Disease name: ALWAYS use 'type 1 diabetes' (lowercase, never T1D)
+- Relationship names containing semicolons MUST be backtick-escaped: [`function_annotation;GO`], [`pathway_annotation;KEGG`], [`pathway_annotation;reactome`]
+- DO NOT add LIMIT anywhere in your query. Result limits are applied automatically by the system.
+
+NODE LABELS (use these exact labels):
+- gene (NOT Gene), snv (NOT snp), OCR_peak (NOT OCR), anatomical_structure (NOT cell_type)
+- disease, gene_ontology, kegg, reactome, donor, data_modality
+
+RETURN FORMAT (CRITICAL):
+- ALWAYS end queries with: WITH collect(DISTINCT ...)+ ... AS nodes, collect(DISTINCT r) AS edges RETURN nodes, edges;
+- DO NOT use collect(map projections like name:val) — they silently return nothing.
+- DO NOT use RETURN g.name, r.prop, ... — only RETURN nodes, edges works.
+- All node/edge properties are automatically included in the returned objects.
+
+GOOD EXAMPLES:
+Query: 'Find gene with name INS'
+MATCH (g:gene) WHERE g.name = 'INS'
+WITH collect(DISTINCT g) AS nodes, [] AS edges
+RETURN nodes, edges;
+
+Query: 'Get SNPs with QTL relationships to gene MAFA'
+MATCH (sn:snv)-[r:part_of_QTL_signal]->(g:gene) WHERE g.name = 'MAFA'
+WITH collect(DISTINCT sn)+collect(DISTINCT g) AS nodes, collect(DISTINCT r) AS edges
+RETURN nodes, edges;
+
+Query: 'Get upregulated genes in Beta Cell in T1D'
+MATCH (g:gene)-[deg:T1D_DEG_in]->(ct:anatomical_structure) WHERE ct.name = 'type B pancreatic cell (beta cell)' AND deg.UpOrDownRegulation = 'Upregulated in T1D'
+WITH collect(DISTINCT g)+collect(DISTINCT ct) AS nodes, collect(DISTINCT deg) AS edges
+RETURN nodes, edges;
+
+Query: 'Get GO annotations for gene CFTR'
+MATCH (g:gene)-[r:`function_annotation;GO`]->(go:gene_ontology) WHERE g.name = 'CFTR'
+WITH collect(DISTINCT g)+collect(DISTINCT go) AS nodes, collect(DISTINCT r) AS edges
+RETURN nodes, edges;
+
+Query: 'Get KEGG pathways for gene INS'
+MATCH (g:gene)-[r:`pathway_annotation;KEGG`]->(k:kegg) WHERE g.name = 'INS'
+WITH collect(DISTINCT g)+collect(DISTINCT k) AS nodes, collect(DISTINCT r) AS edges
+RETURN nodes, edges;
+
+Query: 'Get genes detected in Beta Cell'
+MATCH (g:gene)-[r:gene_detected_in]->(ct:anatomical_structure) WHERE r.cell_type = 'Beta'
+WITH collect(DISTINCT g)+collect(DISTINCT ct) AS nodes, collect(DISTINCT r) AS edges
+RETURN nodes, edges;
+
+Query: 'Find donors with diabetes_type Diabetes (Type I)'
+MATCH (d:donor) WHERE d.diabetes_type = 'Diabetes (Type I)'
+WITH collect(DISTINCT d) AS nodes, [] AS edges
+RETURN nodes, edges;
+
+Query: 'Find donors with aab_state containing GADA positive'
+MATCH (d:donor) WHERE d.aab_state CONTAINS 'GADA positive'
+WITH collect(DISTINCT d) AS nodes, [] AS edges
+RETURN nodes, edges;
+
+Query: 'Find donors with hla_status DR3/DR4'
+MATCH (d:donor) WHERE d.hla_status = 'DR3/DR4'
+WITH collect(DISTINCT d) AS nodes, [] AS edges
+RETURN nodes, edges;
+
+BAD EXAMPLES (DO NOT DO):
+WRONG: MATCH (sn:snp)-[r:part_of_QTL_signal]->(g:gene) (use snv not snp!)
+WRONG: MATCH (g:gene)-[:function_annotation]->(fo:gene_ontology) (missing variable, wrong rel name — use [`function_annotation;GO`])
+WRONG: MATCH (g:gene)-[r:DEG_in]->(ct:cell_type) (use T1D_DEG_in and anatomical_structure!)
+WRONG: ... RETURN nodes, edges LIMIT 50; (DO NOT add LIMIT)
+WRONG: RETURN g.name AS name, r.Log2FoldChange AS lfc (scalar returns not supported!)
+
+Schema:
+"""
 
 
 def make_llm(provider: str = "local"):
@@ -74,11 +121,13 @@ def make_llm(provider: str = "local"):
         )
 
     elif provider == "local":
-        # self-hosted vLLM instance
+        # self-hosted vLLM instance – port is configurable via VLLM_PORT env var
+        import os
+        vllm_port = os.environ.get("VLLM_PORT", "8002")
         return ChatOpenAI(
-            base_url="http://localhost:8000/v1",
+            base_url=f"http://localhost:{vllm_port}/v1",
             api_key="EMPTY",  # vLLM ignores this field but LangChain requires it
-            model="text2cypher_merged",
+            model="cypher-writer",
             temperature=0
         )
 
@@ -101,14 +150,13 @@ class Text2CypherAgent:
         # Use ultra-minimal schema optimized for small models (9B with 8k context)
         self.minimal_schema = get_minimal_schema_for_llm()
         
-        # Build prompt using the model's training format: Schema + Question + Cypher output
-        system_prompt = SYSTEM_RULES.format(schema=self.minimal_schema)
+        system_prompt = SYSTEM_RULES + self.minimal_schema
 
         self.llm = make_llm(provider)
         
         # Use the exact format the model was trained on
         self.prompt = ChatPromptTemplate.from_messages([
-            ("human", system_prompt + "\nQuestion: {user_input}\n\nCypher output:")
+            ("human", system_prompt + "\nQuestion: {user_input}\n\n")
         ])
 
         self.chain = self.prompt | self.llm
@@ -121,7 +169,22 @@ class Text2CypherAgent:
     #     return result.content.strip().strip("` ")
     def respond(self, user_text: str) -> str:
         result = self.chain.invoke({"user_input": user_text})
-        return result.content.strip().strip("` ")
+        cypher = result.content.strip().strip("` ")
+        
+        # Remove common prefixes that models add
+        if cypher.lower().startswith("cypher"):
+            cypher = cypher[6:].strip()
+        
+        # Remove "Query: '...'" prefix if the model echoed the input
+        query_prefix_match = re.match(r'^Query:\s*[\'"].*?[\'"]\s*\n?', cypher, re.IGNORECASE)
+        if query_prefix_match:
+            cypher = cypher[query_prefix_match.end():].strip()
+        
+        # Strip any LIMIT clause the model may have added — limits are
+        # injected by the system (cypher_validator / _ensure_limit_before_collect)
+        cypher = re.sub(r'\s+LIMIT\s+\d+', '', cypher, flags=re.IGNORECASE)
+        
+        return cypher
 
     def respond_with_refinement(self, user_text: str, max_iterations: int = None) -> dict:
         """
@@ -219,29 +282,22 @@ class Text2CypherAgent:
     
     def _build_refinement_prompt(self, original_question: str, previous_cypher: str, 
                                   validation: dict) -> str:
-        """Build a refinement prompt with error feedback and detailed properties."""
-        error_feedback = format_validation_report(validation)
+        """Build a focused refinement prompt with only essential error feedback."""
         
-        # Extract entities from previous attempt and get detailed properties
-        from .schema_loader import extract_entities_from_cypher, get_detailed_properties
-        entities = extract_entities_from_cypher(previous_cypher)
-        detailed_props = get_detailed_properties(
-            entities['node_labels'], 
-            entities['relationship_types']
-        )
+        # Build concise error list
+        errors_text = "\n".join(f"  - {error}" for error in validation['errors'])
+        if not errors_text:
+            errors_text = "  - Low score but no specific errors detected"
         
+        # Build compact prompt focusing on what's wrong
         prompt = (
-            f"Previous Cypher attempt:\n{previous_cypher}\n\n"
-            f"Validation feedback:\n{error_feedback}\n\n"
-            f"{detailed_props}\n\n"
-            f"Please fix the issues and regenerate the Cypher query.\n"
-            f"Remember:\n"
-            f"1. Every relationship needs a variable name like [r:type] not [:type]\n"
-            f"2. Must end with: WITH collect(DISTINCT ...) AS nodes, collect(DISTINCT ...) AS edges RETURN nodes, edges;\n"
-            f"3. Use 'type 1 diabetes' for disease name\n"
-            f"4. Use ONLY the property names listed above - they are case-sensitive\n\n"
-            f"Original question: {original_question}\n"
+            f"Previous attempt (Score: {validation['score']}/100):\n"
+            f"{previous_cypher}\n\n"
+            f"Fix these errors:\n{errors_text}\n\n"
+            f"Question: {original_question}\n\n"
+            f"Generate corrected Cypher query."
         )
+        
         with open('log.txt', 'a') as log_file:
             log_file.write(f"Refinement prompt:\n{prompt}\n")
         return prompt
@@ -250,10 +306,21 @@ class Text2CypherAgent:
         """Generate Cypher using refinement prompt."""
         # Build a simplified prompt for refinement
         schema_section = f"Schema:\n{self.minimal_schema}\n\n"
-        full_prompt = schema_section + refinement_prompt + "\nCypher output:"
+        full_prompt = schema_section + refinement_prompt + "\n\n"
         
         result = self.llm.invoke(full_prompt)
-        return result.content.strip().strip("` ")
+        cypher = result.content.strip().strip("` ")
+        
+        # Remove common prefixes that models add
+        if cypher.lower().startswith("cypher"):
+            cypher = cypher[6:].strip()
+        
+        # Remove "Query: '...'" prefix if the model echoed the input
+        query_prefix_match = re.match(r'^Query:\s*[\'"].*?[\'"]\s*\n?', cypher, re.IGNORECASE)
+        if query_prefix_match:
+            cypher = cypher[query_prefix_match.end():].strip()
+        
+        return cypher
 
     def get_history(self) -> list[dict[str, str]]:
         """Return chat history as list of {role, content} dicts."""

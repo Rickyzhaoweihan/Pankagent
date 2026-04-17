@@ -1,0 +1,179 @@
+# Reward Configuration for PanKLLM RL Post-Training
+#
+# This configuration file defines reward weights, penalties, and thresholds
+# for both Cypher Generator and Orchestrator agents.
+
+# Cypher Generator Reward Configuration
+cypher_reward:
+  # Component weights (must sum to 1.0)
+  weights:
+    answer_quality: 0.25      # From Orchestrator answer evaluation
+    data_quality: 0.25        # From Orchestrator data evaluation
+    trajectory_quality: 0.20  # From Orchestrator trajectory evaluation
+    cypher_correctness: 0.15  # Syntax validation + execution success
+    efficiency: 0.10          # Retrieval efficiency (data per step)
+    execution_time: 0.10      # Query speed
+  
+  # Penalty rates and values
+  penalties:
+    step_penalty_rate: 0.05       # Penalty per step above 3
+    early_stop_penalty: 0.2       # Penalty for stopping too early (< 2 steps, < 5 results)
+    late_stop_penalty: 0.1        # Penalty for not stopping (5 steps, low score)
+    low_data_quality_penalty: 0.1 # Penalty when data_quality < 0.4
+    semantic_ambiguity_rate: 0.05 # Penalty rate for high doubt level
+  
+  # Thresholds for reward computation
+  thresholds:
+    success_threshold: 0.7        # Answer quality threshold for is_correct
+    data_quality_threshold: 0.6   # Data quality threshold for is_correct
+    low_data_quality: 0.4         # Trigger data quality penalty
+    high_doubt: 0.6               # Trigger semantic ambiguity penalty
+    optimal_steps: 3              # Optimal number of steps (no penalty)
+    min_results_early_stop: 5     # Minimum results to avoid early stop penalty
+    max_steps: 5                  # Maximum steps before late stop penalty
+  
+  # Execution time scoring
+  execution_time:
+    decay_factor: 1000.0  # Exponential decay factor (ms)
+    min_score: 0.2        # Minimum time score
+    max_score: 1.0        # Maximum time score
+  
+  # Efficiency scoring
+  efficiency:
+    target_results_per_step: 10  # Target number of results per step
+  
+  # Cypher correctness scoring
+  correctness:
+    failed_query_score: 0.0      # Score for failed queries
+    no_data_score: 0.3           # Score for queries with no data
+    syntax_weight: 0.6           # Weight for syntax score
+    execution_weight: 0.4        # Weight for execution success
+
+# Orchestrator Reward Configuration
+orchestrator_reward:
+  # Question Generation Reward
+  generation:
+    # Component weights (must sum to 1.0)
+    weights:
+      answerability: 0.40      # Did Cypher Generator succeed?
+      difficulty: 0.30         # Is success rate near target?
+      diversity: 0.20          # Is question different from recent ones?
+      scope: 0.10              # Did question stay within constraints?
+    
+    # Thresholds
+    thresholds:
+      success_threshold: 0.7   # Threshold for considering question answerable
+  
+  # Answer Synthesis Reward
+  synthesis:
+    # Component weights (must sum to 1.0)
+    weights:
+      answer_quality: 0.70     # From self-evaluation (Role 4)
+      data_utilization: 0.30   # How well data is used in answer
+    
+    # Thresholds
+    thresholds:
+      success_threshold: 0.7   # Threshold for considering answer correct
+
+# Reward Normalization Configuration
+reward_normalization:
+  # Enable reward normalization using running statistics
+  enabled: true
+  
+  # Window size for computing running mean and std
+  window_size: 100
+  
+  # Clip range for normalized rewards
+  clip_range: [-10, 10]
+  
+  # Separate normalization per agent
+  per_agent: true
+  
+  # Agent names for separate tracking
+  agents:
+    - cypher_generator
+    - orchestrator_generation
+    - orchestrator_synthesis
+
+# Diversity Scoring Configuration
+diversity:
+  # Stopwords to remove when computing diversity
+  stopwords:
+    - the
+    - a
+    - an
+    - and
+    - or
+    - but
+    - in
+    - on
+    - at
+    - to
+    - for
+    - of
+    - with
+    - by
+    - from
+    - is
+    - are
+    - was
+    - were
+    - what
+    - which
+    - who
+    - how
+    - where
+    - when
+  
+  # Minimum word length to consider
+  min_word_length: 2
+  
+  # Maximum number of recent questions to compare
+  max_recent_questions: 20
+
+# Data Utilization Configuration
+data_utilization:
+  # Patterns to extract entities
+  extract_capitalized: true    # Extract capitalized words (gene names, etc.)
+  extract_quoted: true         # Extract quoted strings
+  extract_numbers: true        # Extract numbers (counts, IDs, etc.)
+  
+  # Minimum entity length
+  min_entity_length: 2
+
+# Cypher Validation Configuration
+cypher_validation:
+  # Required keywords
+  required_keywords:
+    - MATCH
+    - RETURN
+  
+  # Penalty for missing relationship variables
+  missing_rel_var_penalty: 20
+  
+  # Penalty for missing WHERE clause
+  missing_where_penalty: 5
+  
+  # Penalty for missing LIMIT clause
+  missing_limit_penalty: 5
+  
+  # Maximum score
+  max_score: 100
+  
+  # Minimum score
+  min_score: 0
+
+# Logging Configuration
+logging:
+  # Log level for reward computation
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  
+  # Log reward components
+  log_components: true
+  
+  # Log penalties
+  log_penalties: true
+  
+  # Log metadata
+  log_metadata: false  # Set to true for detailed debugging
+

@@ -55,13 +55,15 @@ def chat_one_round_glkb(messages_history: list[dict], question: str) -> Tuple[li
             assert (False)  # Currently not handle this error
         function_call_num += 1
         functions_result = run_functions(response['functions'])
-        new_message = '====== From System ======\nThe results of function callings:\n' + functions_result + '\n'
-        if (function_call_num == MAX_ITER):
-            new_message += 'You already called functions 1 continuous times. Next message you must return to user.'
-        else:
-            func_num = MAX_ITER - function_call_num
-            new_message += f'You can call functions {func_num} more times, after this you need to return to user.'
-        messages.append({"role": "user", "content": new_message})
+        
+        # OPTIMIZATION: Return raw HIRN results immediately instead of another GPT synthesis call
+        # This eliminates one redundant GPT call - FormatAgent will handle synthesis
+        raw_response = {
+            'source': 'glkb',
+            'query_used': response.get('functions', []),
+            'raw_abstracts': functions_result
+        }
+        return (messages, json.dumps(raw_response))
 
 
 def chat_forever():

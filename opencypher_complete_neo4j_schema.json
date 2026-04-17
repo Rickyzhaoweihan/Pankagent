@@ -1,0 +1,3316 @@
+{
+  "files": [
+    {
+      "relative_path": "1_eQTL-gtex-susie.edge.csv",
+      "kind": "edge",
+      "row_count": 8245,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "part_of_QTL_signal"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end"
+        },
+        {
+          "raw_name": "tissue_name:String",
+          "name": "tissue_name",
+          "unique_values": [
+            "Pancreas"
+          ]
+        },
+        {
+          "raw_name": "tissue_id:String",
+          "name": "tissue_id",
+          "unique_values": [
+            "UBERON_0001264"
+          ]
+        },
+        {
+          "raw_name": "credible_set:String",
+          "name": "credible_set"
+        },
+        {
+          "raw_name": "gene_name:String",
+          "name": "gene_name"
+        },
+        {
+          "raw_name": "credibleset:String",
+          "name": "credibleset"
+        },
+        {
+          "raw_name": "pip:Float",
+          "name": "pip"
+        },
+        {
+          "raw_name": "nominal_p:Float",
+          "name": "nominal_p"
+        },
+        {
+          "raw_name": "lbf:Float",
+          "name": "lbf"
+        },
+        {
+          "raw_name": "effect_allele:String",
+          "name": "effect_allele"
+        },
+        {
+          "raw_name": "other_allele:String",
+          "name": "other_allele"
+        },
+        {
+          "raw_name": "slope:Float",
+          "name": "slope"
+        },
+        {
+          "raw_name": "n_snp:Int",
+          "name": "n_snp"
+        },
+        {
+          "raw_name": "purity:Float",
+          "name": "purity"
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "02/03/25"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "GTEx; SusieR"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "part_of_QTL_signal"
+      ],
+      "relationship_type_counts": {
+        "part_of_QTL_signal": 8245
+      }
+    },
+    {
+      "relative_path": "1_eQTL-inspire-susie.edge.csv",
+      "kind": "edge",
+      "row_count": 5620,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "part_of_QTL_signal"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end"
+        },
+        {
+          "raw_name": "tissue_name:String",
+          "name": "tissue_name",
+          "unique_values": [
+            "Islet"
+          ]
+        },
+        {
+          "raw_name": "tissue_id:String",
+          "name": "tissue_id",
+          "unique_values": [
+            "UBERON_0000006"
+          ]
+        },
+        {
+          "raw_name": "credible_set:String",
+          "name": "credible_set"
+        },
+        {
+          "raw_name": "gene_name:String",
+          "name": "gene_name"
+        },
+        {
+          "raw_name": "credibleset:String",
+          "name": "credibleset"
+        },
+        {
+          "raw_name": "pip:Float",
+          "name": "pip"
+        },
+        {
+          "raw_name": "nominal_p:Float",
+          "name": "nominal_p"
+        },
+        {
+          "raw_name": "lbf:Float",
+          "name": "lbf"
+        },
+        {
+          "raw_name": "effect_allele:String",
+          "name": "effect_allele",
+          "unique_values": [
+            "A",
+            "C",
+            "G",
+            "T"
+          ]
+        },
+        {
+          "raw_name": "other_allele:String",
+          "name": "other_allele",
+          "unique_values": [
+            "A",
+            "C",
+            "G",
+            "T"
+          ]
+        },
+        {
+          "raw_name": "slope:Float",
+          "name": "slope"
+        },
+        {
+          "raw_name": "n_snp:Int",
+          "name": "n_snp"
+        },
+        {
+          "raw_name": "purity:Float",
+          "name": "purity"
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "02/03/25"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "INSPIRE; SusieR"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "part_of_QTL_signal"
+      ],
+      "relationship_type_counts": {
+        "part_of_QTL_signal": 5620
+      }
+    },
+    {
+      "relative_path": "1_exonQTL-inspire-susie.edge.csv",
+      "kind": "edge",
+      "row_count": 6965,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "part_of_QTL_signal"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end"
+        },
+        {
+          "raw_name": "tissue_name:String",
+          "name": "tissue_name",
+          "unique_values": [
+            "Islet"
+          ]
+        },
+        {
+          "raw_name": "tissue_id:String",
+          "name": "tissue_id",
+          "unique_values": [
+            "UBERON_0000006"
+          ]
+        },
+        {
+          "raw_name": "credible_set:String",
+          "name": "credible_set"
+        },
+        {
+          "raw_name": "gene_name:String",
+          "name": "gene_name"
+        },
+        {
+          "raw_name": "credibleset:String",
+          "name": "credibleset"
+        },
+        {
+          "raw_name": "pip:Float",
+          "name": "pip"
+        },
+        {
+          "raw_name": "nominal_p:Float",
+          "name": "nominal_p"
+        },
+        {
+          "raw_name": "lbf:Float",
+          "name": "lbf"
+        },
+        {
+          "raw_name": "effect_allele:String",
+          "name": "effect_allele",
+          "unique_values": [
+            "A",
+            "C",
+            "G",
+            "T"
+          ]
+        },
+        {
+          "raw_name": "other_allele:String",
+          "name": "other_allele",
+          "unique_values": [
+            "A",
+            "C",
+            "G",
+            "T"
+          ]
+        },
+        {
+          "raw_name": "slope:Float",
+          "name": "slope"
+        },
+        {
+          "raw_name": "n_snp:Int",
+          "name": "n_snp"
+        },
+        {
+          "raw_name": "purity:Float",
+          "name": "purity"
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "02/03/25"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "exon; INSPIRE"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "part_of_QTL_signal"
+      ],
+      "relationship_type_counts": {
+        "part_of_QTL_signal": 6965
+      }
+    },
+    {
+      "relative_path": "1_sQTL-gtex-susie.edge.csv",
+      "kind": "edge",
+      "row_count": 2426,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "part_of_QTL_signal"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end"
+        },
+        {
+          "raw_name": "tissue_name:String",
+          "name": "tissue_name",
+          "unique_values": [
+            "Pancreas"
+          ]
+        },
+        {
+          "raw_name": "tissue_id:String",
+          "name": "tissue_id",
+          "unique_values": [
+            "UBERON_0001264"
+          ]
+        },
+        {
+          "raw_name": "credible_set:String",
+          "name": "credible_set"
+        },
+        {
+          "raw_name": "gene_name:String",
+          "name": "gene_name"
+        },
+        {
+          "raw_name": "credibleset:String",
+          "name": "credibleset"
+        },
+        {
+          "raw_name": "pip:Float",
+          "name": "pip"
+        },
+        {
+          "raw_name": "nominal_p:Float",
+          "name": "nominal_p"
+        },
+        {
+          "raw_name": "lbf:Float",
+          "name": "lbf"
+        },
+        {
+          "raw_name": "effect_allele:String",
+          "name": "effect_allele"
+        },
+        {
+          "raw_name": "other_allele:String",
+          "name": "other_allele",
+          "unique_values": [
+            "A",
+            "C",
+            "CG",
+            "G",
+            "GT",
+            "GTTGACACCTTTTGCAAAAGGTGTTCC",
+            "T",
+            "TG"
+          ]
+        },
+        {
+          "raw_name": "slope:Float",
+          "name": "slope"
+        },
+        {
+          "raw_name": "n_snp:Int",
+          "name": "n_snp"
+        },
+        {
+          "raw_name": "purity:Float",
+          "name": "purity"
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "02/03/25"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "splicing; GTEx"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "part_of_QTL_signal"
+      ],
+      "relationship_type_counts": {
+        "part_of_QTL_signal": 2426
+      }
+    },
+    {
+      "relative_path": "BIOGRID_with_ENSG_slim.edge.csv",
+      "kind": "edge",
+      "row_count": 944145,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "genetic_interaction",
+            "physical_interaction"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end"
+        },
+        {
+          "raw_name": "biogrid_interaction_id:Int",
+          "name": "biogrid_interaction_id"
+        },
+        {
+          "raw_name": "Entrez_ID_A:Int",
+          "name": "Entrez_ID_A"
+        },
+        {
+          "raw_name": "Entrez_ID_B:Int",
+          "name": "Entrez_ID_B"
+        },
+        {
+          "raw_name": "biogrid_id_interactor_a:Int",
+          "name": "biogrid_id_interactor_a"
+        },
+        {
+          "raw_name": "biogrid_id_interactor_b:Int",
+          "name": "biogrid_id_interactor_b"
+        },
+        {
+          "raw_name": "official_symbol_interactor_a:String",
+          "name": "official_symbol_interactor_a"
+        },
+        {
+          "raw_name": "official_symbol_interactor_b:String",
+          "name": "official_symbol_interactor_b"
+        },
+        {
+          "raw_name": "experimental_system:String",
+          "name": "experimental_system"
+        },
+        {
+          "raw_name": "experimental_system_type:String",
+          "name": "experimental_system_type",
+          "unique_values": [
+            "genetic",
+            "physical"
+          ]
+        },
+        {
+          "raw_name": "author:String",
+          "name": "author"
+        },
+        {
+          "raw_name": "publication_source:String",
+          "name": "publication_source"
+        },
+        {
+          "raw_name": "organism_id_interactor_a:Int",
+          "name": "organism_id_interactor_a",
+          "unique_values": [
+            "9606"
+          ]
+        },
+        {
+          "raw_name": "organism_id_interactor_b:Int",
+          "name": "organism_id_interactor_b",
+          "unique_values": [
+            "9606"
+          ]
+        },
+        {
+          "raw_name": "throughput:String",
+          "name": "throughput",
+          "unique_values": [
+            "High Throughput",
+            "High Throughput|Low Throughput",
+            "Low Throughput"
+          ]
+        },
+        {
+          "raw_name": "score:Float",
+          "name": "score"
+        },
+        {
+          "raw_name": "modification:String",
+          "name": "modification"
+        },
+        {
+          "raw_name": "qualifications:String",
+          "name": "qualifications"
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "BIOGRID"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "genetic_interaction",
+        "physical_interaction"
+      ],
+      "relationship_type_counts": {
+        "genetic_interaction": 17226,
+        "physical_interaction": 926919
+      }
+    },
+    {
+      "relative_path": "Ensembl_genes.node.csv",
+      "kind": "node",
+      "row_count": 78687,
+      "columns": [
+        {
+          "raw_name": ":ID",
+          "name": ":ID"
+        },
+        {
+          "raw_name": ":LABEL",
+          "name": ":LABEL",
+          "unique_values": [
+            "coding_elements;gene"
+          ]
+        },
+        {
+          "raw_name": "id:String",
+          "name": "id"
+        },
+        {
+          "raw_name": "id_version:Int",
+          "name": "id_version"
+        },
+        {
+          "raw_name": "description:String",
+          "name": "description"
+        },
+        {
+          "raw_name": "chr:String",
+          "name": "chr"
+        },
+        {
+          "raw_name": "start_loc:Int",
+          "name": "start_loc"
+        },
+        {
+          "raw_name": "end_loc:Int",
+          "name": "end_loc"
+        },
+        {
+          "raw_name": "strand:String",
+          "name": "strand",
+          "unique_values": [
+            "-1",
+            "1"
+          ]
+        },
+        {
+          "raw_name": "name:String",
+          "name": "name"
+        },
+        {
+          "raw_name": "GC_percentage:Float",
+          "name": "GC_percentage"
+        },
+        {
+          "raw_name": "type:String",
+          "name": "type"
+        },
+        {
+          "raw_name": "link:String",
+          "name": "link"
+        },
+        {
+          "raw_name": "gencode_annotation:String",
+          "name": "gencode_annotation",
+          "unique_values": [
+            "GENCODE basic"
+          ]
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "GRCh38.p14"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "Ensembl"
+          ]
+        }
+      ],
+      "labels": [
+        "coding_elements",
+        "gene"
+      ],
+      "label_counts": {
+        "coding_elements": 78687,
+        "gene": 78687
+      }
+    },
+    {
+      "relative_path": "GWAS.edge.csv",
+      "kind": "edge",
+      "row_count": 1608,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID",
+          "unique_values": [
+            "MONDO_0005147"
+          ]
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "part_of_GWAS_signal"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end",
+          "unique_values": [
+            "MONDO_0005147"
+          ]
+        },
+        {
+          "raw_name": "locus_name:String",
+          "name": "locus_name"
+        },
+        {
+          "raw_name": "credible_set_id:String",
+          "name": "credible_set_id"
+        },
+        {
+          "raw_name": "lead_status:String",
+          "name": "lead_status",
+          "unique_values": [
+            "lead",
+            "nonlead"
+          ]
+        },
+        {
+          "raw_name": "pip:Float",
+          "name": "pip"
+        },
+        {
+          "raw_name": "p_value:Float",
+          "name": "p_value"
+        },
+        {
+          "raw_name": "lbf:Float",
+          "name": "lbf"
+        },
+        {
+          "raw_name": "effect_allele:String",
+          "name": "effect_allele"
+        },
+        {
+          "raw_name": "non_effect_allele:String",
+          "name": "non_effect_allele"
+        },
+        {
+          "raw_name": "pip_rank:Int",
+          "name": "pip_rank"
+        },
+        {
+          "raw_name": "credible_set_size:Int",
+          "name": "credible_set_size"
+        },
+        {
+          "raw_name": "credible_set_purity:Float",
+          "name": "credible_set_purity"
+        },
+        {
+          "raw_name": "method:String",
+          "name": "method",
+          "unique_values": [
+            "GWAS"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "GWAS_finemapping_V1"
+          ]
+        },
+        {
+          "raw_name": "data_source_url:String",
+          "name": "data_source_url",
+          "unique_values": [
+            "https://pubmed.ncbi.nlm.nih.gov/34012112/"
+          ]
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "10/18/2025"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "part_of_GWAS_signal"
+      ],
+      "relationship_type_counts": {
+        "part_of_GWAS_signal": 1608
+      }
+    },
+    {
+      "relative_path": "GWAS_snp_id.node.csv",
+      "kind": "node",
+      "row_count": 1643,
+      "columns": [
+        {
+          "raw_name": ":ID",
+          "name": ":ID"
+        },
+        {
+          "raw_name": ":LABEL",
+          "name": ":LABEL",
+          "unique_values": [
+            "variants;sequence_variant;",
+            "variants;sequence_variant;deletion",
+            "variants;sequence_variant;indel",
+            "variants;sequence_variant;insertion",
+            "variants;sequence_variant;snv"
+          ]
+        },
+        {
+          "raw_name": "id:String",
+          "name": "id"
+        },
+        {
+          "raw_name": "chr:String",
+          "name": "chr"
+        },
+        {
+          "raw_name": "start_loc:Int",
+          "name": "start_loc"
+        },
+        {
+          "raw_name": "end_loc:Int",
+          "name": "end_loc"
+        },
+        {
+          "raw_name": "ref:String",
+          "name": "ref"
+        },
+        {
+          "raw_name": "alt:String",
+          "name": "alt"
+        },
+        {
+          "raw_name": "variant_suspect_reason:String",
+          "name": "variant_suspect_reason",
+          "unique_values": [
+            "Paralog",
+            "unspecified"
+          ]
+        },
+        {
+          "raw_name": "freq:String",
+          "name": "freq"
+        },
+        {
+          "raw_name": "HGVS_name:String",
+          "name": "HGVS_name"
+        },
+        {
+          "raw_name": "non_synonymous_frameshift:String",
+          "name": "non_synonymous_frameshift",
+          "unique_values": [
+            "False"
+          ]
+        },
+        {
+          "raw_name": "non_synonymous_missense:String",
+          "name": "non_synonymous_missense",
+          "unique_values": [
+            "False",
+            "True"
+          ]
+        },
+        {
+          "raw_name": "non_synonymous_nonsense:String",
+          "name": "non_synonymous_nonsense",
+          "unique_values": [
+            "False",
+            "True"
+          ]
+        },
+        {
+          "raw_name": "in_3prime_UTR:String",
+          "name": "in_3prime_UTR",
+          "unique_values": [
+            "False",
+            "True"
+          ]
+        },
+        {
+          "raw_name": "in_5prime_UTR:String",
+          "name": "in_5prime_UTR",
+          "unique_values": [
+            "False",
+            "True"
+          ]
+        },
+        {
+          "raw_name": "in_acceptor_splice_site:String",
+          "name": "in_acceptor_splice_site",
+          "unique_values": [
+            "False",
+            "True"
+          ]
+        },
+        {
+          "raw_name": "in_donor_splice_site:String",
+          "name": "in_donor_splice_site",
+          "unique_values": [
+            "False"
+          ]
+        },
+        {
+          "raw_name": "in_intron:String",
+          "name": "in_intron",
+          "unique_values": [
+            "False",
+            "True"
+          ]
+        },
+        {
+          "raw_name": "in_3prime_gene_region:String",
+          "name": "in_3prime_gene_region",
+          "unique_values": [
+            "False",
+            "True"
+          ]
+        },
+        {
+          "raw_name": "in_5prime_gene_region:String",
+          "name": "in_5prime_gene_region",
+          "unique_values": [
+            "False",
+            "True"
+          ]
+        },
+        {
+          "raw_name": "common_SNP:String",
+          "name": "common_SNP",
+          "unique_values": [
+            "False",
+            "True"
+          ]
+        },
+        {
+          "raw_name": "type:String",
+          "name": "type",
+          "unique_values": [
+            "deletion",
+            "sequence_deletion",
+            "sequence_indel",
+            "sequence_insertion",
+            "sequence_snv"
+          ]
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "8/5/21",
+            "8/5/25"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "GWAS_Catalog",
+            "GWAS_other",
+            "Other SNPs",
+            "dbSNP"
+          ]
+        }
+      ],
+      "labels": [
+        "deletion",
+        "indel",
+        "insertion",
+        "sequence_variant",
+        "snv",
+        "variants"
+      ],
+      "label_counts": {
+        "deletion": 71,
+        "indel": 9,
+        "insertion": 9,
+        "sequence_variant": 1643,
+        "snv": 1522,
+        "variants": 1643
+      }
+    },
+    {
+      "relative_path": "HPAP_donor_node.csv",
+      "kind": "node",
+      "row_count": 193,
+      "columns": [
+        {
+          "raw_name": ":ID",
+          "name": ":ID"
+        },
+        {
+          "raw_name": ":LABEL",
+          "name": ":LABEL",
+          "unique_values": [
+            "donor",
+            "donor;provenance"
+          ]
+        },
+        {
+          "raw_name": "id:String",
+          "name": "id"
+        },
+        {
+          "raw_name": "rrid:String",
+          "name": "rrid"
+        },
+        {
+          "raw_name": "pankbase_id:String",
+          "name": "pankbase_id"
+        },
+        {
+          "raw_name": "pancdb_id:String",
+          "name": "pancdb_id"
+        },
+        {
+          "raw_name": "center_donor_id:String",
+          "name": "center_donor_id"
+        },
+        {
+          "raw_name": "derived_diabetes_status:String",
+          "name": "derived_diabetes_status",
+          "unique_values": [
+            "Diabetes",
+            "Normal",
+            "Prediabetes",
+            "Source\nhttps://cde.nlm.nih.gov/deView?tinyId=mJMohLta6U"
+          ]
+        },
+        {
+          "raw_name": "diabetes_type:String",
+          "name": "diabetes_type",
+          "unique_values": [
+            "Control Without Diabetes",
+            "Controlled Wording\nDiabetes (Type I)\nDiabetes (Type II)\nControl Without Diabetes\nSource\nhttps://cde.nlm.nih.gov/deView?tinyId=hbgYw7HPpXW",
+            "Diabetes (Type I)",
+            "Diabetes (Type II)"
+          ]
+        },
+        {
+          "raw_name": "t1d_stage:String",
+          "name": "t1d_stage",
+          "unique_values": [
+            "At-risk: single or transient autoantibody, normal glucose level",
+            "Conflicting diabetes evidence",
+            "No sufficient information to derive",
+            "PanKbase",
+            "Stage 1: two or more autoantibodies, normal glucose metabolism level",
+            "Stage 2: two or more autoantibodies, dysglycemia (e.g., HbA1c \u201a\u00e2\u2022 5.7%)",
+            "Stage 3: one or more autoantibodies and diagnostic hyperglycemia or T1D diagnosis"
+          ]
+        },
+        {
+          "raw_name": "diabetes_duration:String",
+          "name": "diabetes_duration"
+        },
+        {
+          "raw_name": "family_history_of_diabetes:String",
+          "name": "family_history_of_diabetes"
+        },
+        {
+          "raw_name": "aab_state:String",
+          "name": "aab_state"
+        },
+        {
+          "raw_name": "age:String",
+          "name": "age"
+        },
+        {
+          "raw_name": "gender:String",
+          "name": "gender",
+          "unique_values": [
+            "Female",
+            "Male",
+            "Source\nhttps://cde.nlm.nih.gov/deView?tinyId=7kTLRJlzx"
+          ]
+        },
+        {
+          "raw_name": "sex_at_birth:String",
+          "name": "sex_at_birth",
+          "unique_values": [
+            "Female",
+            "Male",
+            "Source\nhttps://cde.nlm.nih.gov/deView?tinyId=rGEh0ckdmr"
+          ]
+        },
+        {
+          "raw_name": "Race:String",
+          "name": "Race",
+          "unique_values": [
+            "African American",
+            "Asian",
+            "Hispanic",
+            "Source\nhttps://cde.nlm.nih.gov/deView?tinyId=LakF0YkywC",
+            "White"
+          ]
+        },
+        {
+          "raw_name": "predicted_genetic_ancestry:String",
+          "name": "predicted_genetic_ancestry"
+        },
+        {
+          "raw_name": "bmi:String",
+          "name": "bmi"
+        },
+        {
+          "raw_name": "c_peptide_ng_ml:String",
+          "name": "c_peptide_ng_ml"
+        },
+        {
+          "raw_name": "hba1c_percentage:String",
+          "name": "hba1c_percentage"
+        },
+        {
+          "raw_name": "hla_status:String",
+          "name": "hla_status",
+          "unique_values": [
+            "DR3/DR4",
+            "DR3/X",
+            "DR4/X",
+            "X/DR3",
+            "X/DR4",
+            "X/X"
+          ]
+        },
+        {
+          "raw_name": "hla_typing:String",
+          "name": "hla_typing"
+        },
+        {
+          "raw_name": "hospital_stay_hours:Int",
+          "name": "hospital_stay_hours"
+        },
+        {
+          "raw_name": "other_therapy:String",
+          "name": "other_therapy"
+        },
+        {
+          "raw_name": "other_disease_records:String",
+          "name": "other_disease_records"
+        },
+        {
+          "raw_name": "creation_date:String",
+          "name": "creation_date",
+          "unique_values": [
+            "14/10/2024",
+            "16/10/2024",
+            "18/08/2025",
+            "3/12/24"
+          ]
+        },
+        {
+          "raw_name": "cause_of_death:String",
+          "name": "cause_of_death"
+        },
+        {
+          "raw_name": "donation_type:String",
+          "name": "donation_type",
+          "unique_values": [
+            "Donation after brain death",
+            "Donation after circulatory death"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "HPAP"
+          ]
+        },
+        {
+          "raw_name": "data_source_url:String",
+          "name": "data_source_url"
+        }
+      ],
+      "labels": [
+        "donor",
+        "provenance"
+      ],
+      "label_counts": {
+        "donor": 193,
+        "provenance": 1
+      }
+    },
+    {
+      "relative_path": "HPAP_sample_node.csv",
+      "kind": "node",
+      "row_count": 8987,
+      "columns": [
+        {
+          "raw_name": ":ID",
+          "name": ":ID"
+        },
+        {
+          "raw_name": ":LABEL",
+          "name": ":LABEL",
+          "unique_values": [
+            "Sample node"
+          ]
+        },
+        {
+          "raw_name": "Data Modality:String",
+          "name": "Data Modality"
+        },
+        {
+          "raw_name": "anatomical_structure:String",
+          "name": "anatomical_structure"
+        },
+        {
+          "raw_name": "note:String",
+          "name": "note"
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "Kaestner Lab_Upenn",
+            "Klaus Kaestner_Upenn",
+            "Luning Prak Lab",
+            "Michael Betts_Upenn",
+            "Powers & Brissova Research Group, Vanderbilt University Medical Center",
+            "Stoffers Lab_Upenn",
+            "Vanderbilt University Medical Center"
+          ]
+        },
+        {
+          "raw_name": "contact:String",
+          "name": "contact"
+        }
+      ],
+      "labels": [
+        "Sample node"
+      ],
+      "label_counts": {
+        "Sample node": 8987
+      }
+    },
+    {
+      "relative_path": "QTL_snp.node.csv",
+      "kind": "node",
+      "row_count": 19448,
+      "columns": [
+        {
+          "raw_name": ":ID",
+          "name": ":ID"
+        },
+        {
+          "raw_name": ":LABEL",
+          "name": ":LABEL",
+          "unique_values": [
+            "variants;sequence_variant;",
+            "variants;sequence_variant;deletion",
+            "variants;sequence_variant;indel",
+            "variants;sequence_variant;insertion",
+            "variants;sequence_variant;snv"
+          ]
+        },
+        {
+          "raw_name": "id:String",
+          "name": "id"
+        },
+        {
+          "raw_name": "chr:String",
+          "name": "chr"
+        },
+        {
+          "raw_name": "start_loc:Int",
+          "name": "start_loc"
+        },
+        {
+          "raw_name": "end_loc:Int",
+          "name": "end_loc"
+        },
+        {
+          "raw_name": "ref:String",
+          "name": "ref"
+        },
+        {
+          "raw_name": "alt:String",
+          "name": "alt"
+        },
+        {
+          "raw_name": "variant_suspect_reason:String",
+          "name": "variant_suspect_reason",
+          "unique_values": [
+            "1kg_failed",
+            "Paralog",
+            "unspecified"
+          ]
+        },
+        {
+          "raw_name": "freq:String",
+          "name": "freq"
+        },
+        {
+          "raw_name": "HGVS_name:String",
+          "name": "HGVS_name"
+        },
+        {
+          "raw_name": "non_synonymous_frameshift:String",
+          "name": "non_synonymous_frameshift",
+          "unique_values": [
+            "FALSE",
+            "TRUE"
+          ]
+        },
+        {
+          "raw_name": "non_synonymous_missense:String",
+          "name": "non_synonymous_missense",
+          "unique_values": [
+            "FALSE",
+            "TRUE"
+          ]
+        },
+        {
+          "raw_name": "non_synonymous_nonsense:String",
+          "name": "non_synonymous_nonsense",
+          "unique_values": [
+            "FALSE",
+            "TRUE"
+          ]
+        },
+        {
+          "raw_name": "in_3prime_UTR:String",
+          "name": "in_3prime_UTR",
+          "unique_values": [
+            "FALSE",
+            "TRUE"
+          ]
+        },
+        {
+          "raw_name": "in_5prime_UTR:String",
+          "name": "in_5prime_UTR",
+          "unique_values": [
+            "FALSE",
+            "TRUE"
+          ]
+        },
+        {
+          "raw_name": "in_acceptor_splice_site:String",
+          "name": "in_acceptor_splice_site",
+          "unique_values": [
+            "FALSE",
+            "TRUE"
+          ]
+        },
+        {
+          "raw_name": "in_donor_splice_site:String",
+          "name": "in_donor_splice_site",
+          "unique_values": [
+            "FALSE",
+            "TRUE"
+          ]
+        },
+        {
+          "raw_name": "in_intron:String",
+          "name": "in_intron",
+          "unique_values": [
+            "FALSE",
+            "TRUE"
+          ]
+        },
+        {
+          "raw_name": "in_3prime_gene_region:String",
+          "name": "in_3prime_gene_region",
+          "unique_values": [
+            "FALSE",
+            "TRUE"
+          ]
+        },
+        {
+          "raw_name": "in_5prime_gene_region:String",
+          "name": "in_5prime_gene_region",
+          "unique_values": [
+            "FALSE",
+            "TRUE"
+          ]
+        },
+        {
+          "raw_name": "common_SNP:String",
+          "name": "common_SNP",
+          "unique_values": [
+            "TRUE"
+          ]
+        },
+        {
+          "raw_name": "type:String",
+          "name": "type",
+          "unique_values": [
+            "insertion",
+            "sequence_deletion",
+            "sequence_indel",
+            "sequence_insertion",
+            "sequence_snv",
+            "snv"
+          ]
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "4/7/25"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "ncbi"
+          ]
+        }
+      ],
+      "labels": [
+        "deletion",
+        "indel",
+        "insertion",
+        "sequence_variant",
+        "snv",
+        "variants"
+      ],
+      "label_counts": {
+        "deletion": 4,
+        "indel": 116,
+        "insertion": 225,
+        "sequence_variant": 19448,
+        "snv": 19076,
+        "variants": 19448
+      }
+    },
+    {
+      "relative_path": "T1D.node.csv",
+      "kind": "node",
+      "row_count": 3,
+      "columns": [
+        {
+          "raw_name": ":ID",
+          "name": ":ID",
+          "unique_values": [
+            "MONDO_0005147",
+            "MONDO_0005148",
+            "healthy"
+          ]
+        },
+        {
+          "raw_name": ":LABEL",
+          "name": ":LABEL",
+          "unique_values": [
+            "ontology;disease"
+          ]
+        },
+        {
+          "raw_name": "url:String",
+          "name": "url",
+          "unique_values": [
+            "http://purl.obolibrary.org/obo/MONDO_0005147",
+            "http://purl.obolibrary.org/obo/MONDO_0005148",
+            "https://purl.obolibrary.org/obo/HP_0012823"
+          ]
+        },
+        {
+          "raw_name": "id:String",
+          "name": "id",
+          "unique_values": [
+            "MONDO_0005147",
+            "MONDO_0005148",
+            "healthy"
+          ]
+        },
+        {
+          "raw_name": "definition:String",
+          "name": "definition",
+          "unique_values": [
+            "A chronic condition characterized by minimal or absent production of insulin by the pancreas.",
+            "A chronic metabolic disease characterized by hyperglycemia resulting from insulin resistance and relative insulin deficiency.",
+            "Absence of disease or major pathological findings in the donor or sample metadata."
+          ]
+        },
+        {
+          "raw_name": "name:String",
+          "name": "name",
+          "unique_values": [
+            "healthy",
+            "type 1 diabetes",
+            "type 2 diabetes"
+          ]
+        },
+        {
+          "raw_name": "synonyms:String",
+          "name": "synonyms",
+          "unique_values": [
+            "control;non-diabetic;healthy",
+            "type 1 diabetes mellitus",
+            "type 2 diabetes mellitus"
+          ]
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "4_29_25"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "NCBO"
+          ]
+        }
+      ],
+      "labels": [
+        "disease",
+        "ontology"
+      ],
+      "label_counts": {
+        "disease": 3,
+        "ontology": 3
+      }
+    },
+    {
+      "relative_path": "T1D_deg.edge.csv",
+      "kind": "edge",
+      "row_count": 1956,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID",
+          "unique_values": [
+            "CL_0000169",
+            "CL_0000171",
+            "CL_0000173",
+            "CL_0002064",
+            "CL_0002079"
+          ]
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "T1D_DEG_in"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end",
+          "unique_values": [
+            "CL_0000169",
+            "CL_0000171",
+            "CL_0000173",
+            "CL_0002064",
+            "CL_0002079"
+          ]
+        },
+        {
+          "raw_name": "UpOrDownRegulation:String",
+          "name": "UpOrDownRegulation",
+          "unique_values": [
+            "Downregulated in T1D",
+            "Upregulated in T1D"
+          ]
+        },
+        {
+          "raw_name": "Log2FoldChange:Float",
+          "name": "Log2FoldChange"
+        },
+        {
+          "raw_name": "SE_of_Log2FoldChange:Float",
+          "name": "SE_of_Log2FoldChange"
+        },
+        {
+          "raw_name": "P_value:Float",
+          "name": "P_value"
+        },
+        {
+          "raw_name": "Adjusted_P_value:Float",
+          "name": "Adjusted_P_value"
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "2025-05-28"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "PanKbase"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "T1D_DEG_in"
+      ],
+      "relationship_type_counts": {
+        "T1D_DEG_in": 1956
+      }
+    },
+    {
+      "relative_path": "anatomical_structure_edge.csv",
+      "kind": "edge",
+      "row_count": 14,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID",
+          "unique_values": [
+            "CL_0000738",
+            "UBERON_0000006",
+            "UBERON_0000178",
+            "UBERON_0001151",
+            "UBERON_0001264",
+            "UBERON_0002106"
+          ]
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "ADJACENT_TO",
+            "HAS_CELL_TYPE",
+            "LYMPH_FLOWS_TO",
+            "PART_OF"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "ADJACENT_TO",
+        "HAS_CELL_TYPE",
+        "LYMPH_FLOWS_TO",
+        "PART_OF"
+      ],
+      "relationship_type_counts": {
+        "ADJACENT_TO": 1,
+        "HAS_CELL_TYPE": 3,
+        "LYMPH_FLOWS_TO": 2,
+        "PART_OF": 8
+      }
+    },
+    {
+      "relative_path": "anatomical_structure_nodes.csv",
+      "kind": "node",
+      "row_count": 42,
+      "columns": [
+        {
+          "raw_name": ":ID",
+          "name": ":ID"
+        },
+        {
+          "raw_name": ":LABEL",
+          "name": ":LABEL",
+          "unique_values": [
+            "anatomical_structure"
+          ]
+        },
+        {
+          "raw_name": "category:String",
+          "name": "category",
+          "unique_values": [
+            "cell_type",
+            "region",
+            "tissue"
+          ]
+        },
+        {
+          "raw_name": "name:String",
+          "name": "name"
+        },
+        {
+          "raw_name": "source:String",
+          "name": "source",
+          "unique_values": [
+            "CL",
+            "UBERON",
+            "UBERON + CL",
+            "local"
+          ]
+        },
+        {
+          "raw_name": "source_url:String",
+          "name": "source_url"
+        },
+        {
+          "raw_name": "description:String",
+          "name": "description"
+        }
+      ],
+      "labels": [
+        "anatomical_structure"
+      ],
+      "label_counts": {
+        "anatomical_structure": 42
+      }
+    },
+    {
+      "relative_path": "anatomical_structure_to_sample_edges.csv",
+      "kind": "edge",
+      "row_count": 13328,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "has_sample"
+          ]
+        },
+        {
+          "raw_name": "data_modality:String",
+          "name": "data_modality"
+        },
+        {
+          "raw_name": "anatomical_structure:String",
+          "name": "anatomical_structure"
+        }
+      ],
+      "relationship_types": [
+        "has_sample"
+      ],
+      "relationship_type_counts": {
+        "has_sample": 13328
+      }
+    },
+    {
+      "relative_path": "coloc.edge.csv",
+      "kind": "edge",
+      "row_count": 24,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID",
+          "unique_values": [
+            "MONDO_0005147"
+          ]
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "signal_COLOC_with"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end",
+          "unique_values": [
+            "MONDO_0005147"
+          ]
+        },
+        {
+          "raw_name": "QTL_locus_name:String",
+          "name": "QTL_locus_name"
+        },
+        {
+          "raw_name": "GWAS_locus_name:String",
+          "name": "GWAS_locus_name"
+        },
+        {
+          "raw_name": "QTL_signal_id:String",
+          "name": "QTL_signal_id"
+        },
+        {
+          "raw_name": "GWAS_signal_id:String",
+          "name": "GWAS_signal_id"
+        },
+        {
+          "raw_name": "nsnp:Int",
+          "name": "nsnp"
+        },
+        {
+          "raw_name": "GWAS_lead_vars:String",
+          "name": "GWAS_lead_vars"
+        },
+        {
+          "raw_name": "QTL_lead_vars:String",
+          "name": "QTL_lead_vars"
+        },
+        {
+          "raw_name": "PP.H0.abf:Float",
+          "name": "PP.H0.abf"
+        },
+        {
+          "raw_name": "PP.H1.abf:Float",
+          "name": "PP.H1.abf"
+        },
+        {
+          "raw_name": "PP.H2.abf:Float",
+          "name": "PP.H2.abf"
+        },
+        {
+          "raw_name": "PP.H3.abf:Float",
+          "name": "PP.H3.abf"
+        },
+        {
+          "raw_name": "PP.H4.abf:Float",
+          "name": "PP.H4.abf"
+        },
+        {
+          "raw_name": "coloc_dataset:String",
+          "name": "coloc_dataset",
+          "unique_values": [
+            "t1d_eQTL-gtex_coloc",
+            "t1d_eQTL-inspire_coloc",
+            "t1d_exonQTL-inspire_coloc",
+            "t1d_sQTL-gtex_coloc"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "HIRN_T1D_QTL_GWAS"
+          ]
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "v1.0"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "signal_COLOC_with"
+      ],
+      "relationship_type_counts": {
+        "signal_COLOC_with": 24
+      }
+    },
+    {
+      "relative_path": "data_modality_node.csv",
+      "kind": "node",
+      "row_count": 17,
+      "columns": [
+        {
+          "raw_name": ":ID",
+          "name": ":ID"
+        },
+        {
+          "raw_name": ":LABEL",
+          "name": ":LABEL",
+          "unique_values": [
+            "data_modality"
+          ]
+        },
+        {
+          "raw_name": "id:String",
+          "name": "id"
+        }
+      ],
+      "labels": [
+        "data_modality"
+      ],
+      "label_counts": {
+        "data_modality": 17
+      }
+    },
+    {
+      "relative_path": "data_modality_to_sample_edges.csv",
+      "kind": "edge",
+      "row_count": 8987,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "has_sample"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "has_sample"
+      ],
+      "relationship_type_counts": {
+        "has_sample": 8987
+      }
+    },
+    {
+      "relative_path": "disease_to_donor_edges.csv",
+      "kind": "edge",
+      "row_count": 192,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID",
+          "unique_values": [
+            "MONDO_0005147",
+            "MONDO_0005148",
+            "healthy"
+          ]
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "has_donor"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "has_donor"
+      ],
+      "relationship_type_counts": {
+        "has_donor": 192
+      }
+    },
+    {
+      "relative_path": "disease_to_sample_edges.csv",
+      "kind": "edge",
+      "row_count": 8985,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID",
+          "unique_values": [
+            "MONDO_0005147",
+            "MONDO_0005148",
+            "healthy"
+          ]
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "has_sample"
+          ]
+        },
+        {
+          "raw_name": "data_modality:String",
+          "name": "data_modality"
+        },
+        {
+          "raw_name": "anatomical_structure:String",
+          "name": "anatomical_structure"
+        }
+      ],
+      "relationship_types": [
+        "has_sample"
+      ],
+      "relationship_type_counts": {
+        "has_sample": 8985
+      }
+    },
+    {
+      "relative_path": "donor_to_sample_edges.csv",
+      "kind": "edge",
+      "row_count": 8985,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "has_sample"
+          ]
+        },
+        {
+          "raw_name": "Data Modality:String",
+          "name": "Data Modality"
+        },
+        {
+          "raw_name": "anatomical_structure:String",
+          "name": "anatomical_structure"
+        }
+      ],
+      "relationship_types": [
+        "has_sample"
+      ],
+      "relationship_type_counts": {
+        "has_sample": 8985
+      }
+    },
+    {
+      "relative_path": "ensembl_to_kegg_pathway.edge.csv",
+      "kind": "edge",
+      "row_count": 38463,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "pathway_annotation;KEGG"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end"
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "2026-03-23"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "KEGG"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "pathway_annotation;KEGG"
+      ],
+      "relationship_type_counts": {
+        "pathway_annotation;KEGG": 38463
+      }
+    },
+    {
+      "relative_path": "ensembl_to_reactome_pathway.edge.csv",
+      "kind": "edge",
+      "row_count": 48545,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "pathway_annotation;reactome"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end"
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "2026-03-23"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "Reactome"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "pathway_annotation;reactome"
+      ],
+      "relationship_type_counts": {
+        "pathway_annotation;reactome": 48545
+      }
+    },
+    {
+      "relative_path": "gene_to_cell_type_fGSEA_gene_enriched_in.edge.csv",
+      "kind": "edge",
+      "row_count": 6765,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID",
+          "unique_values": [
+            "CL_0000171_active",
+            "CL_0000738",
+            "CL_0002275_CL_0005019",
+            "CL_0002410_active",
+            "CL_0002410_quiescent"
+          ]
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "fGSEA_gene_enriched_in"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end",
+          "unique_values": [
+            "CL_0000171_active",
+            "CL_0000738",
+            "CL_0002275_CL_0005019",
+            "CL_0002410_active",
+            "CL_0002410_quiescent"
+          ]
+        },
+        {
+          "raw_name": "pathway_id:String",
+          "name": "pathway_id"
+        },
+        {
+          "raw_name": "cell_type_label:String",
+          "name": "cell_type_label",
+          "unique_values": [
+            "ActiveStellate",
+            "CyclingAlpha",
+            "Gamma+Epsilon",
+            "Immune",
+            "QuiescentStellate"
+          ]
+        },
+        {
+          "raw_name": "pathway_collection:String",
+          "name": "pathway_collection",
+          "unique_values": [
+            "KEGG",
+            "REACTOME"
+          ]
+        },
+        {
+          "raw_name": "pathway_term:String",
+          "name": "pathway_term"
+        },
+        {
+          "raw_name": "pathway_name:String",
+          "name": "pathway_name"
+        },
+        {
+          "raw_name": "pval:Float",
+          "name": "pval"
+        },
+        {
+          "raw_name": "padj:Float",
+          "name": "padj"
+        },
+        {
+          "raw_name": "log2err:Float",
+          "name": "log2err"
+        },
+        {
+          "raw_name": "ES:Float",
+          "name": "ES"
+        },
+        {
+          "raw_name": "NES:Float",
+          "name": "NES"
+        },
+        {
+          "raw_name": "size:Int",
+          "name": "size"
+        },
+        {
+          "raw_name": "leadingEdge:String",
+          "name": "leadingEdge"
+        },
+        {
+          "raw_name": "source_file:String",
+          "name": "source_file",
+          "unique_values": [
+            "ActiveStellate_fGSEA_res_signif.tsv",
+            "CyclingAlpha_fGSEA_res_signif.tsv",
+            "Gamma+Epsilon_fGSEA_res_signif.tsv",
+            "Immune(Macrophages)_fGSEA_res_signif.tsv",
+            "QuiescentStellate_fGSEA_res_signif.tsv"
+          ]
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "2025-09-30"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": []
+        }
+      ],
+      "relationship_types": [
+        "fGSEA_gene_enriched_in"
+      ],
+      "relationship_type_counts": {
+        "fGSEA_gene_enriched_in": 6765
+      }
+    },
+    {
+      "relative_path": "gene_to_cell_type_gene_detected_in.edge.csv",
+      "kind": "edge",
+      "row_count": 111084,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "gene_detected_in"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end"
+        },
+        {
+          "raw_name": "gene_symbol:String",
+          "name": "gene_symbol"
+        },
+        {
+          "raw_name": "condition:String",
+          "name": "condition",
+          "unique_values": [
+            "ALL"
+          ]
+        },
+        {
+          "raw_name": "cell_type:String",
+          "name": "cell_type"
+        },
+        {
+          "raw_name": "n_donors:Int",
+          "name": "n_donors",
+          "unique_values": []
+        },
+        {
+          "raw_name": "total_cells:Int",
+          "name": "total_cells"
+        },
+        {
+          "raw_name": "total_aggregated_count:Int",
+          "name": "total_aggregated_count",
+          "unique_values": []
+        },
+        {
+          "raw_name": "mean_donor_logCPM:Float",
+          "name": "mean_donor_logCPM"
+        },
+        {
+          "raw_name": "median_donor_logCPM:Float",
+          "name": "median_donor_logCPM"
+        },
+        {
+          "raw_name": "sd_donor_logCPM:Float",
+          "name": "sd_donor_logCPM",
+          "unique_values": []
+        },
+        {
+          "raw_name": "iqr_donor_logCPM:Float",
+          "name": "iqr_donor_logCPM",
+          "unique_values": []
+        },
+        {
+          "raw_name": "min_donor_logCPM:Float",
+          "name": "min_donor_logCPM"
+        },
+        {
+          "raw_name": "max_donor_logCPM:Float",
+          "name": "max_donor_logCPM"
+        },
+        {
+          "raw_name": "mean_donor_CPM:Float",
+          "name": "mean_donor_CPM"
+        },
+        {
+          "raw_name": "median_donor_CPM:Float",
+          "name": "median_donor_CPM"
+        },
+        {
+          "raw_name": "mean_pct_cells_expressing:Float",
+          "name": "mean_pct_cells_expressing"
+        },
+        {
+          "raw_name": "median_pct_cells_expressing:Float",
+          "name": "median_pct_cells_expressing"
+        },
+        {
+          "raw_name": "max_pct_cells_expressing:Float",
+          "name": "max_pct_cells_expressing"
+        },
+        {
+          "raw_name": "donors_with_expr_ge5pct:Int",
+          "name": "donors_with_expr_ge5pct",
+          "unique_values": []
+        },
+        {
+          "raw_name": "donors_with_logCPM_ge1:Int",
+          "name": "donors_with_logCPM_ge1",
+          "unique_values": []
+        },
+        {
+          "raw_name": "expression_call:String",
+          "name": "expression_call",
+          "unique_values": [
+            "Expressed"
+          ]
+        },
+        {
+          "raw_name": "confidence_label:String",
+          "name": "confidence_label",
+          "unique_values": []
+        },
+        {
+          "raw_name": "detection_rule:String",
+          "name": "detection_rule",
+          "unique_values": [
+            "median_donor_logCPM_gt_threshold AND median_pct_cells_expressing_gt_threshold"
+          ]
+        },
+        {
+          "raw_name": "min_median_logCPM_threshold:Float",
+          "name": "min_median_logCPM_threshold",
+          "unique_values": [
+            "1.0"
+          ]
+        },
+        {
+          "raw_name": "min_median_pct_cells_threshold:Float",
+          "name": "min_median_pct_cells_threshold",
+          "unique_values": [
+            "10.0"
+          ]
+        },
+        {
+          "raw_name": "source_file:String",
+          "name": "source_file",
+          "unique_values": [
+            "all_donors_per_celltype_logCPM.csv"
+          ]
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "2026-03-24"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "HPAP full_object_expression pseudobulk detection support"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "gene_detected_in"
+      ],
+      "relationship_type_counts": {
+        "gene_detected_in": 111084
+      }
+    },
+    {
+      "relative_path": "gene_to_cell_type_gene_enriched_in.edge.csv",
+      "kind": "edge",
+      "row_count": 8583,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "gene_enriched_in"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end"
+        },
+        {
+          "raw_name": "gene_symbol:String",
+          "name": "gene_symbol"
+        },
+        {
+          "raw_name": "cell_type_label:String",
+          "name": "cell_type_label"
+        },
+        {
+          "raw_name": "expression_cell_type:String",
+          "name": "expression_cell_type"
+        },
+        {
+          "raw_name": "expression_support_match:String",
+          "name": "expression_support_match",
+          "unique_values": [
+            "exact",
+            "mapped_to_available_full_object_expression_label",
+            "renamed_for_full_object_expression"
+          ]
+        },
+        {
+          "raw_name": "condition:String",
+          "name": "condition",
+          "unique_values": [
+            "ND"
+          ]
+        },
+        {
+          "raw_name": "comparison:String",
+          "name": "comparison",
+          "unique_values": [
+            "one_vs_rest"
+          ]
+        },
+        {
+          "raw_name": "effect_direction:String",
+          "name": "effect_direction",
+          "unique_values": [
+            "positive"
+          ]
+        },
+        {
+          "raw_name": "rank_in_cell_type:Int",
+          "name": "rank_in_cell_type"
+        },
+        {
+          "raw_name": "baseMean:Float",
+          "name": "baseMean"
+        },
+        {
+          "raw_name": "log2FoldChange:Float",
+          "name": "log2FoldChange"
+        },
+        {
+          "raw_name": "lfcSE:Float",
+          "name": "lfcSE"
+        },
+        {
+          "raw_name": "stat:Float",
+          "name": "stat"
+        },
+        {
+          "raw_name": "pvalue:Float",
+          "name": "pvalue"
+        },
+        {
+          "raw_name": "padj:Float",
+          "name": "padj"
+        },
+        {
+          "raw_name": "n_donors:Int",
+          "name": "n_donors",
+          "unique_values": []
+        },
+        {
+          "raw_name": "total_cells:Int",
+          "name": "total_cells"
+        },
+        {
+          "raw_name": "total_aggregated_count:Int",
+          "name": "total_aggregated_count",
+          "unique_values": []
+        },
+        {
+          "raw_name": "mean_donor_logCPM:Float",
+          "name": "mean_donor_logCPM"
+        },
+        {
+          "raw_name": "median_donor_logCPM:Float",
+          "name": "median_donor_logCPM"
+        },
+        {
+          "raw_name": "sd_donor_logCPM:Float",
+          "name": "sd_donor_logCPM",
+          "unique_values": []
+        },
+        {
+          "raw_name": "iqr_donor_logCPM:Float",
+          "name": "iqr_donor_logCPM",
+          "unique_values": []
+        },
+        {
+          "raw_name": "min_donor_logCPM:Float",
+          "name": "min_donor_logCPM"
+        },
+        {
+          "raw_name": "max_donor_logCPM:Float",
+          "name": "max_donor_logCPM"
+        },
+        {
+          "raw_name": "mean_donor_CPM:Float",
+          "name": "mean_donor_CPM"
+        },
+        {
+          "raw_name": "median_donor_CPM:Float",
+          "name": "median_donor_CPM"
+        },
+        {
+          "raw_name": "mean_pct_cells_expressing:Float",
+          "name": "mean_pct_cells_expressing"
+        },
+        {
+          "raw_name": "median_pct_cells_expressing:Float",
+          "name": "median_pct_cells_expressing"
+        },
+        {
+          "raw_name": "max_pct_cells_expressing:Float",
+          "name": "max_pct_cells_expressing"
+        },
+        {
+          "raw_name": "donors_with_expr_ge5pct:Int",
+          "name": "donors_with_expr_ge5pct",
+          "unique_values": []
+        },
+        {
+          "raw_name": "donors_with_logCPM_ge1:Int",
+          "name": "donors_with_logCPM_ge1",
+          "unique_values": []
+        },
+        {
+          "raw_name": "expression_call:String",
+          "name": "expression_call",
+          "unique_values": [
+            "Expressed"
+          ]
+        },
+        {
+          "raw_name": "confidence_label:String",
+          "name": "confidence_label",
+          "unique_values": []
+        },
+        {
+          "raw_name": "expression_support_rule:String",
+          "name": "expression_support_rule",
+          "unique_values": [
+            "logCPM_gt_threshold AND pct_expressed_gt_threshold"
+          ]
+        },
+        {
+          "raw_name": "min_expression_logCPM_threshold:Float",
+          "name": "min_expression_logCPM_threshold",
+          "unique_values": [
+            "1.0"
+          ]
+        },
+        {
+          "raw_name": "min_expression_pct_threshold:Float",
+          "name": "min_expression_pct_threshold",
+          "unique_values": [
+            "20.0"
+          ]
+        },
+        {
+          "raw_name": "deg_source_file:String",
+          "name": "deg_source_file"
+        },
+        {
+          "raw_name": "expression_source_file:String",
+          "name": "expression_source_file",
+          "unique_values": [
+            "all_donors_per_celltype_logCPM.csv"
+          ]
+        },
+        {
+          "raw_name": "gene_mapping_source:String",
+          "name": "gene_mapping_source",
+          "unique_values": [
+            "nonDup_proteinCoding_IIDP_merged.features.csv"
+          ]
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "2026-04-01"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "ND-only one-vs-rest DESeq2 markers + full_object_expression support filter"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "gene_enriched_in"
+      ],
+      "relationship_type_counts": {
+        "gene_enriched_in": 8583
+      }
+    },
+    {
+      "relative_path": "go.edge.csv",
+      "kind": "edge",
+      "row_count": 262622,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "function_annotation;GO"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end"
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "GRCh38.p14"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "Ensembl"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "function_annotation;GO"
+      ],
+      "relationship_type_counts": {
+        "function_annotation;GO": 262622
+      }
+    },
+    {
+      "relative_path": "go.node.csv",
+      "kind": "node",
+      "row_count": 17448,
+      "columns": [
+        {
+          "raw_name": ":ID",
+          "name": ":ID"
+        },
+        {
+          "raw_name": ":LABEL",
+          "name": ":LABEL",
+          "unique_values": [
+            "ontology;gene_ontology"
+          ]
+        },
+        {
+          "raw_name": "id:String",
+          "name": "id"
+        },
+        {
+          "raw_name": "name:String",
+          "name": "name"
+        },
+        {
+          "raw_name": "description:String",
+          "name": "description"
+        },
+        {
+          "raw_name": "link:String",
+          "name": "link"
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "GRCh38.p14"
+          ]
+        }
+      ],
+      "labels": [
+        "gene_ontology",
+        "ontology"
+      ],
+      "label_counts": {
+        "gene_ontology": 17448,
+        "ontology": 17448
+      }
+    },
+    {
+      "relative_path": "json_no_special_effector_gene.edge.csv",
+      "kind": "edge",
+      "row_count": 257,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID",
+          "unique_values": [
+            "MONDO_0005147"
+          ]
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "effector_gene_of"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end",
+          "unique_values": [
+            "MONDO_0005147"
+          ]
+        },
+        {
+          "raw_name": "evidence:String",
+          "name": "evidence"
+        },
+        {
+          "raw_name": "effector_gene_list_url:String",
+          "name": "effector_gene_list_url",
+          "unique_values": [
+            "https://t1d.hugeamp.org/research.html?pageid=Atla_T1D_568",
+            "https://t1d.hugeamp.org/research.html?pageid=T1D_UVa_168",
+            "https://t1d.hugeamp.org/research.html?pageid=t1d_effector_genes"
+          ]
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "2025-10-24"
+          ]
+        },
+        {
+          "raw_name": "data_source_url:String",
+          "name": "data_source_url"
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "Type 1 diabetes effector gene predictions (Gaulton KJ, 2021)",
+            "Type 1 diabetes predicted effector genes (Atla G et al. 2022)",
+            "Type 1 diabetes predicted effector genes (Onengut-Gumuscu S and Rich SS, 2022)"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "effector_gene_of"
+      ],
+      "relationship_type_counts": {
+        "effector_gene_of": 257
+      }
+    },
+    {
+      "relative_path": "kegg_pathway.node.csv",
+      "kind": "node",
+      "row_count": 370,
+      "columns": [
+        {
+          "raw_name": ":ID",
+          "name": ":ID"
+        },
+        {
+          "raw_name": ":LABEL",
+          "name": ":LABEL",
+          "unique_values": [
+            "ontology;kegg"
+          ]
+        },
+        {
+          "raw_name": "id:String",
+          "name": "id"
+        },
+        {
+          "raw_name": "name:String",
+          "name": "name"
+        },
+        {
+          "raw_name": "description:String",
+          "name": "description"
+        },
+        {
+          "raw_name": "link:String",
+          "name": "link"
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "2026-03-23"
+          ]
+        }
+      ],
+      "labels": [
+        "kegg",
+        "ontology"
+      ],
+      "label_counts": {
+        "kegg": 370,
+        "ontology": 370
+      }
+    },
+    {
+      "relative_path": "ocr_peak.node.csv",
+      "kind": "node",
+      "row_count": 5294421,
+      "columns": [
+        {
+          "raw_name": ":ID",
+          "name": ":ID"
+        },
+        {
+          "raw_name": ":LABEL",
+          "name": ":LABEL",
+          "unique_values": [
+            "regulatory_elements;OCR_peak"
+          ]
+        },
+        {
+          "raw_name": "id:String",
+          "name": "id"
+        },
+        {
+          "raw_name": "description:String",
+          "name": "description",
+          "unique_values": [
+            "in later version we will add more statistics"
+          ]
+        },
+        {
+          "raw_name": "chr:String",
+          "name": "chr"
+        },
+        {
+          "raw_name": "start_loc:Int",
+          "name": "start_loc"
+        },
+        {
+          "raw_name": "end_loc:Int",
+          "name": "end_loc"
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "PanKbase"
+          ]
+        },
+        {
+          "raw_name": "type:String",
+          "name": "type",
+          "unique_values": [
+            "OCR_peak"
+          ]
+        }
+      ],
+      "labels": [
+        "OCR_peak",
+        "regulatory_elements"
+      ],
+      "label_counts": {
+        "OCR_peak": 5294421,
+        "regulatory_elements": 5294421
+      }
+    },
+    {
+      "relative_path": "ocr_peak_in.edge.csv",
+      "kind": "edge",
+      "row_count": 5294421,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID"
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "OCR_peak_in"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end"
+        },
+        {
+          "raw_name": "description:String",
+          "name": "description",
+          "unique_values": [
+            "in later version we will add more statistics"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "PanKbase"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "OCR_peak_in"
+      ],
+      "relationship_type_counts": {
+        "OCR_peak_in": 5294421
+      }
+    },
+    {
+      "relative_path": "pathway_to_cell_type_fGSEA_enriched_in.edge.csv",
+      "kind": "edge",
+      "row_count": 81,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID",
+          "unique_values": [
+            "CL_0000171_active",
+            "CL_0000738",
+            "CL_0002275_CL_0005019",
+            "CL_0002410_active",
+            "CL_0002410_quiescent"
+          ]
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "fGSEA_enriched_in"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end",
+          "unique_values": [
+            "CL_0000171_active",
+            "CL_0000738",
+            "CL_0002275_CL_0005019",
+            "CL_0002410_active",
+            "CL_0002410_quiescent"
+          ]
+        },
+        {
+          "raw_name": "cell_type_label:String",
+          "name": "cell_type_label",
+          "unique_values": [
+            "ActiveStellate",
+            "CyclingAlpha",
+            "Gamma+Epsilon",
+            "Immune",
+            "QuiescentStellate"
+          ]
+        },
+        {
+          "raw_name": "pathway_collection:String",
+          "name": "pathway_collection",
+          "unique_values": [
+            "KEGG",
+            "REACTOME"
+          ]
+        },
+        {
+          "raw_name": "pathway_term:String",
+          "name": "pathway_term"
+        },
+        {
+          "raw_name": "pathway_name:String",
+          "name": "pathway_name"
+        },
+        {
+          "raw_name": "pval:Float",
+          "name": "pval"
+        },
+        {
+          "raw_name": "padj:Float",
+          "name": "padj"
+        },
+        {
+          "raw_name": "log2err:Float",
+          "name": "log2err"
+        },
+        {
+          "raw_name": "ES:Float",
+          "name": "ES"
+        },
+        {
+          "raw_name": "NES:Float",
+          "name": "NES"
+        },
+        {
+          "raw_name": "size:Int",
+          "name": "size"
+        },
+        {
+          "raw_name": "leadingEdge:String",
+          "name": "leadingEdge"
+        },
+        {
+          "raw_name": "source_file:String",
+          "name": "source_file",
+          "unique_values": [
+            "ActiveStellate_fGSEA_res_signif.tsv",
+            "CyclingAlpha_fGSEA_res_signif.tsv",
+            "Gamma+Epsilon_fGSEA_res_signif.tsv",
+            "Immune(Macrophages)_fGSEA_res_signif.tsv",
+            "QuiescentStellate_fGSEA_res_signif.tsv"
+          ]
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "2025-09-30"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": []
+        }
+      ],
+      "relationship_types": [
+        "fGSEA_enriched_in"
+      ],
+      "relationship_type_counts": {
+        "fGSEA_enriched_in": 81
+      }
+    },
+    {
+      "relative_path": "reactome_pathway.node.csv",
+      "kind": "node",
+      "row_count": 2277,
+      "columns": [
+        {
+          "raw_name": ":ID",
+          "name": ":ID"
+        },
+        {
+          "raw_name": ":LABEL",
+          "name": ":LABEL",
+          "unique_values": [
+            "ontology;reactome"
+          ]
+        },
+        {
+          "raw_name": "id:String",
+          "name": "id"
+        },
+        {
+          "raw_name": "name:String",
+          "name": "name"
+        },
+        {
+          "raw_name": "description:String",
+          "name": "description",
+          "unique_values": []
+        },
+        {
+          "raw_name": "link:String",
+          "name": "link"
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "2026-03-23"
+          ]
+        }
+      ],
+      "labels": [
+        "ontology",
+        "reactome"
+      ],
+      "label_counts": {
+        "ontology": 2277,
+        "reactome": 2277
+      }
+    },
+    {
+      "relative_path": "scATACseq_GeneActivityScore.edge.csv",
+      "kind": "edge",
+      "row_count": 126091,
+      "columns": [
+        {
+          "raw_name": ":START_ID",
+          "name": ":START_ID"
+        },
+        {
+          "raw_name": ":END_ID",
+          "name": ":END_ID",
+          "unique_values": [
+            "CL_0000115",
+            "CL_0000169",
+            "CL_0000171",
+            "CL_0000173",
+            "CL_0000738",
+            "CL_0002064",
+            "CL_0002079"
+          ]
+        },
+        {
+          "raw_name": ":TYPE",
+          "name": ":TYPE",
+          "unique_values": [
+            "gene_activity_score_in"
+          ]
+        },
+        {
+          "raw_name": "start:String",
+          "name": "start"
+        },
+        {
+          "raw_name": "end:String",
+          "name": "end",
+          "unique_values": [
+            "CL_0000115",
+            "CL_0000169",
+            "CL_0000171",
+            "CL_0000173",
+            "CL_0000738",
+            "CL_0002064",
+            "CL_0002079"
+          ]
+        },
+        {
+          "raw_name": "OCR_GeneActivityScore_mean:Float",
+          "name": "OCR_GeneActivityScore_mean"
+        },
+        {
+          "raw_name": "OCR_GeneActivityScore_median:Float",
+          "name": "OCR_GeneActivityScore_median"
+        },
+        {
+          "raw_name": "non_diabetic__OCR_GeneActivityScore_mean:Float",
+          "name": "non_diabetic__OCR_GeneActivityScore_mean"
+        },
+        {
+          "raw_name": "non_diabetic__OCR_GeneActivityScore_median:Float",
+          "name": "non_diabetic__OCR_GeneActivityScore_median"
+        },
+        {
+          "raw_name": "AAB_pos__OCR_GeneActivityScore_mean:Float",
+          "name": "AAB_pos__OCR_GeneActivityScore_mean"
+        },
+        {
+          "raw_name": "AAB_pos__OCR_GeneActivityScore_median:Float",
+          "name": "AAB_pos__OCR_GeneActivityScore_median"
+        },
+        {
+          "raw_name": "type_1_diabetes__OCR_GeneActivityScore_mean:Float",
+          "name": "type_1_diabetes__OCR_GeneActivityScore_mean"
+        },
+        {
+          "raw_name": "type_1_diabetes__OCR_GeneActivityScore_median:Float",
+          "name": "type_1_diabetes__OCR_GeneActivityScore_median"
+        },
+        {
+          "raw_name": "type_2_diabetes__OCR_GeneActivityScore_mean:Float",
+          "name": "type_2_diabetes__OCR_GeneActivityScore_mean"
+        },
+        {
+          "raw_name": "type_2_diabetes__OCR_GeneActivityScore_median:Float",
+          "name": "type_2_diabetes__OCR_GeneActivityScore_median"
+        },
+        {
+          "raw_name": "data_version:String",
+          "name": "data_version",
+          "unique_values": [
+            "2025_05_28"
+          ]
+        },
+        {
+          "raw_name": "data_source:String",
+          "name": "data_source",
+          "unique_values": [
+            "PanKbase"
+          ]
+        }
+      ],
+      "relationship_types": [
+        "gene_activity_score_in"
+      ],
+      "relationship_type_counts": {
+        "gene_activity_score_in": 126091
+      }
+    }
+  ]
+}

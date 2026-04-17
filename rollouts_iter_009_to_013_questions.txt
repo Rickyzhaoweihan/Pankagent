@@ -1,0 +1,690 @@
+=== rollouts_iter_009 (168 questions) ===
+1. Which genes are differentially expressed in Alpha Cells compared to Beta Cells?
+2. What are the GO terms associated with the gene PLA2G4A?
+3. What genes are associated with type 1 diabetes?
+4. What are the Gene Ontology terms associated with the gene "WASHC1"?
+5. What genes are differentially expressed in Beta Cells and are associated with type 1 diabetes?
+6. What diseases is the gene OR6C65 an effector gene of?
+7. Which genes are part of the QTL signal for ZNF880?
+8. What diseases is the SNP rs36162000 associated with through GWAS studies?
+9. What genes are associated with the gene "RRBP1" through physical interactions?
+10. What GO terms are associated with genes expressed in Beta Cells?
+11. What are the Gene Ontology terms associated with the gene "MED24"?
+12. Which diseases is the SNP rs13233253 associated with through GWAS studies?
+13. Which genes are associated with type 2 diabetes?
+14. What diseases is the SNP rs4472418 associated with through GWAS studies?
+15. What are the Gene Ontology terms associated with the gene "RN7SKP65"?
+16. What GO terms are associated with the gene SP100?
+17. What diseases is the SNP rs1018979 associated with through GWAS studies?
+18. What GO terms are associated with the gene "PANK1"??
+19. What GO terms are associated with the gene "ARID1A"??
+20. Which genes are associated with the SNP rs1045599 through QTL signals?
+21. What genes are effector genes of type 1 diabetes?
+22. What are the Gene Ontology terms associated with the gene "SPTBN1"?
+23. What are the Gene Ontology terms associated with the gene "PLA2G4A"?
+24. What differentially expressed genes are found in Delta Cells?
+25. What are the Gene Ontology terms associated with the gene "EMC7"??
+26. What GO terms are associated with the gene "CDC14A"?
+27. What SNPs are associated with type 1 diabetes through GWAS studies?
+28. Which Gene Ontology terms are associated with the gene "ARID1A"??
+29. What GO terms are associated with the gene "MRPS6P4"?
+30. What GO terms are associated with the gene "RAD52"?
+31. What GO terms are associated with the gene "TXNDC17"?
+32. What are the Gene Ontology terms associated with genes that have open chromatin regions active in Ductal Cells?
+33. Which SNPs are associated with type 1 diabetes through GWAS signals?
+34. Which genes are associated with the cell type Acinar Cell through open chromatin regions?
+35. Which genes are associated with the GO term "DNA-binding transcription repressor activity"??
+36. What is the expression level of the gene "LAMP1" in Alpha Cells?
+37. What GO terms are associated with the gene "MED24"??
+38. What are the differentially expressed genes associated with TSHR in Alpha Cells?
+39. What are the Gene Ontology terms associated with the gene "CDC14A"??
+40. What GO terms are associated with the gene "WASHC1"??
+41. Which genes are associated with type 1 diabetes through GWAS signals?
+42. Which GO terms are associated with the gene "PLA2G4A"??
+43. Which genes physically interact with EPHA5?
+44. What GO terms are associated with the gene "SPTBN1"??
+45. What GO terms are associated with the gene "MED24"?
+46. What GO terms are associated with the gene "WASHC1"??
+47. Which GO terms are associated with the gene "MED24"??
+48. What GO terms are associated with the gene "sptbn1"?
+49. What genes are associated with the cell type Delta Cell?
+50. What genes physically interact with TUBB?
+51. What SNPs are associated with the gene expression of arid1a?
+52. Which diseases are associated with the gene "Y_RNA" as effector genes?
+53. What differentially expressed genes are found in Beta Cells?
+54. What are the differentially expressed genes in Acinar Cells?
+55. What Gene Ontology terms are associated with the gene "PRDM11"?
+56. Which genes are effector genes of type 1 diabetes?
+57. Which GO terms are associated with the gene "C8orf33"??
+58. What are the expression levels of SLC23A2 in Alpha Cells?
+59. What genes are differentially expressed in Alpha Cells?
+60. What genes physically interact with FOLR1?
+61. What genes are associated with the GO term "methyltransferase activity"?
+62. Which genes are differentially expressed in Delta Cells?
+63. Which GO terms are associated with the gene "TUBB"??
+64. Which GO terms are associated with the gene "rs2046511"??
+65. What are the expression levels of DNAJC13 in Alpha Cells?
+66. What differentially expressed genes are found in Delta Cells?
+67. What SNPs are associated with type 1 diabetes via GWAS signals?
+68. Which GO terms are associated with the gene "MED10"?
+69. What genes are associated with the gene ontology term "metal ion binding"?
+70. What genes are associated with the GO term "DNA-binding transcription repressor activity"?
+71. What genes are annotated with the "heterochromatin organization" GO term?
+72. What genes are differentially expressed in Ductal Cells?
+73. Which genes are associated with the GO term "transferase activity"??
+74. Which genes are associated with the GO term "histone H3K9 monomethyltransferase activity"??
+75. What are the expression levels of CYP2C56P in Alpha Cells?
+76. What GO terms are associated with the gene "DUSP6"??
+77. What genes are associated with the GO term "histone H3K9 monomethyltransferase activity"??
+78. What genes are associated with type 2 diabetes via GWAS signals?
+79. Which SNPs are associated with the gene "rs2236947" through QTL signals?
+80. What genes are associated with the GO term "histone H3K9 monomethyltransferase activity"??
+81. What are the differentially expressed genes in Acinar Cells?
+82. Which GO terms are associated with the gene "rs10053411"?
+83. What genes are associated with the gene ontology term "ubiquitin protein ligase activity"?
+84. Which GO terms are associated with the gene "MED10"?
+85. What differentially expressed genes are associated with "methyltransferase activity" in Alpha Cells?
+86. What genes physically interact with MRPL11?
+87. What diseases are affected by the gene "ZBTB17"?
+88. What GO terms are associated with the gene "SRPK2"?
+89. Which genes are differentially expressed in Beta Cells?
+90. Which genes are associated with the disease type 1 diabetes through effector gene relationships?
+91. Which genes are associated with the SNP "rs2286446" through QTL signals?
+92. What diseases are associated with the SNP rs62065438 through GWAS signals?
+93. What differentially expressed genes are associated with "DNA-binding transcription repressor activity" in Alpha Cells?
+94. Which SNPs are associated with type 1 diabetes via GWAS signals?
+95. What are the Gene Ontology terms associated with the gene AFG3L1P?
+96. Which GO terms are associated with the gene "U2AF1L4"?
+97. Which differentially expressed genes are associated with "histone H3K9 monomethyltransferase activity" in Delta Cells?
+98. What are the effector genes of type 1 diabetes?
+99. Which GO terms are associated with the gene "rs7532198"?
+100. What genes physically interact with CEACAM8?
+101. Which genes colocalize with type 1 diabetes?
+102. Which GO terms are associated with the gene "GAD1"??
+103. Which genes are effector genes of type 1 diabetes?
+104. Which genes with the GO term "histone H3K9 monomethyltransferase activity" are differentially expressed in Ductal Cells?
+105. What genes physically interact with FOS?
+106. Which diseases are associated with the SNP rs10141370 through GWAS signals?
+107. What genes are differentially expressed in Ductal Cells?
+108. What genes are physically interacting with NFYC?
+109. Which genes with the GO term "methyltransferase activity" are effector genes of type 2 diabetes?
+110. Which genes are associated with the SNP "rs1061810" through QTL signals?
+111. Which genes physically interact with MRPS23?
+112. Which genes are associated with the SNP "rs113561797" through QTL signals?
+113. Which genes with the GO term "chromatin remodeling" are physically interacting with each other?
+114. What genes are differentially expressed in Acinar Cells?
+115. Which genes with the GO term "DNA-binding transcription repressor activity" are effector genes of type 1 diabetes?
+116. Which genes are associated with the SNP "rs34363898" through GWAS signals?
+117. Which genes are differentially expressed in Acinar Cells?
+118. What are the expression levels of the gene "FH" in Alpha Cells and Beta Cells?
+119. Which GO terms are associated with the gene "FABP5"?
+120. What GO terms are associated with the gene "BRCA1"??
+121. Which genes are associated with the gene "MAPK9" through physical interaction?
+122. Which genes are differentially expressed in Alpha Cells and Beta Cells?
+123. Which genes with the GO term "histone H3K9 monomethyltransferase activity" are expressed in Acinar Cells?
+124. Which GO terms are associated with the gene "NLRP12"??
+125. Which genes are associated with the disease type 1 diabetes?
+126. What genes are associated with type 1 diabetes through QTL signals?
+127. Which genes with the GO term "RNA polymerase II cis-regulatory region sequence-specific DNA binding" are expressed in Alpha Cells?
+128. What diseases are associated with the gene "LINC01624" through QTL signals?
+129. Which SNPs are associated with type 1 diabetes through GWAS signals?
+130. What GO terms are associated with the gene "ACSS1"?
+131. What genes are differentially expressed in Delta Cells?
+132. What are the expression levels of the gene "SRPK1" in Alpha Cells and Beta Cells?
+133. Which genes are associated with the GO term "methyltransferase activity"?
+134. What genes are associated with type 1 diabetes through colocalization signals?
+135. Which GO terms are associated with the gene "DUSP6"?
+136. What are the GO terms associated with the gene "TCEAL9"?
+137. What GO terms are associated with the gene "KCNC3"?
+138. Which GO terms are associated with the gene "G6PC"??
+139. Which genes are associated with the disease type 2 diabetes through QTL signals?
+140. What GO terms are associated with the gene "IDH1"?
+141. What diseases are associated with the SNP "rs10166621" through GWAS signals?
+142. What are the expression levels of the gene THAP11 in Alpha Cells and Beta Cells?
+143. Which genes are associated with the disease type 1 diabetes through physical interactions?
+144. Which genes with the GO term "DNA-binding transcription repressor activity" are associated with type 1 diabetes?
+145. What GO terms are associated with the gene "DUSP9"??
+146. Which genes have the GO term "histone H3K9 monomethyltransferase activity"?
+147. Which genes are effector genes of type 1 diabetes?
+148. Which SNPs are associated with type 1 diabetes through GWAS signals?
+149. Which genes are associated with the SNP "rs34191899" through QTL signals?
+150. Which GO terms are associated with the gene "ENSG00000256969"?
+151. What genes physically interact with RPL8?
+152. What are the GO terms associated with the gene "IL33"?
+153. Which genes are differentially expressed in Beta Cells?
+154. What GO terms are associated with the gene "MRPS23"??
+155. Which GO terms are associated with the gene "TXNDC17"??
+156. What diseases are associated with the SNP "rs4380994" through GWAS signals?
+157. Which genes are associated with the SNP "rs6503687" through QTL signals?
+158. What genes have a physical interaction with the gene "ACTB"??
+159. Which SNPs are associated with type 1 diabetes through GWAS signals and physically interact with the gene DUSP6?
+160. Which diseases are associated with the SNP "rs1018941" through GWAS signals?
+161. Which genes are differentially expressed in Delta Cells?
+162. Which genes are associated with the GO term "membrane"?
+163. What genes are associated with the SNP "rs67232936" through QTL signals?
+164. Which genes are differentially expressed in Delta Cells?
+165. Which genes are differentially expressed in Delta Cells?
+166. Which genes are associated with the gene "MGST3" through QTL signals?
+167. What genes are effector genes of type 1 diabetes?
+168. Which genes are differentially expressed in Ductal Cells?
+
+=== rollouts_iter_010 (168 questions) ===
+1. Which SNPs are part of a QTL signal for the gene ACSL6?
+2. What diseases is the SNP rs16967104 associated with through GWAS signals?
+3. What SNPs are part of the QTL signal for the gene SPG21?
+4. Which genes are expressed in Ductal Cells?
+5. What genes are located in open chromatin regions associated with ADGRG4?
+6. In which cell types is the gene LUZP4 associated with open chromatin regions?
+7. What diseases colocalize with the gene LINC02444?
+8. What genes have a negative regulation of DNA-templated transcription according to Gene Ontology annotations?
+9. Which genes are differentially expressed in Alpha Cells?
+10. Which genes have the gene ontology term "DNA-binding transcription repressor activity"?
+11. What disease is the SNP rs4419720 associated with through GWAS signal?
+12. In which cell types is the gene ZSCAN5A differentially expressed?
+13. What genes have a physical interaction with MASTL?
+14. Which genes are associated with protein quality control for misfolded or incompletely synthesized proteins according to the Gene Ontology?
+15. Which genes are differentially expressed in Alpha Cells?
+16. Which genes are associated with the SNP rs2038760 through a QTL signal?
+17. What GO terms are associated with the gene RELB?
+18. What gene ontology terms are associated with the gene P2RY1?
+19. What gene ontology terms are associated with the gene MASTL?
+20. What gene ontology terms are associated with METTL25?
+21. Which genes have the gene ontology term "histone H3K9 monomethyltransferase activity"?
+22. Which genes have a physical interaction with ZSCAN20?
+23. What SNPs are associated with type 1 diabetes through GWAS signals?
+24. Which genes are associated with the SNP rs1002658 through a QTL signal?
+25. What is the expression level of the gene ANKRD44 in Beta Cells?
+26. What genes have the gene ontology term "methyltransferase activity"?
+27. Which genes are associated with the SNP rs34605207 through a QTL signal?
+28. What genes are physically interacting with MASTL?
+29. Which genes are associated with the SNP rs10075801 through a QTL signal?
+30. What gene ontology terms are associated with the gene MYOC?
+31. Which genes are associated with type 1 diabetes through colocalization signals?
+32. Which genes are associated with the SNP rs11126991 through a QTL signal?
+33. What genes have the gene ontology term "histone H3K9 monomethyltransferase activity"?
+34. Which genes have a physical interaction with BRCA1?
+35. What gene ontology terms are associated with the gene SETMAR?
+36. Which genes have the gene ontology term "DNA-binding transcription repressor activity"?
+37. Which genes with the gene ontology term "histone H3K9 monomethyltransferase activity" are expressed in Ductal Cells?
+38. Which genes are expressed in Ductal Cells?
+39. What are the gene ontology terms associated with the gene EIF2AK2?
+40. Which genes are differentially expressed in Acinar Cells?
+41. Which genes are associated with the SNP rs10141370 through a QTL signal?
+42. Which diseases are associated with the SNP rs10205490 through a GWAS signal?
+43. Which diseases are associated with the SNP rs28836469 through a GWAS signal?
+44. Which genes are differentially expressed in Alpha Cells?
+45. Which SNPs are associated with type 1 diabetes through a GWAS signal?
+46. Which genes are differentially expressed in Alpha Cells?
+47. What are the gene ontology terms associated with the gene OR10U1P?
+48. What genes have the gene ontology term "chromatin remodeling"?
+49. Which diseases are associated with the gene OR2M5 as effector genes?
+50. Which diseases are associated with the gene GABRD through colocalization signals?
+51. Which genes are associated with the SNP rs10176782 through a QTL signal?
+52. What are the gene ontology terms associated with the gene EIF2AK4?
+53. What open chromatin regions are active in Delta Cells?
+54. Which genes are associated with the SNP rs76664120 through a QTL signal?
+55. What are the gene ontology terms associated with DYRK2?
+56. Which diseases are associated with the SNP rs2658432 through a GWAS signal?
+57. Which genes are effector genes of type 1 diabetes?
+58. What are the gene ontology terms associated with the gene mastl?
+59. What are the gene ontology terms associated with the gene EIF2AK2?
+60. Which genes have a physical interaction with the gene OR10U1P?
+61. What genes have the gene ontology term "protein quality control for misfolded or incompletely synthesized proteins"?
+62. Which diseases are associated with the SNP rs6545776 through a GWAS signal?
+63. Which gene ontology terms are associated with the gene ZSCAN5A?
+64. Which diseases are associated with the SNP rs11868068 through a GWAS signal?
+65. Which genes are associated with the SNP rs10127756 through a QTL signal?
+66. Which diseases are associated with the SNP rs79353251 through a GWAS signal?
+67. Which genes are associated with the gene ontology term "DNA-binding transcription repressor activity"?
+68. What diseases are associated with the SNP rs4596007 through a GWAS signal?
+69. Which genes are effector genes of type 1 diabetes?
+70. What diseases are associated with the SNP rs73083778 through a GWAS signal?
+71. What are the gene ontology terms associated with the gene GABRD?
+72. What genes have a physical interaction with the gene MYOC?
+73. What diseases are associated with the SNP rs151179 through a GWAS signal?
+74. Which genes are associated with the gene ontology term "methyltransferase activity"?
+75. Which genes have the gene ontology term "methyltransferase activity"?
+76. What is the expression level of SPECC1 in Acinar Cells?
+77. Which gene ontology terms are associated with the gene EIF2AK4?
+78. What are the gene ontology terms associated with the gene rs10616365?
+79. Which genes are associated with the SNP rs10203482 through a QTL signal?
+80. What genes are associated with the gene ontology term "transferase activity"?
+81. Which genes are associated with the gene ontology term "negative regulation of transforming growth factor beta receptor signaling pathway"?
+82. Which genes are associated with the gene ontology term "histone H3K9 monomethyltransferase activity"?
+83. Which diseases are associated with the SNP rs2356349 through a GWAS signal?
+84. What genes are associated with the SNP rs2346561 through a QTL signal?
+85. Which GO terms are associated with the gene ZSCAN20?
+86. What diseases have colocalization signals with the gene GABRD?
+87. Which genes have a physical interaction with the gene BRCA1?
+88. Which genes are associated with the gene ontology term "histone H3K9 monomethyltransferase activity"?
+89. What genes are associated with the gene ontology term "brown fat cell differentiation"?
+90. Which genes are associated with the gene ontology term "DNA-binding transcription repressor activity"?
+91. Which genes are expressed in Delta Cells?
+92. Which genes are associated with the gene ontology term "chromatin remodeling"?
+93. Which genes are associated with the SNP rs28545035 through a QTL signal?
+94. What are the gene ontology terms associated with the gene H3K9MTS1?
+95. Which GO terms are associated with the gene TLE2?
+96. What gene ontology terms are associated with the gene WDR18?
+97. What genes are associated with the gene ontology term "heterochromatin organization"?
+98. What GO terms are associated with the gene APEX1?
+99. Which SNPs are associated with the gene MFSD4B through a QTL signal?
+100. Which genes are differentially expressed in Alpha Cells and have the gene ontology term "DNA-binding transcription repressor activity"?
+101. Which genes are associated with the gene ontology term "DNA-binding transcription repressor activity"?
+102. Which genes are physically interacting with the gene BRCA1?
+103. Which genes have a physical interaction with the gene BRCA1?
+104. Which genes are associated with the gene ontology term "methyltransferase activity"?
+105. Which gene ontology terms are associated with genes physically interacting with EIF2AK4?
+106. Which gene ontology terms are associated with the gene CFAP57?
+107. What are the gene ontology terms associated with the gene NT5E?
+108. Which GO terms are associated with the gene BRCA1?
+109. Which gene ontology terms are associated with the gene APOE?
+110. Which genes are signal_COLOC_with the disease "type 1 diabetes"?
+111. What are the Gene Ontology terms associated with the gene HSP90AB1?
+112. Which genes are associated with the gene ontology term "histone H3K9 monomethyltransferase activity"?
+113. Which gene ontology terms are associated with the gene rs12042529?
+114. Which gene ontology terms are associated with the gene MYOC?
+115. Which genes are signal_COLOC_with the gene PTGR2?
+116. What gene ontology terms are associated with the gene HLA-F?
+117. Which genes are associated with the gene ontology term "peroxisome"?
+118. Which genes are associated with the gene ontology term "DNA-binding transcription factor activity"?
+119. Which genes are signal_COLOC_with the disease "type 1 diabetes" and have the gene ontology term "methyltransferase activity"?
+120. Which disease is associated with the SNP rs13410999 through a GWAS signal?
+121. Which physical interaction partners does the gene PPIB have?
+122. What are the gene ontology terms associated with the gene PUSL1?
+123. Which gene ontology terms are associated with genes that are differentially expressed in Delta Cells?
+124. What gene ontology terms are associated with the gene TCIRG1?
+125. Which gene ontology terms are associated with the gene rs261334?
+126. Which genes are associated with the gene ontology term "cell differentiation"?
+127. Which genes are associated with the gene ontology term "methyltransferase activity"?
+128. What are the Gene Ontology terms associated with the gene ACOT12?
+129. Which genes have a gene ontology term associated with "DNA-binding transcription repressor activity"?
+130. What are the gene ontology terms associated with the gene HSD11B1?
+131. Which diseases are associated with the SNP rs111423688 through a GWAS signal?
+132. Which gene ontology terms are associated with the gene rs10172060?
+133. Which genes are effector genes of type 1 diabetes?
+134. Which gene ontology terms are associated with the gene rs710221?
+135. What are the gene ontology terms associated with genes differentially expressed in Ductal Cells?
+136. Which genes are associated with the gene ontology term "histone H3K9 monomethyltransferase activity"?
+137. What are the gene ontology terms associated with genes expressed in Acinar Cells?
+138. Which gene ontology terms are associated with the gene PLAU?
+139. What genes are associated with the gene ontology term "DNA-binding transcription repressor activity"?
+140. What gene ontology terms are associated with the gene OR2T6?
+141. What gene ontology terms are associated with the genes expressed in Ductal Cells?
+142. What genes are associated with the gene ontology term "DNA-binding transcription factor binding"?
+143. Which gene ontology terms are associated with the gene rs1100134?
+144. Which gene ontology terms are associated with the gene rs1991229?
+145. What are the gene ontology terms associated with the gene that rs2303137 is part of a QTL signal for?
+146. Which gene ontology terms are associated with the gene G6PC?
+147. Which genes are associated with the gene ontology term "protein transport"?
+148. What are the gene ontology terms associated with the gene ADAM15?
+149. What gene ontology terms are associated with the gene HYI?
+150. Which gene ontology terms are associated with the gene expressed in Delta Cells?
+151. Which gene ontology terms are associated with the gene rs2330809?
+152. Which gene ontology terms are associated with the gene ABCG2?
+153. What SNPs are part of the QTL signal for the gene FAM53A?
+154. Which gene ontology terms are associated with the gene STK40?
+155. What gene ontology terms are associated with the gene zscan20?
+156. What are the gene ontology terms associated with the gene PTOV1?
+157. What gene ontology terms are associated with the gene RNU7-120P?
+158. What gene ontology terms are associated with the gene BRCA1?
+159. What gene ontology terms are associated with the gene BRWD1?
+160. Which diseases are associated with the SNP rs62065448 through GWAS signals?
+161. Which gene ontology terms are associated with the gene eif2ak4?
+162. SLC35F3 is differentially expressed in which cell types?
+163. What SNPs are part of the QTL signal for the gene LINC01106?
+164. Which genes are associated with the SNP rs11559147 through a QTL signal?
+165. Which diseases are associated with the SNP rs61840390 through GWAS signals?
+166. Which gene ontology terms are associated with the gene APOE?
+167. Which genes are associated with the gene ontology term "negative regulation of DNA-templated transcription"?
+168. Which gene ontology terms are associated with the gene SLC26A5?
+
+=== rollouts_iter_011 (152 questions) ===
+1. Which genes are expressed in Ductal Cells?
+2. What genes have a physical interaction with HUS1?
+3. What genes are effector genes of type 1 diabetes?
+4. Which genes physically interact with CTNNBL1?
+5. Which SNPs are part of the QTL signal for the gene "PPARG"?
+6. Which diseases are associated with the SNP rs17630466 through GWAS signals?
+7. Which genes are expressed in Acinar Cells?
+8. What is the expression level of the gene LACC1 in Alpha Cells?
+9. Which genes are differentially expressed in Beta Cells?
+10. Which genes are effector genes of type 2 diabetes?
+11. What GO terms are associated with the gene RSL1D1-DT?
+12. What genes are differentially expressed in Alpha Cells?
+13. Which genes are effector genes of type 2 diabetes?
+14. Which genes are effector genes of type 2 diabetes?
+15. What genes are effector genes of type 2 diabetes?
+16. Which genes are effector genes of type 2 diabetes?
+17. Which genes physically interact with CYP2C19?
+18. Which SNPs are part of the QTL signal for the gene "RPL23AP1"?
+19. Which genes have a physical interaction with USP10?
+20. What genes physically interact with HLA-DQB1?
+21. What SNPs are associated with type 1 diabetes through GWAS signals?
+22. What genes have a physical interaction with CTNNBL1?
+23. Which diseases are associated with the SNP rs10197066 through GWAS signals?
+24. What genes are effector genes of type 1 diabetes?
+25. What open chromatin regions are active in Delta Cells?
+26. Which genes are associated with the SNP rs1010599 through QTL signals?
+27. What GO terms are associated with the gene CTDSP2?
+28. What genes physically interact with CES1?
+29. Which genes are differentially expressed in Delta Cells?
+30. What genes are associated with the gene ontology term "positive regulation of DNA-templated transcription"?
+31. What genes are annotated with the GO term "peroxisome"?
+32. Which genes are effector genes of type 1 diabetes?
+33. Which SNPs are associated with type 1 diabetes through GWAS signals and interact with the gene "RPL23AP1"?
+34. What open chromatin regions are located in the gene "BCL2L1"?
+35. Which genes are annotated with the GO term "DNA-binding transcription factor binding"?
+36. What open chromatin regions are active in Acinar Cells?
+37. Which GO terms are associated with the gene "RCHY1"?
+38. Which genes are differentially expressed in Alpha Cells?
+39. Which genes are associated with the SNP rs2572128 through QTL signals?
+40. Which genes are differentially expressed in Ductal Cells?
+41. What GO terms are associated with the gene "USP10"?
+42. What genes physically interact with GGCT?
+43. What are the differentially expressed genes in Acinar Cells?
+44. Which genes are annotated with the GO term "nucleus"?
+45. What genes are differentially expressed in Beta Cells?
+46. Which SNPs are associated with type 2 diabetes through GWAS signals and how do they relate to the gene "rs4318178"?
+47. Which genes are associated with the SNP rs117689190 through QTL signals?
+48. What genes are annotated with the GO term "histone H3K9 monomethyltransferase activity"?
+49. Which genes are associated with the SNP rs7784850 through GWAS signals?
+50. Which genes are differentially expressed in Delta Cells?
+51. Which genes are colocalized with type 1 diabetes?
+52. Which genes are annotated with the GO term "DNA-binding transcription repressor activity"?
+53. Which genes are annotated with the GO term "methyltransferase activity"?
+54. What GO terms are associated with the gene "BCL2L11"?
+55. Which genes are associated with the SNP rs12712929 through QTL signals?
+56. Which GO terms are associated with the gene "DUSP6"?
+57. What genes are annotated with the GO term "chromatin remodeling"?
+58. Which genes are annotated with the GO term "chromatin remodeling"?
+59. Which open chromatin regions are active in Acinar Cells?
+60. Which genes are annotated with the GO term "RNA polymerase II cis-regulatory region sequence-specific DNA binding"?
+61. What genes are differentially expressed in Alpha Cells?
+62. Which genes are colocalized with type 1 diabetes and have the GO term "histone H3K9 monomethyltransferase activity"?
+63. Which genes are annotated with the GO term "peroxisome organization"?
+64. Which SNPs are associated with type 1 diabetes through GWAS signals?
+65. Which genes are effector genes of type 1 diabetes?
+66. Which genes are colocalized with type 2 diabetes?
+67. Which genes are associated with the GO term "histone H3K9 monomethyltransferase activity"?
+68. What GO terms are associated with the gene "SLC1A3"?
+69. Which GO terms are associated with the gene "ZAP70"?
+70. Which genes are physically interacting with the gene "BCL2L11"?
+71. Which genes are differentially expressed in Ductal Cells?
+72. Which SNPs are associated with type 2 diabetes through GWAS signals?
+73. Which SNPs are associated with type 1 diabetes through GWAS signals and interact with the gene "CES1"?
+74. Which genes are physically interacting with the gene "CES1"?
+75. Which genes are differentially expressed in Delta Cells?
+76. Which open chromatin regions are located in the gene "TRNAU1AP"?
+77. What open chromatin regions are active in Alpha Cells?
+78. What genes are associated with the GO term "DNA-binding transcription repressor activity"?
+79. Which SNPs are associated with type 1 diabetes?
+80. What genes are annotated with the GO term "positive regulation of DNA-templated transcription"?
+81. Which genes are part of a QTL signal involving the gene "KCNA1"?
+82. What genes are effector genes of type 1 diabetes?
+83. Which genes are physically interacting with the gene "GATA3"?
+84. Which genes are associated with the GO term "methyltransferase activity"?
+85. Which genes are differentially expressed in Acinar Cells?
+86. What SNPs are associated with type 1 diabetes through GWAS signals?
+87. Which genes are associated with the GO term "methyltransferase activity"?
+88. Which genes are associated with type 1 diabetes through GWAS signals?
+89. What genes are differentially expressed in Beta Cells?
+90. What genes are associated with the GO term "histone H3K9 monomethyltransferase activity"?
+91. Which genes are associated with the GO term "histone H3K9 monomethyltransferase activity"?
+92. What genes are associated with the GO term "histone H3K9 monomethyltransferase activity"?
+93. Which genes are associated with the GO term "histone H3K9 monomethyltransferase activity"?
+94. Which genes are physically interacting with the gene "PLA2G2E"?
+95. Which genes are associated with the GO term "DNA-binding transcription repressor activity"?
+96. What genes are annotated with the GO term "nucleoplasm"?
+97. Which genes are associated with the GO term "nucleoplasm" and are also expressed in Alpha Cells?
+98. What genes are differentially expressed in Acinar Cells?
+99. What genes are associated with the GO term "DNA-binding transcription repressor activity"?
+100. What are the Gene Ontology terms associated with the gene "SNX3"?
+101. What SNPs are associated with type 2 diabetes through GWAS signals?
+102. What genes physically interact with the gene "SEMA4B"?
+103. Which GO terms are associated with the gene CTCF?
+104. Which genes are differentially expressed in Alpha Cells?
+105. What genes are differentially expressed in Beta Cells and have the GO term "DNA-binding transcription repressor activity"?
+106. Which genes are differentially expressed in Ductal Cells?
+107. Which genes are associated with the SNP "rs9652863" through QTL signals?
+108. Which genes are associated with the GO term "nucleus"?
+109. What genes are differentially expressed in Delta Cells?
+110. What SNPs are associated with type 1 diabetes through GWAS signals?
+111. Which genes are differentially expressed in Delta Cells?
+112. What genes are differentially expressed in Ductal Cells?
+113. What diseases colocalize with the gene "RNA5SP391"?
+114. Which genes are associated with the SNP "rs10185510" through QTL signals?
+115. Which genes are associated with the GO term "methyltransferase activity"?
+116. What genes are differentially expressed in Delta Cells and have the GO term "methyltransferase activity"?
+117. What GO terms are associated with the gene "GCK"?
+118. Which genes are associated with the GO term "ubiquitin protein ligase activity"?
+119. What GO terms are associated with the gene "PRMT1"?
+120. Which disease is the SNP "rs11119997" associated with through GWAS signals?
+121. What genes are differentially expressed in Acinar Cells?
+122. What genes are associated with the GO term "DNA-binding transcription repressor activity"?
+123. Which genes are associated with the GO term "histone H3K9 monomethyltransferase activity"?
+124. What genes are associated with the GO term "histone H3K9 monomethyltransferase activity"?
+125. What open chromatin regions are associated with the gene "NKAIN1"?
+126. What genes are associated with the GO term "histone H3K9 monomethyltransferase activity"?
+127. What open chromatin regions are active in Beta Cells?
+128. Which genes are differentially expressed in Beta Cells and have the GO term "DNA-binding transcription repressor activity"?
+129. What genes are associated with the GO term "cell differentiation"?
+130. Which genes are differentially expressed in Beta Cells and have the GO term "DNA-binding transcription repressor activity"?
+131. Which genes are differentially expressed in Delta Cells and have the GO term "DNA-binding transcription repressor activity"?
+132. Which diseases are associated with the SNP "rs10198275" through GWAS signals?
+133. What diseases is the SNP "rs13018977" associated with through GWAS signals?
+134. What SNPs are associated with type 1 diabetes through GWAS signals?
+135. What genes physically interact with ZC3H6?
+136. What genes are associated with the GO term "positive regulation of DNA-templated transcription"?
+137. What open chromatin regions are active in Stellate Cells?
+138. What genes are associated with the GO term "methyltransferase activity"?
+139. What genes are associated with the GO term "chromatin remodeling"?
+140. What genes are associated with the GO term "methyltransferase activity"?
+141. Which genes are associated with the SNP "rs224329" through QTL signals?
+142. What genes physically interact with DNTTIP2?
+143. What genes are associated with the GO term "transcription cis-regulatory region binding"?
+144. Which genes are associated with the SNP "rs180814" through QTL signals?
+145. Which genes are associated with the SNP "rs11542583" through QTL signals?
+146. What genes are associated with the GO term "DNA-binding transcription repressor activity"?
+147. Which genes are associated with the SNP "rs10197237" through QTL signals?
+148. What diseases are associated with the SNP "rs10176782" through GWAS signals?
+149. What genes are differentially expressed in Acinar Cells and have the GO term "methyltransferase activity"?
+150. Which genes are associated with the SNP "rs1165596" through QTL signals?
+151. Which genes are associated with the SNP "rs224322" through QTL signals?
+152. What genes are associated with the gene "FAM153A" through QTL signals?
+
+=== rollouts_iter_012 (152 questions) ===
+1. Which genes signal colocalization with type 1 diabetes?
+2. What genes colocalize with signals for type 1 diabetes?
+3. What diseases are ZSCAN20 an effector gene of?
+4. Which diseases are associated with the SNP rs61985135?
+5. Which SNPs are part of the QTL signal for the gene "PTPN2"?
+6. Which SNPs are associated with the gene expression of the gene "SIRT1"??
+7. Which genes are part of the QTL signal for MTRF1L?
+8. What genes are differentially expressed in Alpha Cells?
+9. Which genes are associated with the SNP rs10166621?
+10. Which SNPs are associated with the gene expression of the gene "GCK"?
+11. What genes colocalize with signals for type 2 diabetes?
+12. Which SNPs are associated with type 1 diabetes through GWAS signals?
+13. What genes are associated with type 1 diabetes through colocalization signals?
+14. Which SNPs are associated with type 1 diabetes?
+15. Which genes are differentially expressed in Delta Cells?
+16. Which diseases are associated with the SNP rs72727394?
+17. Which SNPs are associated with type 2 diabetes through GWAS signals?
+18. Which genes colocalize with signals for type 1 diabetes in Alpha Cells?
+19. What genes are differentially expressed in Ductal Cells?
+20. Which genes are differentially expressed in Acinar Cells?
+21. Which genes are associated with the SNP rs1010599 through QTL signals?
+22. What genes are differentially expressed in Beta Cells?
+23. Which SNPs are associated with type 2 diabetes through GWAS signals?
+24. Which SNPs are part of the QTL signal for the gene "ZNF544"?
+25. Which genes are annotated with the gene ontology term "transcription coactivator activity"?
+26. What open chromatin regions are active in Alpha Cells?
+27. What genes are expressed in Ductal Cells?
+28. What genes are associated with type 1 diabetes through colocalization signals?
+29. What genes are effector genes of type 1 diabetes?
+30. Which genes are differentially expressed in Alpha Cells?
+31. Which open chromatin regions are located in the gene RUNX3?
+32. What genes physically interact with DNAJB1?
+33. Which genes are associated with the SNP rs7111905 through QTL signals?
+34. Which genes colocalize with signals for type 1 diabetes in Delta Cells?
+35. Which genes are annotated with the gene ontology term "histone H3K9 monomethyltransferase activity"?
+36. What genes are effector genes of type 1 diabetes and physically interact with OR10U1P?
+37. What gene ontology terms are associated with the gene FABP4?
+38. What genes physically interact with ZCCHC9?
+39. Which genes are associated with type 1 diabetes through colocalization signals and have a gene ontology term related to DNA-binding transcription repressor activity?
+40. What genes are annotated with the gene ontology term "methyltransferase activity"?
+41. What gene ontology terms are associated with the gene PRPF19?
+42. Which diseases are associated with the SNP rs10088596 through GWAS signals?
+43. Which genes are associated with the gene ontology term "DNA-binding transcription repressor activity"?
+44. What genes are annotated with the gene ontology term "positive regulation of cold-induced thermogenesis"?
+45. Which genes are associated with the SNP rs2862956 through QTL signals?
+46. What genes are differentially expressed in Delta Cells?
+47. Which genes are effector genes of type 1 diabetes and have a physical interaction with EZR?
+48. Which open chromatin regions are active in Delta Cells?
+49. What are the gene ontology terms associated with RGPD6?
+50. What gene ontology terms are associated with the gene OR2T6?
+51. What open chromatin regions are located in the gene WFDC9?
+52. Which genes are differentially expressed in Acinar Cells?
+53. What genes are annotated with the gene ontology term "histone H3K9 monomethyltransferase activity"?
+54. Which genes are associated with the gene ontology term "histone H3K9 monomethyltransferase activity"?
+55. Which open chromatin regions are active in Acinar Cells?
+56. What SNPs are associated with type 1 diabetes through GWAS signals?
+57. What genes are associated with the SNP rs34456643 through QTL signals?
+58. What is the expression level of MAGOHB in Alpha Cells?
+59. What genes are differentially expressed in Ductal Cells?
+60. What open chromatin regions are active in Alpha Cells?
+61. What genes physically interact with OR2M2?
+62. What are the gene ontology terms associated with the gene FAF1?
+63. Which genes are associated with the SNP rs6556513 through QTL signals?
+64. Which genes have the function annotation "methyltransferase activity"?
+65. What diseases are colocalized with the gene SF3A3?
+66. What genes are differentially expressed in Delta Cells?
+67. Which genes are differentially expressed in Beta Cells?
+68. Which genes are associated with type 1 diabetes through effector gene relationships?
+69. Which genes are associated with the SNP rs2515641 through QTL signals?
+70. What genes are associated with the gene ontology term "DNA-binding transcription repressor activity"?
+71. Which genes are associated with the SNP rs6745562 through QTL signals?
+72. Which diseases are associated with colocalization signals from the gene GABRD?
+73. Which genes have colocalization signals with type 1 diabetes?
+74. What is the expression level of CCDC90B in Beta Cells?
+75. What genes are associated with "methyltransferase activity" GO term?
+76. Which genes are differentially expressed in Alpha Cells?
+77. Which genes are associated with the SNP rs6420186 through QTL signals?
+78. What genes are expressed in Acinar Cells?
+79. What are the Gene Ontology terms associated with the gene DNM3?
+80. Which diseases are associated with the SNP rs10185143 through GWAS signals?
+81. What genes are associated with the SNP rs11693654 through QTL signals?
+82. What genes are differentially expressed in Ductal Cells?
+83. What genes have the function annotation "methyltransferase activity"?
+84. What genes are associated with the SNP rs2572925 through QTL signals?
+85. Which genes are associated with the SNP rs11887646 through QTL signals?
+86. Which diseases are associated with the SNP rs34839 through GWAS signals?
+87. What genes are associated with the gene ontology term "protein transport"?
+88. What SNPs are associated with type 1 diabetes through GWAS signals?
+89. Which genes are associated with the SNP rs2440660 through QTL signals?
+90. What genes are associated with the SNP rs10165451 through QTL signals?
+91. What physical interactions does the gene ATP6AP1 have with other genes?
+92. What genes are associated with the SNP rs2572876 through QTL signals?
+93. What are the physical interaction partners of the gene INO80?
+94. Which diseases are associated with the SNP rs7148416 through GWAS signals?
+95. Which genes are associated with the SNP rs10064755 through QTL signals?
+96. What diseases are associated with the SNP rs212410 through GWAS signals?
+97. What genes are associated with the SNP rs11673317 through QTL signals?
+98. What genes have the function annotation "histone H3K9 monomethyltransferase activity"?
+99. What genes have the function annotation "DNA-binding transcription repressor activity"?
+100. What diseases are colocalized with the gene MYL6B-AS1?
+101. What genes are colocalized with type 1 diabetes?
+102. Which genes have the function annotation "histone H3K9 monomethyltransferase activity"?
+103. Which genes are associated with the gene ontology term "histone H3K9 monomethyltransferase activity"?
+104. Which genes have the function annotation "positive regulation of cold-induced thermogenesis"?
+105. What diseases does the gene GABRA5 affect as an effector gene?
+106. Which genes are associated with the SNP rs2531360 through QTL signals?
+107. Which genes are associated with the SNP rs10953363 through QTL signals?
+108. What open chromatin regions are located in the gene TTPAL?
+109. Which genes have the function annotation "methyltransferase activity"?
+110. Which diseases are associated with the SNP rs7563873 through GWAS signals?
+111. What diseases are associated with the SNP rs10176782 through GWAS signals?
+112. What genes are associated with the SNP rs1234567 through QTL signals?
+113. Which genes are associated with type 1 diabetes as effector genes?
+114. What open chromatin regions are located in the gene ATP1B4?
+115. Which genes have the function annotation "chromatin remodeling"?
+116. Which genes have the function annotation "chromatin remodeling"?
+117. Which genes are associated with type 1 diabetes as effector genes?
+118. Which genes are physically interacting with the gene DHCR7-DT?
+119. What diseases are colocalized with the gene PRDM11?
+120. Which genes are associated with the SNP rs1865059 through QTL signals?
+121. What genes have the function annotation "RNA polymerase II cis-regulatory region sequence-specific DNA binding"?
+122. Which genes are differentially expressed in Alpha Cells?
+123. What genes are associated with the SNP rs4690219 through QTL signals?
+124. Which genes have the function annotation "histone H3K9 monomethyltransferase activity"?
+125. Which open chromatin regions are active in Acinar Cells?
+126. What is the expression level of LRIG3 in Alpha Cells?
+127. Which genes have the function annotation "RNA polymerase II cis-regulatory region sequence-specific DNA binding"?
+128. Which genes are associated with the SNP rs74508302 through QTL signals?
+129. What diseases are associated with the SNP rs10203482 through GWAS signals?
+130. Which genes are colocalized with type 1 diabetes?
+131. What are the gene ontology functions annotated to OSR2?
+132. Which genes have the function annotation "nucleus"?
+133. What are the expression levels of RANBP10 in Alpha Cells?
+134. Which genes are associated with the SNP rs2604209 through QTL signals?
+135. Which genes are differentially expressed in Beta Cells?
+136. What is the expression level of OR2M5 in Delta Cells?
+137. Which genes have the function annotation "methyltransferase activity"?
+138. Which genes are associated with the SNP rs11764446 through QTL signals?
+139. Which genes are associated with the SNP rs73088465 through GWAS signals?
+140. Which genes have the function annotation "DNA-binding transcription repressor activity"?
+141. Which genes are associated with the SNP rs2305670 through QTL signals?
+142. Which open chromatin regions are located in the gene NANP?
+143. What genes have the function annotation "peroxisomal membrane"?
+144. Which genes are differentially expressed in Ductal Cells?
+145. Which genes are differentially expressed in Alpha Cells and have the function annotation "methyltransferase activity"?
+146. Which genes are differentially expressed in Alpha Cells?
+147. Which genes are effector genes of type 1 diabetes?
+148. Which genes have the function annotation "histone H3K9 monomethyltransferase activity"?
+149. What are the effector genes of type 1 diabetes?
+150. Which genes have the function annotation "histone H3K9 monomethyltransferase activity"?
+151. What are the expression levels of OR6C65 in Alpha Cells?
+152. Which genes are colocalized with type 1 diabetes?
+
+=== rollouts_iter_013 (40 questions) ===
+1. Which genes are differentially expressed in Alpha Cells?
+2. What SNPs are part of QTL signals for the gene SLC1A2?
+3. What are the gene ontology terms associated with the gene MYOC?
+4. Which diseases are PRDM11 an effector gene of?
+5. Which genes are part of a QTL signal associated with type 1 diabetes involving the SNP "rs10165451"?
+6. What genes are differentially expressed in Alpha Cells?
+7. What genes are effector genes of type 1 diabetes?
+8. What genes have a physical interaction with EFR3A?
+9. What genes are part of QTL signals associated with the SNP rs680465?
+10. Which genes are physically interacting with EFR3A?
+11. What is the expression level of MPHOSPH10 in Alpha Cells?
+12. What genes are part of a QTL signal associated with AADACP1?
+13. Which open chromatin regions are active in Alpha Cells?
+14. Which genes have the function of DNA-binding transcription repressor activity in the Alpha Cell?
+15. What are the gene ontology terms associated with INPP5F?
+16. Which genes have a physical interaction with EFR3A?
+17. What are the gene ontology terms associated with the gene UCP1?
+18. What are the gene ontology terms associated with the gene CD3E?
+19. What are the Gene Ontology terms associated with the gene GH1?
+20. What are the gene ontology terms associated with TUBG1?
+21. What open chromatin regions are active in Ductal Cells?
+22. What genes physically interact with BTK?
+23. What genes are physically interacting with EFR3A?
+24. Which genes have the function of protein import into peroxisome matrix?
+25. Which genes are part of a QTL signal associated with rs107068?
+26. What gene ontology terms are associated with the gene RPS6P22?
+27. Which genes are differentially expressed in Alpha Cells?
+28. Which genes are expressed in Acinar Cells?
+29. Which genes are associated with the gene ontology term "methyltransferase activity"?
+30. What genes are annotated with the function "RNA polymerase II cis-regulatory region sequence-specific DNA binding"?
+31. Which open chromatin regions are active in Acinar Cells?
+32. What genes are differentially expressed in Ductal Cells?
+33. Which genes are part of a QTL signal for TRNT1?
+34. What diseases are associated with the SNP rs12896939 through GWAS signals?
+35. Which genes physically interact with BICD1?
+36. Which genes are part of a QTL signal associated with rs2278147?
+37. What open chromatin regions are located in genes associated with type 1 diabetes?
+38. Which genes are associated with the gene ontology term "histone H3K9 monomethyltransferase activity"?
+39. What genes are part of a QTL signal associated with rs55794721?
+40. Which genes are part of a QTL signal associated with rs300181?
+

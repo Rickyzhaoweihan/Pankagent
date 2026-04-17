@@ -1,0 +1,146 @@
+# Training Configuration for Collaborative Multi-Agent System
+# Strategy 2: Sequential Within-Epoch Updates with Model Swapping
+
+# Training parameters
+num_epochs: 45  # 10 easy + 15 medium + 20 hard
+questions_per_epoch: 512
+experiment_name: pankllm_collaborative_rl
+
+# Paths (will be overridden by command-line args)
+schema_path: null
+checkpoint_dir: null
+log_dir: null
+val_questions_path: null
+
+# Neo4j connection
+neo4j_url: "https://nzi5e9mb0f.execute-api.us-east-1.amazonaws.com/production/pankgraph-neo4j"
+
+# PPO config paths
+cypher_ppo_config_path: "rl_implementation/config/ppo_collaborative.yaml"
+orchestrator_ppo_config_path: "rl_implementation/config/orchestrator_ppo.yaml"
+
+# =============================================================================
+# GPU Allocation Configuration - Sequential Training Strategy
+# =============================================================================
+# 
+# STRATEGY: Sequential Within-Epoch Updates with Model Swapping
+# 
+# Each epoch has 3 phases:
+#   Phase 1 (Rollout):     Both models loaded for INFERENCE (split GPUs)
+#   Phase 2 (Cypher PPO):  Only Cypher loaded for TRAINING (all GPUs)
+#   Phase 3 (Orch PPO):    Only Orch loaded for TRAINING (all GPUs, conditional)
+#
+# Benefits:
+#   - Maximum GPU utilization during training (all 8 GPUs for one model)
+#   - Memory efficient (only one model in training mode at a time)
+#   - Both agents learn from same rollout experiences
+#
+# =============================================================================
+
+gpu_allocation:
+  # Total GPUs available on the node
+  total_gpus: 8
+  
+  # Number of nodes (for multi-node training)
+  nnodes: 1
+  
+  # Training mode: "sequential" (recommended) or "parallel"
+  # - sequential: Swap models between phases, use all GPUs for training
+  # - parallel: Keep both models loaded, split GPUs (legacy mode)
+  mode: "sequential"
+  
+  # --- Sequential Mode Settings ---
+  # During rollout (inference), GPUs are split between models
+  rollout:
+    cypher_gpus: 4      # Cypher Generator inference
+    orch_gpus: 4        # Orchestrator inference (EMA + Trainable)
+  
+  # During training, ALL GPUs are used for the active model
+  training:
+    gpus: 8             # All GPUs for whichever model is training
+  
+  # --- Parallel Mode Settings (legacy) ---
+  # If mode is "parallel", these are used instead
+  parallel:
+    cypher_gpus: 4
+    orch_gpus: 4
+    use_shared_model: false
+
+# =============================================================================
+# Orchestrator Update Schedule
+# =============================================================================
+# Controls when Orchestrator is trained (Cypher trains every epoch)
+#
+# Phases:
+#   - warmup (epochs 1-5): Freeze Orch, only train Cypher
+#   - alternating (epochs 6-20): Train Orch every N epochs
+#   - joint (epochs 21+): Train Orch more frequently
+#
+# =============================================================================
+
+orchestrator_schedule:
+  # Phase definitions
+  warmup_epochs: 5          # Epochs 1-5: Freeze Orchestrator
+  alternating_end_epoch: 20 # Epochs 6-20: Alternating updates
+  
+  # Update frequency per phase
+  warmup_frequency: 0       # Never update during warmup (0 = disabled)
+  alternating_frequency: 3  # Update every 3 epochs during alternating phase
+  joint_frequency: 2        # Update every 2 epochs during joint phase
+  
+  # Stage-specific overrides (optional)
+  stage_overrides:
+    easy:
+      joint_frequency: 2    # Every 2 epochs for easy stage
+    medium:
+      joint_frequency: 1    # Every epoch for medium stage
+    hard:
+      joint_frequency: 1    # Every epoch for hard stage
+
+# =============================================================================
+# EMA (Exponential Moving Average) Orchestrator Settings
+# =============================================================================
+# The EMA Orchestrator is used for stable evaluation (Roles 2 & 4)
+# It's updated slowly after each Orchestrator training step
+#
+# =============================================================================
+
+ema:
+  enabled: true
+  decay: 0.99              # EMA decay rate (higher = slower updates)
+  decay_on_drift: 0.995    # Increase decay if drift detected
+  update_after_orch_train: true  # Update EMA after Orch PPO step
+
+# Curriculum settings
+curriculum:
+  initial_stage: easy
+  window_size: 100
+  
+# Experience buffer
+experience_buffer:
+  max_patterns: 100
+
+# Reward tracking
+reward_tracking:
+  window_size: 100
+
+# Validation
+validation_frequency: 5  # Every N epochs
+validation_size: 100  # Number of validation questions
+
+# =============================================================================
+# Rollout Logging Configuration
+# =============================================================================
+# Controls what rollout information is logged for inspection
+rollout_logging:
+  enabled: true           # Enable sample rollout logging
+  sample_per_epoch: 5     # Number of rollouts to log per epoch (set to 0 to disable)
+  save_samples: false     # Save samples to JSON files (can be large, disable for production)
+
+# Checkpoint settings
+checkpoint_frequency: 5  # Every N epochs (aligned with validation)
+max_checkpoints: 3
+
+# Logging
+log_level: INFO
+

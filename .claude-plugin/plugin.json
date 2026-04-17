@@ -1,0 +1,7 @@
+{
+  "name": "pankllm-agents",
+  "description": "PanKLLM multi-agent system for biomedical knowledge queries — includes FormatAgent for response synthesis and hallucination checking",
+  "version": "0.2.0",
+  "license": "MIT"
+}
+

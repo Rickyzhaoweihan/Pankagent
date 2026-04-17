@@ -1,0 +1,131 @@
+# =============================================================================
+# Cypher Generator Training Configuration - FSDP on 4x H100 (80GB each)
+# =============================================================================
+# Train Cypher Generator using FSDP (Fully Sharded Data Parallel) for
+# memory-efficient training across 2 GPUs.
+#
+# H100 (80GB) allows larger batch sizes and mini-batch sizes compared to L40S.
+# This results in faster training without memory constraints.
+#
+# Usage:
+#   CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 \
+#     scripts/train_cypher_from_rollouts.py --config config/train_cypher_config_fsdp_h100.yaml
+# =============================================================================
+
+# =============================================================================
+# FSDP Configuration
+# =============================================================================
+# Enable FSDP training
+use_fsdp: true
+
+# Sharding strategy: FULL_SHARD (maximum memory savings)
+# - FULL_SHARD: Shard weights + gradients + optimizer states
+# - SHARD_GRAD_OP: Only shard gradients + optimizer states
+# - NO_SHARD: No sharding (like DDP)
+sharding_strategy: FULL_SHARD
+
+# Backward prefetch strategy
+# - BACKWARD_PRE: Prefetch next layer during backward (faster)
+# - BACKWARD_POST: No prefetch (less memory)
+backward_prefetch: BACKWARD_PRE
+
+# CPU offload (not needed for H100 80GB)
+cpu_offload: false
+
+# =============================================================================
+# Rollouts Configuration
+# =============================================================================
+rollouts_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/stage1_ddp/rollouts_collect_base_model.jsonl
+
+# Filtering options
+min_reward: 0.1
+
+# Balanced sampling for better GRPO performance
+use_balanced_sampling: true
+
+# =============================================================================
+# Prompt Configuration
+# =============================================================================
+rebuild_prompts: false
+schema_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/legacy/PankBaseAgent/text_to_cypher/data/input/kg_schema.json
+
+# =============================================================================
+# Model Configuration
+# =============================================================================
+cypher_model_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/models/qwen2.5-coder-14b
+
+# LoRA configuration
+lora_rank: 128
+lora_alpha: 256
+lora_dropout: 0.05
+
+# =============================================================================
+# Output Configuration
+# =============================================================================
+checkpoint_dir: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/cypher_trained
+log_dir: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/cypher_trained/logs
+
+# =============================================================================
+# Training Configuration (H100 80GB - Higher throughput)
+# =============================================================================
+num_epochs: 10
+
+# Batch size - total samples for PPO/GRPO update
+# Larger = better advantage estimation and more stable GRPO training
+batch_size: 32
+
+# Learning rate
+learning_rate: 5.0e-6
+
+# Weight decay
+weight_decay: 0.01
+
+# Max gradient norm for clipping
+max_grad_norm: 1.0
+
+# Warmup steps
+warmup_steps: 50
+
+# Save checkpoint every N epochs
+save_frequency: 1
+
+# =============================================================================
+# PPO/GRPO Configuration
+# =============================================================================
+clip_ratio: 0.2
+entropy_coeff: 0.01
+use_kl_penalty: false
+kl_coeff: 0.1
+grpo_baseline: mean
+normalize_advantages: true
+ppo_epochs: 1
+
+# Mini-batch size for forward passes during log prob computation
+# H100 80GB can handle larger mini-batches for faster training
+# This does NOT affect training quality, only speed
+mini_batch_size: 4
+
+# =============================================================================
+# Precision and Memory
+# =============================================================================
+use_bf16: true
+
+# Gradient checkpointing saves activation memory
+gradient_checkpointing: true
+
+# Maximum sequence length (full length with H100's 80GB)
+max_length: 4096
+
+# =============================================================================
+# Memory Estimate for H100 (80GB VRAM) with FSDP FULL_SHARD (2 GPUs)
+# =============================================================================
+# Sharded model weights (14B bf16):   ~14 GB per GPU
+# LoRA adapters (rank=128):           ~0.5 GB
+# Sharded optimizer states:           ~14 GB per GPU
+# Sharded gradients:                  ~14 GB per GPU
+# Activations (batch=32, seq=4096):   ~15-20 GB
+# Safety buffer:                      ~10 GB
+# -----------------------------------------
+# Total per GPU:                      ~55-65 GB ✓ (fits in 80GB)
+# =============================================================================
+

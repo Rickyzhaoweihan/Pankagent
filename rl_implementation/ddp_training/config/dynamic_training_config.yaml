@@ -1,0 +1,148 @@
+# =============================================================================
+# Dynamic Training Pipeline Configuration
+# =============================================================================
+#
+# Controls the adaptive training loop that decides when to train each model
+# based on reward thresholds and plateau detection.
+#
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Reward Thresholds
+# -----------------------------------------------------------------------------
+# Models are trained when their average reward falls below these thresholds.
+# Higher thresholds = more training, lower thresholds = less training.
+
+# Cypher Generator reward threshold
+# Based on: cypher_reward from rollouts (0.0 - 1.0 scale)
+# - Includes: answer quality, data quality, trajectory quality, cypher correctness
+cypher_reward_threshold: 0.5
+
+# Orchestrator reward threshold
+# Based on: average of orch_qgen_reward and orch_synth_reward (0.0 - 1.0 scale)
+# - Question generation: answerability, difficulty, diversity, scope
+# - Answer synthesis: answer quality, data utilization
+orch_reward_threshold: 0.4
+
+# -----------------------------------------------------------------------------
+# Adaptive Thresholds (NEW - Pursue Excellence)
+# -----------------------------------------------------------------------------
+# When enabled, thresholds automatically increase as models improve.
+# This ensures models keep improving rather than stopping at "good enough".
+
+# Enable adaptive thresholds
+adaptive_thresholds: true
+
+# How much to raise threshold when model exceeds it
+# e.g., 0.02 means: if model at 0.45 and threshold 0.4, new threshold = 0.45 + 0.02 = 0.47
+# Reduced from 0.05 to 0.02 for less aggressive threshold adaptation
+threshold_increase_step: 0.02
+
+# Maximum thresholds (caps for adaptive increase)
+max_cypher_threshold: 0.85
+max_orch_threshold: 0.75
+
+# Minimum improvement expected per training run
+# If model doesn't improve by this much after training, may indicate issue
+min_expected_improvement: 0.02
+
+# Force training every N iterations regardless of threshold (0 = disabled)
+# This ensures models keep improving even when above threshold
+force_training_interval: 5
+
+# -----------------------------------------------------------------------------
+# Plateau Detection
+# -----------------------------------------------------------------------------
+# If reward hasn't improved significantly over several iterations,
+# the model is trained anyway to try to break out of the plateau.
+
+# Number of iterations to check for improvement
+plateau_window: 3
+
+# Minimum improvement per iteration to not be considered a plateau
+# e.g., 0.01 means reward must improve by at least 0.01 per iteration average
+plateau_epsilon: 0.01
+
+# -----------------------------------------------------------------------------
+# Training Cooldown
+# -----------------------------------------------------------------------------
+# Prevents training the same model every iteration.
+# After training, model enters cooldown for N iterations.
+
+# Number of iterations to wait after training before training again
+# Set to 0 to disable cooldown (train every time if thresholds met)
+# Increased from 1 to 2 to give models more time to improve before retraining
+cooldown_iterations: 2
+
+# -----------------------------------------------------------------------------
+# Iteration Settings
+# -----------------------------------------------------------------------------
+
+# Maximum number of training iterations
+# Each iteration: collect rollouts -> analyze -> train (if needed) -> update
+max_iterations: 10
+
+# Number of questions to collect per iteration
+questions_per_iteration: 64
+
+# Difficulty level for question generation
+# Options: easy, medium, hard
+difficulty: easy
+
+# Batch size for rollout collection
+collection_batch_size: 8
+
+# Number of training epochs per iteration (for each model if trained)
+training_epochs_per_iteration: 3
+
+# -----------------------------------------------------------------------------
+# GPU Allocation (4 GPUs required)
+# -----------------------------------------------------------------------------
+# GPU 0: vLLM Orchestrator server (port 8001) - inference
+# GPU 1: vLLM Cypher server (port 8002) - inference
+# GPU 2: Cypher Generator training
+# GPU 3: Orchestrator training
+
+cypher_training_gpu: 2
+orchestrator_training_gpu: 3
+
+# vLLM server GPUs (for reference, set in restart_vllm_server.sh)
+vllm_orchestrator_gpu: 0
+vllm_cypher_gpu: 1
+
+# -----------------------------------------------------------------------------
+# Convergence Detection
+# -----------------------------------------------------------------------------
+# Stop training if both models are above threshold and not improving.
+
+# Enable automatic stopping when converged
+auto_stop_on_convergence: true
+
+# Number of consecutive iterations both models must be above threshold
+convergence_window: 3
+
+# -----------------------------------------------------------------------------
+# Model Paths (defaults, can be overridden)
+# -----------------------------------------------------------------------------
+
+# These are relative to PROJECT_DIR or absolute paths
+cypher_model_path: "models/qwen2.5-coder-14b"
+orchestrator_model_path: "models/qwen2.5-14b"
+
+# Output directories for trained models
+cypher_output_dir: "outputs/cypher_trained"
+orchestrator_output_dir: "outputs/orchestrator_trained"
+
+# Rollouts output directory
+rollouts_dir: "outputs/stage1_ddp"
+
+# -----------------------------------------------------------------------------
+# Logging
+# -----------------------------------------------------------------------------
+
+# Log directory for training logs
+log_dir: "outputs/stage1_ddp/logs"
+
+# Verbose logging
+verbose: true
+

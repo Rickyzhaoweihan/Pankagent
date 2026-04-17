@@ -12,15 +12,20 @@ from performance_monitor import instrument_module_functions
 
 HIRN_ABSTRACT_SEARCH_URL = os.getenv(
     "HIRN_ABSTRACT_SEARCH_URL",
-    "https://nzi5e9mb0f.execute-api.us-east-1.amazonaws.com/production/pank3-ai-summary/search_hirn_abstracts",
+    "https://glkb.dcmb.med.umich.edu/api/external/search_hirn_abstracts",
 )
 HIRN_REQUEST_TIMEOUT_SECONDS = int(os.getenv("HIRN_REQUEST_TIMEOUT_SECONDS", "30"))
 
 def semantic_search(query: str, limit: int = 10) -> list:
     params = {"query": query, "k": limit}
     try:
+        # Note: verify=False due to SSL cert issues on HPC systems
+        # The GLKB API is an internal trusted service
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         response = requests.get(
-            HIRN_ABSTRACT_SEARCH_URL, params=params, timeout=HIRN_REQUEST_TIMEOUT_SECONDS
+            HIRN_ABSTRACT_SEARCH_URL, params=params, timeout=HIRN_REQUEST_TIMEOUT_SECONDS,
+            verify=False  # Bypass SSL verification for internal API
         )
         response.raise_for_status()
     except requests.RequestException as exc:
@@ -95,7 +100,7 @@ def text_embedding(input: str, index: int) -> str:
         result += f'Error: {str([res])[1:-1]}\n\n'
         return result
     result += f'Status: success\n'
-    res = res[:15000]
+    # No truncation - GPT-4o has 128K token context window
     result += f'Result: {res}\n\n'
     return result
 

@@ -1,0 +1,135 @@
+# =============================================================================
+# Orchestrator Training Configuration
+# =============================================================================
+# Train Orchestrator from collected rollouts using PPO/GRPO.
+# Trains both Question Generation and Answer Synthesis roles.
+#
+# Usage:
+#   python scripts/train_orchestrator_from_rollouts.py --config config/train_orchestrator_config.yaml
+# =============================================================================
+
+# =============================================================================
+# Rollouts Configuration
+# =============================================================================
+# Path to rollouts JSONL file (from collect_rollouts.py)
+rollouts_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/stage1_ddp/rollouts_collect_base_model.jsonl
+
+# Filtering options
+# min_epoch: 1          # Only use rollouts from epoch N onwards
+# max_epoch: 10         # Only use rollouts up to epoch N
+# difficulty: easy      # Filter by difficulty: easy, medium, hard
+min_reward: 0.1         # Filter out zero/low-reward rollouts (critical for training stability!)
+
+# Balanced sampling for better GRPO performance with bimodal reward distribution
+# CRITICAL for Orchestrator: 49% of qgen_rewards are near-zero due to plural issues!
+use_balanced_sampling: true  # Enable stratified batch sampling (recommended for GRPO)
+
+# =============================================================================
+# Prompt Configuration
+# =============================================================================
+# By default, uses stored full prompts from rollouts (exact reproducibility).
+# Set use_stored_prompts: false only for old rollouts without stored prompts.
+use_stored_prompts: true
+
+# =============================================================================
+# Model Configuration
+# =============================================================================
+# Path to Orchestrator model
+orchestrator_model_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/models/qwen2.5-14b
+
+# LoRA configuration (reduced for memory)
+lora_rank: 128
+lora_alpha: 256
+lora_dropout: 0.05
+
+# =============================================================================
+# Role Selection
+# =============================================================================
+# Which roles to train
+train_question_gen: true       # Train question generation (Role 1)
+train_answer_synthesis: true   # Train answer synthesis (Role 3)
+
+# =============================================================================
+# Output Configuration
+# =============================================================================
+# Directory to save checkpoints (LoRA adapters)
+checkpoint_dir: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/orchestrator_trained
+
+# Directory for logs
+log_dir: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/orchestrator_trained/logs
+
+# =============================================================================
+# Training Configuration
+# =============================================================================
+# Number of training epochs
+num_epochs: 10
+
+# Batch size (mini-batch for GRPO training)
+# Increased from 4 to 16 for better GRPO baseline estimation
+# CRITICAL: With 49% near-zero qgen_rewards, need larger batches for stable training
+batch_size: 16
+
+# Mini-batch size for forward passes (controls memory, not training quality)
+# Set to 1 for maximum memory safety - gradients are accumulated across mini-batches
+mini_batch_size: 1
+
+# Learning rate (reduced for stability with noisy rewards)
+learning_rate: 5.0e-6
+
+# Weight decay
+weight_decay: 0.01
+
+# Max gradient norm for clipping
+max_grad_norm: 1.0
+
+# Warmup steps
+warmup_steps: 50
+
+# Save checkpoint every N epochs
+save_frequency: 1
+
+# =============================================================================
+# PPO/GRPO Configuration
+# =============================================================================
+# PPO clip ratio
+clip_ratio: 0.2
+
+# Entropy coefficient
+entropy_coeff: 0.01
+
+# KL penalty (optional)
+use_kl_penalty: false
+kl_coeff: 0.1
+
+# GRPO baseline: mean, median, min, max
+grpo_baseline: mean
+
+# Normalize advantages
+normalize_advantages: true
+
+# PPO epochs per update
+ppo_epochs: 1
+
+# =============================================================================
+# Precision and Memory
+# =============================================================================
+# Use bfloat16 precision
+use_bf16: true
+
+# Enable gradient checkpointing to save memory
+gradient_checkpointing: true
+
+# Maximum sequence length
+max_length: 4096  # For H100 (80GB) - use L40S config for 48GB GPUs
+
+# =============================================================================
+# Optional: Schema Summary for Question Generation
+# =============================================================================
+# Brief summary of the knowledge graph schema for question generation prompts
+# schema_summary: |
+#   The PankBase knowledge graph contains:
+#   - Genes with expression levels
+#   - Diseases and their associations
+#   - SNPs and GWAS signals
+#   - Cell types and tissues
+

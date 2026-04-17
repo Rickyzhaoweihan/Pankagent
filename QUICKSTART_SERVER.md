@@ -40,7 +40,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8080
 **Option A: Using curl**
 ```bash
 # If using default port 8080
-curl -X POST http://localhost:9000/query \
+curl -X POST http://localhost:8080/query \
   -H "Content-Type: application/json" \
   -d '{"question": "Which SNP serves as the lead QTL for CFTR?"}'
 

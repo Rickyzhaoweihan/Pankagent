@@ -1,0 +1,102 @@
+# =============================================================================
+# ORCHESTRATOR-FOCUSED Training Configuration
+# =============================================================================
+#
+# This configuration prioritizes training the Orchestrator to generate
+# ANSWERABLE questions before trying to improve the Cypher Generator.
+#
+# Strategy:
+# - Train Orchestrator aggressively until it can generate good questions
+# - Cypher Generator training is disabled (it already works reasonably well)
+# - Focus on making Orchestrator learn which entities exist in the database
+#
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Reward Thresholds - ORCHESTRATOR FOCUS
+# -----------------------------------------------------------------------------
+
+# Cypher Generator: DISABLED (set threshold to 0 to never trigger training)
+# The base model already achieves ~0.64 cypher_reward when given good questions
+cypher_reward_threshold: 0.0
+
+# Orchestrator: ALWAYS TRAIN (set very high threshold)
+# Train until Orchestrator learns to ask answerable questions
+orch_reward_threshold: 0.95
+
+# -----------------------------------------------------------------------------
+# Adaptive Thresholds - DISABLED for Orchestrator focus
+# -----------------------------------------------------------------------------
+# We want to train Orchestrator every iteration regardless of performance
+adaptive_thresholds: false
+threshold_increase_step: 0.0
+max_cypher_threshold: 0.0
+max_orch_threshold: 0.95
+min_expected_improvement: 0.0
+
+# Force training every iteration
+force_training_interval: 1
+
+# -----------------------------------------------------------------------------
+# Plateau Detection - DISABLED
+# -----------------------------------------------------------------------------
+# We always want to train Orchestrator
+plateau_window: 1
+plateau_epsilon: 0.0
+
+# -----------------------------------------------------------------------------
+# Training Cooldown - DISABLED
+# -----------------------------------------------------------------------------
+# No cooldown - train every iteration
+cooldown_iterations: 0
+
+# -----------------------------------------------------------------------------
+# Iteration Settings - MORE EPOCHS
+# -----------------------------------------------------------------------------
+
+# Run many iterations to see improvement
+max_iterations: 20
+
+# Collect more questions to get diverse training signal
+questions_per_iteration: 64
+
+# Use easy questions to establish baseline
+difficulty: easy
+
+collection_batch_size: 8
+
+# MORE EPOCHS per iteration for deeper learning
+training_epochs_per_iteration: 8
+
+# -----------------------------------------------------------------------------
+# GPU Allocation (4 GPUs required)
+# -----------------------------------------------------------------------------
+cypher_training_gpu: 2
+orchestrator_training_gpu: 3
+vllm_orchestrator_gpu: 0
+vllm_cypher_gpu: 1
+
+# -----------------------------------------------------------------------------
+# Convergence Detection - DISABLED
+# -----------------------------------------------------------------------------
+# Keep training until max_iterations
+auto_stop_on_convergence: false
+convergence_window: 10
+
+# -----------------------------------------------------------------------------
+# Model Paths
+# -----------------------------------------------------------------------------
+cypher_model_path: "models/qwen2.5-coder-14b"
+orchestrator_model_path: "models/qwen2.5-14b"
+
+cypher_output_dir: "outputs/cypher_trained"
+orchestrator_output_dir: "outputs/orchestrator_trained"
+
+rollouts_dir: "outputs/stage1_ddp"
+
+# -----------------------------------------------------------------------------
+# Logging
+# -----------------------------------------------------------------------------
+log_dir: "outputs/stage1_ddp/logs"
+verbose: true
+

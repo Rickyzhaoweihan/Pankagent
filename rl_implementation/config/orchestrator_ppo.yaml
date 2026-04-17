@@ -1,0 +1,323 @@
+# PPO Configuration for Orchestrator Agent
+# Based on ppo_collaborative.yaml with Orchestrator-specific settings
+
+data:
+  tokenizer: null
+  use_shm: False
+  train_files: ["/nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/data/processed/sft_data/text2cypher_train.parquet"]
+  val_files: ["/nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/data/processed/sft_data/text2cypher_val.parquet"]
+  prompt_key: prompt
+  reward_fn_key: data_source
+  max_prompt_length: 4096  # Orchestrator token budget (larger for full context)
+  max_response_length: 1024  # Larger response for detailed answers
+  train_batch_size: 512  # Questions per epoch
+  val_batch_size: 100
+  return_raw_input_ids: False
+  return_raw_chat: False
+  return_full_prompt: False
+  shuffle: True
+  filter_overlong_prompts: False
+  filter_overlong_prompts_workers: 1
+  truncation: error
+  image_key: images
+  video_key: videos
+  trust_remote_code: False
+  custom_cls:
+      path: null
+      name: null
+
+actor_rollout_ref:
+  hybrid_engine: True
+  model:
+    path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/models/qwen2.5-14b  # Orchestrator base model
+    use_shm: False
+    external_lib: null
+    override_config: { }
+    enable_gradient_checkpointing: False  # No training, no need for checkpointing
+    enable_activation_offload: False
+    use_remove_padding: False
+    # No LoRA - Orchestrator is inference-only for now
+    # All 4 modes (question gen, data eval, answer synth, answer eval) use frozen base model
+    lora_rank: 0  # Disabled - inference only
+    lora_alpha: 16
+    target_modules: all-linear
+    use_liger: False
+    use_fused_kernels: False
+    trust_remote_code: False
+  actor:
+    strategy: fsdp
+    ppo_mini_batch_size: 128
+    ppo_num_mini_batches: 1
+    ppo_micro_batch_size: null
+    ppo_micro_batch_size_per_gpu: 4  # Inference only, can use larger batches  # Micro batch size per GPU
+    use_dynamic_bsz: False
+    use_dynamic_mini_batch: False
+    ppo_max_token_len_per_gpu: 16384
+    grad_clip: 1.0
+    clip_ratio: 0.2
+    clip_ratio_low: 0.2
+    clip_ratio_high: 0.2
+    clip_ratio_c: 3.0
+    loss_agg_mode: "token-mean"
+    entropy_coeff: 0
+    use_kl_loss: False
+    use_torch_compile: False  # Disable to avoid CUDA graph issues
+    kl_loss_coef: 0.001
+    kl_loss_type: low_var_kl
+    ppo_epochs: 1
+    shuffle: False
+    ulysses_sequence_parallel_size: 1
+    checkpoint:
+      contents: ['model', 'optimizer', 'extra']
+    optim:
+      lr: 1e-6  # Conservative learning rate for RL
+      lr_warmup_steps: -1
+      lr_warmup_steps_ratio: 0.
+      min_lr_ratio: null
+      num_cycles: 0.5
+      warmup_style: constant
+      total_training_steps: -1
+      weight_decay: 0.01
+    fsdp_config:
+      wrap_policy:
+        min_num_params: 0
+      param_offload: False
+      optimizer_offload: False
+      offload_policy: False
+      reshard_after_forward: True
+      fsdp_size: -1
+    grad_norm_threshold: 1e5
+  ref:
+    strategy: fsdp
+    fsdp_config:
+      param_offload: False
+      reshard_after_forward: True
+      wrap_policy:
+        min_num_params: 0
+    use_torch_compile: ${actor_rollout_ref.actor.use_torch_compile}
+    log_prob_micro_batch_size: null
+    log_prob_micro_batch_size_per_gpu: 4  # Inference only, can use larger batches
+    log_prob_use_dynamic_bsz: ${actor_rollout_ref.actor.use_dynamic_bsz}
+    log_prob_max_token_len_per_gpu: ${actor_rollout_ref.actor.ppo_max_token_len_per_gpu}
+    ulysses_sequence_parallel_size: ${actor_rollout_ref.actor.ulysses_sequence_parallel_size}
+  rollout:
+    name: vllm
+    mode: sync
+    chat_scheduler: null
+    chat_template: null
+    temperature: 1.0
+    top_k: -1
+    top_p: 1
+    use_fire_sampling: False
+    prompt_length: ${data.max_prompt_length}
+    response_length: ${data.max_response_length}
+    dtype: bfloat16
+    gpu_memory_utilization: 0.7  # Inference only, can use more memory
+    ignore_eos: False
+    enforce_eager: False  # Enable CUDA graphs for speed
+    free_cache_engine: False  # Keep cache (required for CUDA graphs)
+    load_format: dummy_hf  # Load HuggingFace model format
+    layered_summon: False
+    tensor_model_parallel_size: 4  # Shard 14B model across all 4 GPUs
+    max_num_batched_tokens: 8192  # Must be >= max_model_len
+    max_model_len: 6144  # Context length (prompt + response)
+    max_num_seqs: 128  # Concurrent sequences
+    log_prob_micro_batch_size: null
+    log_prob_micro_batch_size_per_gpu: 4  # Inference only, can use larger batches
+    log_prob_use_dynamic_bsz: ${actor_rollout_ref.actor.use_dynamic_bsz}
+    log_prob_max_token_len_per_gpu: ${actor_rollout_ref.actor.ppo_max_token_len_per_gpu}
+    disable_log_stats: True
+    enable_chunked_prefill: False  # Disabled - not compatible with LoRA in Cypher Gen
+    do_sample: True
+    n: 1
+    engine_kwargs:
+      vllm:
+        swap_space: null
+      sglang:
+        attention_backend: null
+    val_kwargs:
+      top_k: -1
+      top_p: 1.0
+      temperature: 0
+      n: 1
+      do_sample: False
+    multi_turn: 
+      enable: False  # Orchestrator is single-turn per role
+      max_turns: 1
+      tool_config_path: null
+      format: chatml
+    disable_logging: True
+
+critic:
+  enable: False  # No critic for our setup
+  rollout_n: ${actor_rollout_ref.rollout.n}
+  strategy: fsdp
+  optim:
+    lr: 1e-5
+    lr_warmup_steps_ratio: 0.
+    min_lr_ratio: null
+    warmup_style: constant
+    total_training_steps: -1
+    weight_decay: 0.01
+  model:
+    path: null
+    use_shm: False
+    tokenizer_path: ${actor_rollout_ref.model.path}
+    override_config: { }
+    external_lib: ${actor_rollout_ref.model.external_lib}
+    enable_gradient_checkpointing: True
+    enable_activation_offload: False
+    use_remove_padding: False
+    trust_remote_code: ${actor_rollout_ref.model.trust_remote_code}
+    fsdp_config:
+      param_offload: False
+      optimizer_offload: False
+      offload_policy: False
+      reshard_after_forward: True
+      wrap_policy:
+        min_num_params: 0
+      fsdp_size: -1
+    lora_rank: 0
+    lora_alpha: 16
+    target_modules: all-linear
+  ppo_mini_batch_size: ${actor_rollout_ref.actor.ppo_mini_batch_size}
+  ppo_micro_batch_size: null
+  ppo_micro_batch_size_per_gpu: 4  # Set even though critic is disabled
+  forward_micro_batch_size: ${critic.ppo_micro_batch_size}
+  forward_micro_batch_size_per_gpu: ${critic.ppo_micro_batch_size_per_gpu}
+  use_dynamic_bsz: ${actor_rollout_ref.actor.use_dynamic_bsz}
+  ppo_max_token_len_per_gpu: 32768
+  forward_max_token_len_per_gpu: ${critic.ppo_max_token_len_per_gpu}
+  ulysses_sequence_parallel_size: 1
+  ppo_epochs: ${actor_rollout_ref.actor.ppo_epochs}
+  shuffle: ${actor_rollout_ref.actor.shuffle}
+  grad_clip: 1.0
+  cliprange_value: 0.5
+  loss_agg_mode: ${actor_rollout_ref.actor.loss_agg_mode}
+  checkpoint:
+    contents: ['model', 'optimizer', 'extra']
+
+reward_model:
+  enable: False
+  strategy: fsdp
+  model:
+    input_tokenizer: ${actor_rollout_ref.model.path}
+    path: null
+    use_shm: False
+    external_lib: ${actor_rollout_ref.model.external_lib}
+    use_remove_padding: False
+    use_fused_kernels: ${actor_rollout_ref.model.use_fused_kernels}
+    trust_remote_code: False
+    fsdp_config:
+      wrap_policy:
+        min_num_params: 0
+      param_offload: False
+      reshard_after_forward: True
+      fsdp_size: -1
+  micro_batch_size: null
+  micro_batch_size_per_gpu: null
+  max_length: null
+  ulysses_sequence_parallel_size: 1
+  use_dynamic_bsz: ${critic.use_dynamic_bsz}
+  forward_max_token_len_per_gpu: ${critic.forward_max_token_len_per_gpu}
+  reward_manager: naive
+  launch_reward_fn_async: False
+  sandbox_fusion:
+    url: null
+    max_concurrent: 64
+
+custom_reward_function:
+  # Note: Orchestrator has two reward functions
+  # orchestrator_generation_reward_fn for question generation
+  # orchestrator_synthesis_reward_fn for answer synthesis
+  path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/rl_implementation/rewards/orchestrator_reward.py
+  name: orchestrator_generation_reward_fn  # Default, will be switched based on mode
+
+algorithm:
+  gamma: 1.0
+  lam: 1.0
+  # Use GRPO (Group Relative Policy Optimization) since we don't have a critic
+  # GAE requires critic values, GRPO uses reward-based advantage estimation
+  adv_estimator: grpo
+  norm_adv_by_std_in_grpo: True
+  use_kl_in_reward: False
+  kl_penalty: kl
+  kl_ctrl:
+    type: fixed
+    kl_coef: 0.001
+    horizon: 10000
+    target_kl: 0.1
+  use_pf_ppo: False
+  pf_ppo:
+    reweight_method: pow
+    weight_pow: 2.0
+  mask_truncated_samples: False
+  clip_advantages: False
+
+trainer:
+  balance_batch: True
+  total_epochs: 45  # 10 easy + 15 medium + 20 hard
+  total_training_steps: null
+  project_name: pankllm_rl
+  experiment_name: orchestrator_training
+  logger: [ 'console', 'wandb' ]
+  log_val_generations: 0
+  rollout_data_dir: null
+  validation_data_dir: null
+  nnodes: 1
+  # ==========================================================================
+  # GPU Configuration for Sequential Training Mode (Strategy 2)
+  # ==========================================================================
+  # In sequential mode:
+  # - During ROLLOUT: Uses 4 GPUs (split with Cypher Generator)
+  # - During TRAINING: Uses 8 GPUs (all GPUs, Cypher unloaded)
+  #
+  # Orchestrator has 4 roles:
+  # - Role 1 (Question Gen): TRAINABLE - uses training GPUs
+  # - Role 2 (Data Quality): INFERENCE ONLY - uses EMA model
+  # - Role 3 (Answer Synth): TRAINABLE - uses training GPUs
+  # - Role 4 (Answer Quality): INFERENCE ONLY - uses EMA model
+  #
+  # These values are overridden dynamically by the training loop based on phase:
+  # - Phase 1 (Rollout): n_gpus_per_node = 4 (rollout.orch_gpus)
+  # - Phase 3 (Training): n_gpus_per_node = 8 (training.gpus)
+  # ==========================================================================
+  n_gpus_per_node: 4  # Default for rollout phase
+  n_training_gpus_per_node: 8  # Used during PPO training phase (all GPUs)
+  save_freq: 5
+  resume_mode: auto
+  resume_from_path: null
+  val_before_train: False  # Disable validation before training
+  test_freq: 5
+  critic_warmup: 0
+  default_hdfs_dir: null
+  del_local_ckpt_after_load: False
+  default_local_dir: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/checkpoints
+  max_actor_ckpt_to_keep: 3
+  max_critic_ckpt_to_keep: null
+  ray_wait_register_center_timeout: 300
+  rejection_sample: False
+  rejection_sample_multiplier: 2
+
+ray_init:
+  num_cpus: null
+
+# RLLM Agent Config
+env:
+  name: custom
+  env_args: {}  # Orchestrator doesn't use environment directly
+
+agent:
+  name: orchestrator
+  max_steps: 1  # Single-turn per role
+  async_engine: True
+  trajectory_timeout: null
+  overlong_filter: False
+  normalize_step_advantage: False
+  use_stepwise_advantage: False
+  stepwise_advantage_mode: "broadcast"
+  agent_args:
+    schema_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/legacy/PankBaseAgent/schemas/kg_schema copy.json
+    mode: generation  # Can be: generation, data_eval, synthesis, answer_eval
+  engine_args: {}
+

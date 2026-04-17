@@ -1,0 +1,120 @@
+# =============================================================================
+# Cypher Generator Training Configuration
+# =============================================================================
+# Train Cypher Generator from collected rollouts using PPO/GRPO.
+#
+# Usage:
+#   python scripts/train_cypher_from_rollouts.py --config config/train_cypher_config.yaml
+# =============================================================================
+
+# =============================================================================
+# Rollouts Configuration
+# =============================================================================
+# Path to rollouts JSONL file (from collect_rollouts.py)
+rollouts_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/stage1_ddp/rollouts_collect_base_model.jsonl
+
+# Filtering options
+# min_epoch: 1          # Only use rollouts from epoch N onwards
+# max_epoch: 10         # Only use rollouts up to epoch N
+# difficulty: easy      # Filter by difficulty: easy, medium, hard
+min_reward: 0.1         # Filter out zero/low-reward rollouts (critical for training stability!)
+
+# Balanced sampling for better GRPO performance with bimodal reward distribution
+use_balanced_sampling: true  # Enable stratified batch sampling (recommended for GRPO)
+
+# =============================================================================
+# Prompt Configuration
+# =============================================================================
+# By default, uses stored full prompts from rollouts (exact reproducibility).
+# Set rebuild_prompts: true only for old rollouts with truncated prompts.
+rebuild_prompts: false
+
+# Path to KG schema JSON (only needed if rebuild_prompts: true)
+schema_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/legacy/PankBaseAgent/text_to_cypher/data/input/kg_schema.json
+
+# Path to experience buffer JSON (optional, for learned rules during rebuild)
+# experience_buffer_path: /path/to/experience_buffer.json
+
+# =============================================================================
+# Model Configuration
+# =============================================================================
+# Path to Cypher Generator model
+cypher_model_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/models/qwen2.5-coder-14b
+
+# LoRA configuration (reduced for memory)
+lora_rank: 128
+lora_alpha: 256
+lora_dropout: 0.05
+
+# =============================================================================
+# Output Configuration
+# =============================================================================
+# Directory to save checkpoints (LoRA adapters)
+checkpoint_dir: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/cypher_trained
+
+# Directory for logs
+log_dir: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/cypher_trained/logs
+
+# =============================================================================
+# Training Configuration
+# =============================================================================
+# Number of training epochs
+num_epochs: 10
+
+# Batch size (total samples for GRPO training)
+# Increased from 4 to 16 for better GRPO baseline estimation with bimodal rewards
+batch_size: 16
+
+# Mini-batch size for forward passes (controls memory, not training quality)
+# Set to 1 for maximum memory safety - gradients are accumulated across mini-batches
+mini_batch_size: 1
+
+# Learning rate (reduced for stability with noisy rewards)
+learning_rate: 5.0e-6
+
+# Weight decay
+weight_decay: 0.01
+
+# Max gradient norm for clipping
+max_grad_norm: 1.0
+
+# Warmup steps
+warmup_steps: 50
+
+# Save checkpoint every N epochs
+save_frequency: 1
+
+# =============================================================================
+# PPO/GRPO Configuration
+# =============================================================================
+# PPO clip ratio
+clip_ratio: 0.2
+
+# Entropy coefficient
+entropy_coeff: 0.01
+
+# KL penalty (optional)
+use_kl_penalty: false
+kl_coeff: 0.1
+
+# GRPO baseline: mean, median, min, max
+grpo_baseline: mean
+
+# Normalize advantages
+normalize_advantages: true
+
+# PPO epochs per update
+ppo_epochs: 1
+
+# =============================================================================
+# Precision and Memory
+# =============================================================================
+# Use bfloat16 precision
+use_bf16: true
+
+# Enable gradient checkpointing to save memory
+gradient_checkpointing: true
+
+# Maximum sequence length
+max_length: 4096  # For H100 (80GB) - use L40S config for 48GB GPUs
+

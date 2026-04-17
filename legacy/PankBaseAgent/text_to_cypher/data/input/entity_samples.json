@@ -1,0 +1,816 @@
+{
+  "genes": [
+    {
+      "name": "AFG3L1P",
+      "id": "ENSG00000293510",
+      "description": "AFG3 like matrix AAA peptidase subunit 1, pseudogene [Source:HGNC Symbol;Acc:HGNC:314]"
+    },
+    {
+      "name": "ZSCAN20",
+      "id": "ENSG00000121903",
+      "description": "zinc finger and SCAN domain containing 20 [Source:HGNC Symbol;Acc:HGNC:13093]"
+    },
+    {
+      "name": "OR2T6",
+      "id": "ENSG00000198104",
+      "description": "olfactory receptor family 2 subfamily T member 6 [Source:HGNC Symbol;Acc:HGNC:15018]"
+    },
+    {
+      "name": "OSR2",
+      "id": "ENSG00000164920",
+      "description": "odd-skipped related transciption factor 2 [Source:HGNC Symbol;Acc:HGNC:15830]"
+    },
+    {
+      "name": "OR2M1P",
+      "id": "ENSG00000177233",
+      "description": "olfactory receptor family 2 subfamily M member 1 pseudogene [Source:HGNC Symbol;Acc:HGNC:8267]"
+    },
+    {
+      "name": "OR2M5",
+      "id": "ENSG00000162727",
+      "description": "olfactory receptor family 2 subfamily M member 5 [Source:HGNC Symbol;Acc:HGNC:19576]"
+    },
+    {
+      "name": "OR10U1P",
+      "id": "ENSG00000227423",
+      "description": "olfactory receptor family 10 subfamily U member 1 pseudogene [Source:HGNC Symbol;Acc:HGNC:15332]"
+    },
+    {
+      "name": "OR2M2",
+      "id": "ENSG00000198601",
+      "description": "olfactory receptor family 2 subfamily M member 2 [Source:HGNC Symbol;Acc:HGNC:8268]"
+    },
+    {
+      "name": "OR10A7",
+      "id": "ENSG00000179919",
+      "description": "olfactory receptor family 10 subfamily A member 7 [Source:HGNC Symbol;Acc:HGNC:15329]"
+    },
+    {
+      "name": "GM2AP2",
+      "id": "ENSG00000239428",
+      "description": "GM2A pseudogene 2 [Source:HGNC Symbol;Acc:HGNC:38002]"
+    },
+    {
+      "name": "OR6C65",
+      "id": "ENSG00000205328",
+      "description": "olfactory receptor family 6 subfamily C member 65 [Source:HGNC Symbol;Acc:HGNC:31295]"
+    },
+    {
+      "name": "CYCSP53",
+      "id": "ENSG00000234333",
+      "description": "CYCS pseudogene 53 [Source:HGNC Symbol;Acc:HGNC:24404]"
+    },
+    {
+      "name": "MYOC",
+      "id": "ENSG00000034971",
+      "description": "myocilin [Source:HGNC Symbol;Acc:HGNC:7610]"
+    },
+    {
+      "name": "MYL6B-AS1",
+      "id": "ENSG00000257809",
+      "description": "MYL6B antisense RNA 1 [Source:HGNC Symbol;Acc:HGNC:55472]"
+    },
+    {
+      "name": "TCIRG1",
+      "id": "ENSG00000110719",
+      "description": "T cell immune regulator 1, ATPase H+ transporting V0 subunit a3 [Source:HGNC Symbol;Acc:HGNC:11647]"
+    },
+    {
+      "name": "CTDSP2",
+      "id": "ENSG00000175215",
+      "description": "CTD small phosphatase 2 [Source:HGNC Symbol;Acc:HGNC:17077]"
+    },
+    {
+      "name": "GABRD",
+      "id": "ENSG00000187730",
+      "description": "gamma-aminobutyric acid type A receptor subunit delta [Source:HGNC Symbol;Acc:HGNC:4084]"
+    },
+    {
+      "name": "ATP23",
+      "id": "ENSG00000166896",
+      "description": "ATP23 metallopeptidase and ATP synthase assembly factor homolog [Source:HGNC Symbol;Acc:HGNC:29452]"
+    },
+    {
+      "name": "PTOV1",
+      "id": "ENSG00000104960",
+      "description": "PTOV1 extended AT-hook containing adaptor protein [Source:HGNC Symbol;Acc:HGNC:9632]"
+    },
+    {
+      "name": "GABRB3",
+      "id": "ENSG00000166206",
+      "description": "gamma-aminobutyric acid type A receptor subunit beta3 [Source:HGNC Symbol;Acc:HGNC:4083]"
+    },
+    {
+      "name": "RGPD6",
+      "id": "ENSG00000183054",
+      "description": "RANBP2 like and GRIP domain containing 6 [Source:HGNC Symbol;Acc:HGNC:32419]"
+    },
+    {
+      "name": "RN7SKP65",
+      "id": "ENSG00000222210",
+      "description": "RN7SK pseudogene 65 [Source:HGNC Symbol;Acc:HGNC:45789]"
+    },
+    {
+      "name": "PRDM11",
+      "id": "ENSG00000019485",
+      "description": "PR/SET domain 11 [Source:HGNC Symbol;Acc:HGNC:13996]"
+    },
+    {
+      "name": "ZNF705EP",
+      "id": "ENSG00000214534",
+      "description": "zinc finger protein 705E, pseudogene [Source:HGNC Symbol;Acc:HGNC:33203]"
+    },
+    {
+      "name": "PRPS1P1",
+      "id": "ENSG00000226847",
+      "description": "phosphoribosyl pyrophosphate synthetase 1 pseudogene 1 [Source:HGNC Symbol;Acc:HGNC:39427]"
+    },
+    {
+      "name": "CYP2C56P",
+      "id": "ENSG00000229641",
+      "description": "cytochrome P450 family 2 subfamily C member 56, pseudogene [Source:HGNC Symbol;Acc:HGNC:39971]"
+    },
+    {
+      "name": "FBXL19-AS1",
+      "id": "ENSG00000260852",
+      "description": "FBXL19 antisense RNA 1 [Source:HGNC Symbol;Acc:HGNC:27557]"
+    },
+    {
+      "name": "LRIG3",
+      "id": "ENSG00000139263",
+      "description": "leucine rich repeats and immunoglobulin like domains 3 [Source:HGNC Symbol;Acc:HGNC:30991]"
+    },
+    {
+      "name": "ZBTB17",
+      "id": "ENSG00000116809",
+      "description": "zinc finger and BTB domain containing 17 [Source:HGNC Symbol;Acc:HGNC:12936]"
+    },
+    {
+      "name": "FANCL",
+      "id": "ENSG00000115392",
+      "description": "FA complementation group L [Source:HGNC Symbol;Acc:HGNC:20748]"
+    },
+    {
+      "name": "RPS6P22",
+      "id": "ENSG00000244390",
+      "description": "ribosomal protein S6 pseudogene 22 [Source:HGNC Symbol;Acc:HGNC:35655]"
+    },
+    {
+      "name": "RNU7-120P",
+      "id": "ENSG00000238302",
+      "description": "RNA, U7 small nuclear 120 pseudogene [Source:HGNC Symbol;Acc:HGNC:45654]"
+    },
+    {
+      "name": "MRPS6P4",
+      "id": "ENSG00000257820",
+      "description": "mitochondrial ribosomal protein S6 pseudogene 4 [Source:HGNC Symbol;Acc:HGNC:29782]"
+    },
+    {
+      "name": "DUSP6",
+      "id": "ENSG00000139318",
+      "description": "dual specificity phosphatase 6 [Source:HGNC Symbol;Acc:HGNC:3072]"
+    },
+    {
+      "name": "GABRA5",
+      "id": "ENSG00000186297",
+      "description": "gamma-aminobutyric acid type A receptor subunit alpha5 [Source:HGNC Symbol;Acc:HGNC:4079]"
+    },
+    {
+      "name": "KAT7",
+      "id": "ENSG00000136504",
+      "description": "lysine acetyltransferase 7 [Source:HGNC Symbol;Acc:HGNC:17016]"
+    },
+    {
+      "name": "MEF2C-AS1",
+      "id": "ENSG00000248309",
+      "description": "MEF2C antisense RNA 1 [Source:HGNC Symbol;Acc:HGNC:48908]"
+    },
+    {
+      "name": "NAPSA",
+      "id": "ENSG00000131400",
+      "description": "napsin A aspartic peptidase [Source:HGNC Symbol;Acc:HGNC:13395]"
+    },
+    {
+      "name": "Y_RNA",
+      "id": "ENSG00000207387",
+      "description": "Y RNA [Source:RFAM;Acc:RF00019]"
+    },
+    {
+      "name": "LINC02444",
+      "id": "ENSG00000258123",
+      "description": "long intergenic non-protein coding RNA 2444 [Source:HGNC Symbol;Acc:HGNC:53376]"
+    },
+    {
+      "name": "METTL25",
+      "id": "ENSG00000127720",
+      "description": "methyltransferase like 25 [Source:HGNC Symbol;Acc:HGNC:26228]"
+    },
+    {
+      "name": "TVP23BP1",
+      "id": "ENSG00000259122",
+      "description": "TVP23B pseudogene 1 [Source:HGNC Symbol;Acc:HGNC:31127]"
+    },
+    {
+      "name": "RNA5SP391",
+      "id": "ENSG00000200326",
+      "description": "RNA, 5S ribosomal pseudogene 391 [Source:HGNC Symbol;Acc:HGNC:43291]"
+    },
+    {
+      "name": "RSL1D1-DT",
+      "id": "ENSG00000263307",
+      "description": "RSL1D1 divergent transcript [Source:HGNC Symbol;Acc:HGNC:55337]"
+    },
+    {
+      "name": "CCDC90B",
+      "id": "ENSG00000137500",
+      "description": "coiled-coil domain containing 90B [Source:HGNC Symbol;Acc:HGNC:28108]"
+    },
+    {
+      "name": "STX18-AS1",
+      "id": "ENSG00000247708",
+      "description": "STX18 antisense RNA 1 (head to head) [Source:HGNC Symbol;Acc:HGNC:48877]"
+    },
+    {
+      "name": "RHCG",
+      "id": "ENSG00000140519",
+      "description": "Rh family C glycoprotein [Source:HGNC Symbol;Acc:HGNC:18140]"
+    },
+    {
+      "name": "TBC1D3P6",
+      "id": "ENSG00000224966",
+      "description": "TBC1 domain family member 3 pseudogene 6 [Source:HGNC Symbol;Acc:HGNC:43568]"
+    },
+    {
+      "name": "CCAR2",
+      "id": "ENSG00000158941",
+      "description": "cell cycle and apoptosis regulator 2 [Source:HGNC Symbol;Acc:HGNC:23360]"
+    },
+    {
+      "name": "SRARP",
+      "id": "ENSG00000183888",
+      "description": "steroid receptor associated and regulated protein [Source:HGNC Symbol;Acc:HGNC:28339]"
+    }
+  ],
+  "diseases": [
+    {
+      "name": "type 1 diabetes",
+      "id": "MONDO_0005147",
+      "definition": "A chronic condition characterized by minimal or absent production of insulin by the pancreas."
+    }
+  ],
+  "cell_types": [
+    {
+      "name": "Acinar Cell",
+      "id": "CL_0002064",
+      "definition": "A secretory cell found in pancreatic acini that secretes digestive enzymes and mucins. This cell is a typical zymogenic cell, have a basal nucleus and basophilic cytoplasm consisting of regular arrays"
+    },
+    {
+      "name": "Stellate Cell",
+      "id": "CL_0002410",
+      "definition": "A cell that is found in the periacinar space of the exocrine pancreas and in perivascular and periductal regions of the pancreas, and has long cytoplasmic processes that encircle the base of the acinu"
+    },
+    {
+      "name": "Alpha Cell",
+      "id": "CL_0000171",
+      "definition": "A type A enteroendocrine cell found in the periphery of the islets of Langerhans that secretes glucagon."
+    },
+    {
+      "name": "Beta Cell",
+      "id": "CL_0000169",
+      "definition": "A cell that secretes insulin and is located towards the center of the islets of Langerhans."
+    },
+    {
+      "name": "Delta Cell",
+      "id": "CL_0000173",
+      "definition": "A D cell located in the pancreas. Peripherally placed within the islets like type A cells; contains somatostatin."
+    },
+    {
+      "name": "Ductal Cell",
+      "id": "CL_0002079",
+      "definition": "Epithelial cell found in the ducts of the pancreas. This cell type contributes to the high luminal pH."
+    },
+    {
+      "name": "Endothelial Cell",
+      "id": "CL_0000115",
+      "definition": "An endothelial cell comprises the outermost layer or lining of anatomical structures and can be squamous or cuboidal. In mammals, endothelial cell has vimentin filaments and is derived from the mesode"
+    },
+    {
+      "name": "Macrophage Cell",
+      "id": "CL_0000235",
+      "definition": "A mononuclear phagocyte present in variety of tissues, typically differentiated from monocytes, capable of phagocytosing a variety of extracellular particulate material, including immune complexes, mi"
+    }
+  ],
+  "snps": [
+    {
+      "id": "rs1002658",
+      "chr": "6",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10053411",
+      "chr": "5",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10064755",
+      "chr": "5",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10075801",
+      "chr": "5",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10077384",
+      "chr": "5",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs1008723",
+      "chr": "17",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs1008756",
+      "chr": "5",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10088596",
+      "chr": "8",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10094267",
+      "chr": "8",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs1010599",
+      "chr": "5",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs1010600",
+      "chr": "5",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs1010601",
+      "chr": "5",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10116772",
+      "chr": "9",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10127703",
+      "chr": "1",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10127756",
+      "chr": "1",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10131490",
+      "chr": "14",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10141370",
+      "chr": "14",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10153800",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs1016431",
+      "chr": "7",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs1016432",
+      "chr": "7",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10165451",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10166621",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10169743",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10171117",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10172060",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10172825",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10175599",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10176782",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10180733",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10182181",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10182458",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10185059",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10185143",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10185510",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10186242",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10188318",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs1018941",
+      "chr": "7",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs1018979",
+      "chr": "7",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs1018980",
+      "chr": "7",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10193465",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10197066",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10197237",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10198275",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10198356",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10200566",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10203386",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10203482",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10205490",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10206196",
+      "chr": "2",
+      "type": "sequence_snp"
+    },
+    {
+      "id": "rs10206261",
+      "chr": "2",
+      "type": "sequence_snp"
+    }
+  ],
+  "gene_ontology": [
+    {
+      "name": "protein binding",
+      "id": "GO_0005515",
+      "description": "Binding to a protein."
+    },
+    {
+      "name": "histone H3K9 methyltransferase activity",
+      "id": "GO_0046974",
+      "description": "Catalysis of the reaction: S-adenosyl-L-methionine + histone H3 L-lysine (position 9) = S-adenosyl-L-homocysteine + histone H3 N6-methyl-L-lysine (position 9). This reaction is the addition of up to t"
+    },
+    {
+      "name": "nucleus",
+      "id": "GO_0005634",
+      "description": "A membrane-bounded organelle of eukaryotic cells in which chromosomes are housed and replicated. In most cells, the nucleus contains all of the cell's chromosomes except the organellar chromosomes, an"
+    },
+    {
+      "name": "methyltransferase activity",
+      "id": "GO_0008168",
+      "description": "Catalysis of the transfer of a methyl group to an acceptor molecule."
+    },
+    {
+      "name": "methylation",
+      "id": "GO_0032259",
+      "description": "The process in which a methyl group is covalently attached to a molecule."
+    },
+    {
+      "name": "nucleoplasm",
+      "id": "GO_0005654",
+      "description": "That part of the nuclear content other than the chromosomes or the nucleolus."
+    },
+    {
+      "name": "cytosol",
+      "id": "GO_0005829",
+      "description": "The part of the cytoplasm that does not contain organelles but which does contain other particulate matter, such as protein complexes."
+    },
+    {
+      "name": "chromatin remodeling",
+      "id": "GO_0006338",
+      "description": "A dynamic process of chromatin reorganization resulting in changes to chromatin structure. These changes allow DNA metabolic processes such as transcriptional regulation, DNA recombination, DNA repair"
+    },
+    {
+      "name": "aggresome",
+      "id": "GO_0016235",
+      "description": "An inclusion body formed by dynein-dependent retrograde transport of an aggregated protein on microtubules."
+    },
+    {
+      "name": "DNA-binding transcription factor activity",
+      "id": "GO_0003700",
+      "description": "A transcription regulator activity that modulates transcription of gene sets via selective and non-covalent binding to a specific double-stranded genomic DNA sequence (sometimes referred to as a motif"
+    },
+    {
+      "name": "regulation of DNA-templated transcription",
+      "id": "GO_0006355",
+      "description": "Any process that modulates the frequency, rate or extent of cellular DNA-templated transcription."
+    },
+    {
+      "name": "cytoplasm",
+      "id": "GO_0005737",
+      "description": "The contents of a cell excluding the plasma membrane and nucleus, but including other subcellular structures."
+    },
+    {
+      "name": "metal ion binding",
+      "id": "GO_0046872",
+      "description": "Binding to a metal ion."
+    },
+    {
+      "name": "DNA binding",
+      "id": "GO_0003677",
+      "description": "Any molecular function by which a gene product interacts selectively and non-covalently with DNA (deoxyribonucleic acid)."
+    },
+    {
+      "name": "cell differentiation",
+      "id": "GO_0030154",
+      "description": "The cellular developmental process in which a relatively unspecialized cell, e.g. embryonic or regenerative cell, acquires specialized structural and/or functional features that characterize a specifi"
+    },
+    {
+      "name": "positive regulation of DNA-templated transcription",
+      "id": "GO_0045893",
+      "description": "Any process that activates or increases the frequency, rate or extent of cellular DNA-templated transcription."
+    },
+    {
+      "name": "RNA polymerase II cis-regulatory region sequence-specific DNA binding",
+      "id": "GO_0000978",
+      "description": "Binding to a specific upstream regulatory DNA sequence (transcription factor recognition sequence or binding site) located in cis relative to the transcription start site (i.e., on the same strand of "
+    },
+    {
+      "name": "regulation of transcription by RNA polymerase II",
+      "id": "GO_0006357",
+      "description": "Any process that modulates the frequency, rate or extent of transcription mediated by RNA polymerase II."
+    },
+    {
+      "name": "positive regulation of transcription by RNA polymerase II",
+      "id": "GO_0045944",
+      "description": "Any process that activates or increases the frequency, rate or extent of transcription from an RNA polymerase II promoter."
+    },
+    {
+      "name": "sequence-specific DNA binding",
+      "id": "GO_0043565",
+      "description": "Binding to DNA of a specific nucleotide composition, e.g. GC-rich DNA binding, or with a specific sequence motif or type of DNA e.g. promotor binding or rDNA binding."
+    },
+    {
+      "name": "negative regulation of DNA-templated transcription",
+      "id": "GO_0045892",
+      "description": "Any process that stops, prevents, or reduces the frequency, rate or extent of cellular DNA-templated transcription."
+    },
+    {
+      "name": "negative regulation of transcription by RNA polymerase II",
+      "id": "GO_0000122",
+      "description": "Any process that stops, prevents, or reduces the frequency, rate or extent of transcription mediated by RNA polymerase II."
+    },
+    {
+      "name": "DNA-binding transcription activator activity",
+      "id": "RNA polymerase II-specific",
+      "description": "GO_0001228\", \"A DNA-binding transcription factor activity that activates or increases transcription of specific gene sets transcribed by RNA polymerase II."
+    },
+    {
+      "name": "transcription coregulator activity",
+      "id": "GO_0003712",
+      "description": "A transcription regulator activity that modulates the transcription of specific gene sets via binding to a DNA-binding transcription factor at a specific genomic locus, either on its own or as part of"
+    },
+    {
+      "name": "DNA-binding transcription repressor activity",
+      "id": "RNA polymerase II-specific",
+      "description": "GO_0001227\", \"A DNA-binding transcription factor activity that represses or decreases the transcription of specific gene sets transcribed by RNA polymerase II."
+    },
+    {
+      "name": "transcription coactivator activity",
+      "id": "GO_0003713",
+      "description": "A transcription coregulator activity that activates or increases the transcription of specific gene sets via binding to a DNA-binding transcription factor at a specific genomic locus, either on its ow"
+    },
+    {
+      "name": "positive regulation of cold-induced thermogenesis",
+      "id": "GO_0120162",
+      "description": "Any process that activates or increases the frequency, rate or extent of cold-induced thermogenesis."
+    },
+    {
+      "name": "histone H3 methyltransferase activity",
+      "id": "GO_0140938",
+      "description": "Catalysis of the reaction: S-adenosyl-L-methionine + a histone H3 = S-adenosyl-L-homocysteine + a methylated histone H3. Histone methylation generally occurs on either an arginine or a lysine residue."
+    },
+    {
+      "name": "negative regulation of transforming growth factor beta receptor signaling pathway",
+      "id": "GO_0030512",
+      "description": "Any process that stops, prevents, or reduces the frequency, rate or extent of any TGF-beta receptor signaling pathway."
+    },
+    {
+      "name": "DNA-binding transcription factor binding",
+      "id": "GO_0140297",
+      "description": "Binding to a DNA-binding transcription factor, a protein that interacts with a specific DNA sequence (sometimes referred to as a motif) within the regulatory region of a gene to modulate transcription"
+    },
+    {
+      "name": "transcription repressor complex",
+      "id": "GO_0017053",
+      "description": "A protein complex that possesses activity that prevents or downregulates transcription."
+    },
+    {
+      "name": "heterochromatin organization",
+      "id": "GO_0070828",
+      "description": "Any process that results in the specification, formation or maintenance of the physical structure of eukaryotic heterochromatin, a compact and highly condensed form of chromatin."
+    },
+    {
+      "name": "transcription cis-regulatory region binding",
+      "id": "GO_0000976",
+      "description": "Binding to a specific sequence of DNA that is part of a regulatory region that controls transcription of that section of the DNA. The transcribed region might be described as a gene, cistron, or opero"
+    },
+    {
+      "name": "histone H3K9me2 methyltransferase activity",
+      "id": "GO_0140947",
+      "description": "Catalysis of the reaction: N6,N6-dimethyl-L-lysyl9-[histone H3] + S-adenosyl-L-methionine = H+ + N6,N6,N6-trimethyl-L-lysyl9-[histone H3] + S-adenosyl-L-homocysteine. This reaction is the addition of "
+    },
+    {
+      "name": "histone H3K9 monomethyltransferase activity",
+      "id": "GO_0140948",
+      "description": "Catalysis of the reaction: L-lysyl9-[histone H3] + S-adenosyl-L-methionine = H+ + N6-methyl-L-lysyl9-[histone H3] + S-adenosyl-L-homocysteine. This reaction is the addition of a methyl group to the un"
+    },
+    {
+      "name": "brown fat cell differentiation",
+      "id": "GO_0050873",
+      "description": "The process in which a relatively unspecialized cell acquires specialized features of a brown adipocyte, an animal connective tissue cell involved in adaptive thermogenesis. Brown adipocytes contain m"
+    },
+    {
+      "name": "regulation of cellular respiration",
+      "id": "GO_0043457",
+      "description": "Any process that modulates the frequency, rate or extent of cellular respiration, the enzymatic release of energy from organic compounds."
+    },
+    {
+      "name": "zinc ion binding",
+      "id": "GO_0008270",
+      "description": "Binding to a zinc ion (Zn)."
+    },
+    {
+      "name": "peroxisome organization",
+      "id": "GO_0007031",
+      "description": "A process that is carried out at the cellular level which results in the assembly, arrangement of constituent parts, or disassembly of a peroxisome. A peroxisome is a small, membrane-bounded organelle"
+    },
+    {
+      "name": "peroxisomal membrane",
+      "id": "GO_0005778",
+      "description": "The lipid bilayer surrounding a peroxisome."
+    },
+    {
+      "name": "protein import into peroxisome matrix",
+      "id": "GO_0016558",
+      "description": "The import of proteins into the peroxisomal matrix. A peroxisome targeting signal (PTS) binds to a soluble receptor protein in the cytosol, and the resulting complex then binds to a receptor protein i"
+    },
+    {
+      "name": "membrane",
+      "id": "GO_0016020",
+      "description": "A lipid bilayer along with all the proteins and protein complexes embedded in it and attached to it."
+    },
+    {
+      "name": "transferase activity",
+      "id": "GO_0016740",
+      "description": "Catalysis of the transfer of a group, e.g. a methyl group, glycosyl group, acyl group, phosphorus-containing, or other groups, from one compound (generally regarded as the donor) to another compound ("
+    },
+    {
+      "name": "protein ubiquitination",
+      "id": "GO_0016567",
+      "description": "The process in which one or more ubiquitin groups are added to a protein."
+    },
+    {
+      "name": "protein transport",
+      "id": "GO_0015031",
+      "description": "The directed movement of proteins into, out of or within a cell, or between cells, by means of some agent such as a transporter or pore."
+    },
+    {
+      "name": "peroxisome",
+      "id": "GO_0005777",
+      "description": "A small organelle enclosed by a single membrane, and found in most eukaryotic cells. Contains peroxidases and other enzymes involved in a variety of metabolic processes including free radical detoxifi"
+    },
+    {
+      "name": "ubiquitin protein ligase activity",
+      "id": "GO_0061630",
+      "description": "Catalysis of the transfer of ubiquitin to a substrate protein via the reaction X-ubiquitin + S = X + S-ubiquitin, where X is either an E2 or E3 enzyme, the X-ubiquitin linkage is a thioester bond, and"
+    },
+    {
+      "name": "protein polyubiquitination",
+      "id": "GO_0000209",
+      "description": "Addition of multiple ubiquitin groups to a protein, forming a ubiquitin chain."
+    },
+    {
+      "name": "proteasome-mediated ubiquitin-dependent protein catabolic process",
+      "id": "GO_0043161",
+      "description": "The chemical reactions and pathways resulting in the breakdown of a protein or peptide by hydrolysis of its peptide bonds, initiated by the covalent attachment of ubiquitin, and mediated by the protea"
+    },
+    {
+      "name": "protein quality control for misfolded or incompletely synthesized proteins",
+      "id": "GO_0006515",
+      "description": "The chemical reactions and pathways resulting in the breakdown of misfolded or attenuated proteins."
+    }
+  ],
+  "relationship_samples": {
+    "gene_effector_disease": [],
+    "gene_expression_celltype": [],
+    "gene_interaction_gene": [],
+    "snp_gwas_disease": [],
+    "gene_function_go": []
+  },
+  "extracted_at": "2025-11-29T21:20:01.786782",
+  "source_url": "https://nzi5e9mb0f.execute-api.us-east-1.amazonaws.com/production/pankgraph-neo4j"
+}

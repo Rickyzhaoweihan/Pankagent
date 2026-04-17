@@ -1,0 +1,53 @@
+{
+  "name": "pankllm-agents",
+  "owner": {
+    "name": "Yuanhao Huang",
+    "email": "noreply@example.com"
+  },
+  "metadata": {
+    "description": "PanKLLM multi-agent system for biomedical knowledge queries",
+    "version": "0.2.0",
+    "created": "2026-02-11",
+    "updated": "2026-02-11"
+  },
+  "plugins": [
+    {
+      "name": "format-agent",
+      "description": "Format raw sub-agent data (Neo4j results, GLKB abstracts, Cypher queries) into structured JSON responses with hallucination checking. Uses Claude Opus 4.6 with specialized prompts for WITH-LITERATURE and NO-LITERATURE modes.",
+      "source": "skills/format-agent/"
+    }
+  ],
+  "activation": {
+    "keywords": [
+      "format response",
+      "format agent",
+      "synthesize results",
+      "final summary",
+      "hallucination check",
+      "format biomedical data"
+    ],
+    "patterns": [
+      "(?i)format\\s+(the\\s+)?response",
+      "(?i)run\\s+format\\s+agent",
+      "(?i)check\\s+hallucination"
+    ]
+  },
+  "usage": {
+    "when_to_use": [
+      "After sub-agents (PankBase, GLKB, TemplateToolAgent) have returned raw data",
+      "When Neo4j results need to be synthesized into a user-facing summary",
+      "When hallucination checking is needed on generated summaries"
+    ],
+    "when_not_to_use": [
+      "During initial query planning (use PlannerAgent instead)",
+      "When querying databases directly (use PankBaseAgent or GLKB agent)",
+      "For template matching queries that don't need formatting"
+    ]
+  },
+  "test_queries": [
+    "What is the role of CFTR in Type 1 Diabetes?",
+    "Tell me about gene TP53",
+    "What SNPs are associated with IRF4?"
+  ]
+}
+

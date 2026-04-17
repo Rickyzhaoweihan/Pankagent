@@ -8,4 +8,5 @@ langchain_openai==0.3.32
 neo4j==5.28.1
 openai==1.106.1
 python-dotenv==1.1.1
+psycopg2-binary>=2.9.0
 Requests==2.32.5

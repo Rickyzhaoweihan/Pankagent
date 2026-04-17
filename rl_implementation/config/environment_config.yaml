@@ -1,0 +1,86 @@
+# Environment Configuration for Graph Reasoning Environment
+# 
+# This configuration file defines settings for the GraphReasoningEnvironment
+# used in the PanKLLM RL post-training system.
+
+graph_reasoning_env:
+  # AWS Lambda endpoint for Pankbase Neo4j API
+  # Production endpoint (default)
+  api_url: "https://nzi5e9mb0f.execute-api.us-east-1.amazonaws.com/production/pankgraph-neo4j"
+  
+  # Development endpoint (alternative)
+  # api_url: "https://nzi5e9mb0f.execute-api.us-east-1.amazonaws.com/development/pank2-neo4j-api-development"
+  
+  # Maximum number of Cypher query steps per episode
+  # Corresponds to the maximum number of queries the agent can execute
+  # before the episode terminates
+  max_turns: 5
+  
+  # Request timeout in seconds
+  # How long to wait for Neo4j API response before timing out
+  timeout: 60
+  
+  # Schema path (optional)
+  # Path to the knowledge graph schema JSON file
+  # If not provided, schema will be loaded separately
+  schema_path: "/nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/legacy/PankBaseAgent/schemas/kg_schema copy.json"
+
+# Curriculum stage configurations
+# These define the constraints for each difficulty level
+curriculum:
+  easy:
+    max_turns: 3
+    max_hops: 2
+    target_success_rate: 0.7
+    expected_trajectory_length: "1-2 steps"
+    expected_subgraph_size: "10-50 nodes"
+  
+  medium:
+    max_turns: 4
+    max_hops: 3
+    target_success_rate: 0.5
+    expected_trajectory_length: "2-3 steps"
+    expected_subgraph_size: "50-200 nodes"
+  
+  hard:
+    max_turns: 5
+    max_hops: 5
+    target_success_rate: 0.4
+    expected_trajectory_length: "3-5 steps"
+    expected_subgraph_size: "200+ nodes"
+
+# Execution time thresholds (in milliseconds)
+# Used for providing feedback to the agent
+execution_time:
+  fast: 100      # ⚡ Very fast
+  good: 500      # ○ Good
+  acceptable: 1000  # △ Acceptable
+  slow: 1000     # ✗ Slow (above this threshold)
+
+# Data quality thresholds
+# Used for experience buffer pattern extraction
+data_quality:
+  high_quality: 0.7      # Episodes above this are considered high quality
+  low_quality: 0.4       # Episodes below this indicate bad data regions
+  high_doubt: 0.6        # Doubt level above this triggers semantic ambiguity investigation
+
+# Result counting heuristics
+# Used for estimating the number of nodes/edges in results
+result_counting:
+  # Minimum entities to consider as "has data"
+  min_entities: 1
+  
+  # Maximum entities to return in data summary
+  max_summary_entities: 100
+
+# Logging configuration
+logging:
+  # Log level for environment operations
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  
+  # Log execution metrics
+  log_execution_metrics: true
+  
+  # Log query history
+  log_query_history: true
+

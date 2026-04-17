@@ -1,0 +1,116 @@
+# =============================================================================
+# Orchestrator Training Configuration - L40S (48GB VRAM)
+# =============================================================================
+# Settings for NVIDIA L40S GPUs (48GB) with activation offloading
+# Use this config with submit_2l40s_pipeline.sbatch
+#
+# Key difference from H100 config:
+#   - activation_offloading: true - offloads activations to CPU
+#   - Same batch_size (16) and max_length (4096) as H100
+#   - Training is ~20-30% slower but uses less GPU memory
+# =============================================================================
+
+# =============================================================================
+# Rollouts Configuration
+# =============================================================================
+rollouts_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/stage1_ddp/rollouts_collect_base_model.jsonl
+
+# Filtering options
+min_reward: 0.1
+
+# Balanced sampling
+use_balanced_sampling: true
+
+# =============================================================================
+# Prompt Configuration
+# =============================================================================
+rebuild_prompts: false
+schema_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/legacy/PankBaseAgent/text_to_cypher/data/input/kg_schema.json
+
+# =============================================================================
+# Model Configuration
+# =============================================================================
+orchestrator_model_path: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/models/qwen2.5-14b
+
+# LoRA configuration
+lora_rank: 128
+lora_alpha: 256
+lora_dropout: 0.05
+
+# =============================================================================
+# Output Configuration
+# =============================================================================
+checkpoint_dir: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/orchestrator_trained
+log_dir: /nfs/turbo/umms-drjieliu/usr/rickyhan/rllm/examples/PanKLLM_RL_post-training/outputs/orchestrator_trained/logs
+
+# =============================================================================
+# Training Configuration (L40S Memory-Optimized)
+# =============================================================================
+num_epochs: 10
+
+# Full batch size for GRPO (larger = better advantage estimates)
+batch_size: 16
+
+# Mini-batch size for forward passes (controls memory, not training quality)
+# Set to 1 for L40S 48GB - gradients are accumulated across mini-batches
+mini_batch_size: 1
+
+learning_rate: 5.0e-6
+weight_decay: 0.01
+max_grad_norm: 1.0
+warmup_steps: 50
+save_frequency: 1
+
+# =============================================================================
+# Orchestrator Role Configuration
+# =============================================================================
+# Train question generation role
+train_qgen: true
+qgen_weight: 0.7
+
+# Train answer synthesis role
+train_synth: true
+synth_weight: 0.3
+
+# =============================================================================
+# PPO/GRPO Configuration
+# =============================================================================
+clip_ratio: 0.2
+entropy_coeff: 0.01
+use_kl_penalty: false
+kl_coeff: 0.1
+grpo_baseline: mean
+normalize_advantages: true
+ppo_epochs: 1
+
+# =============================================================================
+# Precision and Memory (L40S Optimized - 48GB VRAM)
+# =============================================================================
+use_bf16: true
+gradient_checkpointing: true
+
+# Activation offloading - moves activations to CPU during forward pass
+# Significantly reduces GPU memory at cost of ~20-30% slower training
+# NOTE: This automatically switches to "eager" attention (not SDPA/Flash)
+# because SDPA uses vmap which conflicts with saved_tensors_hooks
+activation_offloading: true
+
+# CPU offload for optimizer states (optional, further reduces GPU memory)
+cpu_offload_optimizer: false
+
+# Full sequence length enabled with activation offloading
+max_length: 4096
+
+# =============================================================================
+# Memory Estimate for L40S (48GB VRAM) with Activation Offloading
+# =============================================================================
+# Model weights (Qwen2.5-14B bf16):     ~28 GB
+# LoRA adapters (rank=128):             ~0.5 GB
+# Optimizer states (LoRA only):         ~1.5 GB
+# Gradients (LoRA only):                ~0.5 GB
+# Activations (with offloading):        ~6-10 GB (batch=16, seq=4096)
+# Safety buffer:                        ~2 GB
+# -----------------------------------------
+# Total with offloading:                ~39-43 GB ✓ (fits in 48GB)
+# =============================================================================
+

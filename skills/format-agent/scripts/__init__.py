@@ -1,0 +1,2 @@
+"""FormatAgent skill — scripts package."""
+

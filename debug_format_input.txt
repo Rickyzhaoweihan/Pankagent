@@ -1,0 +1,13 @@
+Human Query: Which genes are part of a QTL signal associated with rs300181?
+
+=== NEO4J CYPHER QUERIES ===
+[]
+
+=== NEO4J DATABASE RESULTS (0 nodes, 0 edges) ===
+[]
+
+CRITICAL INSTRUCTIONS:
+- The above contains ALL data retrieved from the database. Use ALL of it.
+- There are 0 nodes listed above. Account for EVERY one in your summary.
+- If a gene appears in the nodes list, it IS in the data — do NOT say it is missing.
+- Cross-reference: if the user asks about gene X, check if X appears in ANY node's "name" field above.

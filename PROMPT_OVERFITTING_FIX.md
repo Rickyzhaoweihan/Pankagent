@@ -61,14 +61,14 @@ MATCH (g:gene) WHERE g.name = 'INS'
 ```
 "How does the SNP rs2402203 contribute to CFTR's function in T1D?"
 1. "Find gene with name CFTR"
-2. "Get SNPs that have QTL_for relationships with gene CFTR"
+2. "Get SNPs that have part_of_QTL_signal relationships with gene CFTR"
 ```
 
 **After**:
 ```
 "How does the SNP rs738409 contribute to PNPLA3's function in T1D?"
 1. "Find gene with name PNPLA3"
-2. "Get SNPs that have QTL_for relationships with gene PNPLA3"
+2. "Get SNPs that have part_of_QTL_signal relationships with gene PNPLA3"
 ```
 
 ## Files Modified
@@ -116,7 +116,7 @@ MATCH (g:gene) WHERE g.name = 'INS'
 **Generated**: `MATCH (g:gene) WHERE g.name = 'INS'` ✅
 
 **Query**: "Get SNPs for gene MAFA"
-**Generated**: `MATCH (sn:snp)-[r:QTL_for]->(g:gene) WHERE g.name = 'MAFA'` ✅
+**Generated**: `MATCH (sn:snp)-[r:part_of_QTL_signal]->(g:gene) WHERE g.name = 'MAFA'` ✅
 
 ## Gene Names Now Used in Examples
 

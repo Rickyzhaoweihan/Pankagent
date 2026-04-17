@@ -49,7 +49,7 @@ MAX_ITER = 1  # Was 3
 1. "Find SNP with name rs2402203"
 2. "Find gene with name CFTR"
 3. "Find disease with name type 1 diabetes"
-4. "Get all genes that have QTL_for relationships with SNPs"
+4. "Get all genes that have part_of_QTL_signal relationships with SNPs"
 5. "Get all genes that are effector genes for diseases"
 6. "Get all genes that have DEG_in relationships with cell types"
 7. "Get all cell types in the database"
@@ -181,7 +181,7 @@ MAX_ITER = 1  # Was 5 in pseudocode
     {"name": "pankbase_chat_one_round", "input": "Find SNP with name rs2402203"},
     {"name": "pankbase_chat_one_round", "input": "Find gene with name CFTR"},
     {"name": "pankbase_chat_one_round", "input": "Find disease with name type 1 diabetes"},
-    {"name": "pankbase_chat_one_round", "input": "Get all SNPs that have QTL_for relationships with genes"},
+    {"name": "pankbase_chat_one_round", "input": "Get all SNPs that have part_of_QTL_signal relationships with genes"},
     {"name": "pankbase_chat_one_round", "input": "Get all genes that are effector genes for diseases"},
     {"name": "pankbase_chat_one_round", "input": "Get all genes that have DEG_in relationships with cell types"},
     {"name": "pankbase_chat_one_round", "input": "Get all cell types in the database"}

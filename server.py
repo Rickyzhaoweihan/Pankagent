@@ -5,13 +5,19 @@ FastAPI server for serving PlannerAgent queries via HTTP.
 
 Endpoints
 ---------
-  GET  /              — API info
-  GET  /health        — health check
-  POST /query         — synchronous query (returns full answer)
-  POST /query/stream  — streaming query (returns NDJSON events in real time)
-  POST /plan/start    — start interactive plan session (returns plan for review)
-  POST /plan/revise   — revise plan with a user prompt
-  POST /plan/confirm  — confirm plan and run final format/reasoning pipeline
+  GET    /              — API info
+  GET    /health        — health check
+
+  Multi-turn dialogue (session-based):
+  POST   /chat/start    — start a chat session (first question runs full pipeline)
+  POST   /chat/message  — follow-up; smart-routed to pipeline or context-only
+  GET    /chat/history  — retrieve conversation history
+  DELETE /chat/end      — end session and free memory
+
+  Interactive plan review (session-based):
+  POST   /plan/start    — start interactive plan session (returns plan for review)
+  POST   /plan/revise   — revise plan with a user prompt
+  POST   /plan/confirm  — confirm plan and run final format/reasoning pipeline
 """
 
 from fastapi import FastAPI, HTTPException, Request
@@ -31,6 +37,21 @@ import threading
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+
+# Load .env BEFORE importing modules that read ANTHROPIC_API_KEY at import time
+# (claude.py, qp_query_planner.py, PankBaseAgent/claude.py all read os.environ).
+# .env lives next to server.py.
+try:
+    from dotenv import load_dotenv
+    _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    load_dotenv(_env_path, override=False)
+except ImportError:
+    pass  # python-dotenv not installed — fall back to whatever env the process inherited
+
+# Alias CLAUDE_API_KEY -> ANTHROPIC_API_KEY for backward-compat with older .env files.
+# All code downstream reads ANTHROPIC_API_KEY.
+if not os.environ.get("ANTHROPIC_API_KEY") and os.environ.get("CLAUDE_API_KEY"):
+    os.environ["ANTHROPIC_API_KEY"] = os.environ["CLAUDE_API_KEY"]
 
 # Import the main chat function and the rigor-mode toggle
 import main as _main_module
@@ -172,36 +193,6 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 # Request / Response models
 # ---------------------------------------------------------------------------
-
-class QueryRequest(BaseModel):
-    question: str = Field(..., description="Natural language question about genes, diseases, etc.")
-    rigor: bool = Field(True, description="Use rigorous mode (strict evidence-only, no speculation). Defaults to True.")
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "question": "What is the function of gene TP53?",
-                "rigor": True,
-            }
-        }
-
-
-class QueryResponse(BaseModel):
-    answer: str = Field(..., description="Full pipeline JSON response")
-    answer_markdown: str = Field("", description="Clean Markdown output identical to the CLI printout")
-    processing_time_ms: float = Field(
-        ..., description="Time taken to process the query in milliseconds"
-    )
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "answer": '{"to":"user","text":{"template_matching":"agent_answer","cypher":["..."],"summary":"..."}}',
-                "answer_markdown": "## Reasoning Trace\n\n...\n\nAnswer\n\nTP53 is a tumor suppressor gene...\n\n## Cypher Queries\n\n**Query 1:**\n```cypher\nMATCH ...\n```",
-                "processing_time_ms": 1234.56,
-            }
-        }
-
 
 class HealthResponse(BaseModel):
     status: str
@@ -350,6 +341,14 @@ class ChatSession:
     session_id: str
     history: list = field(default_factory=list)  # [{"role": "user"|"assistant", "content": str}, ...]
     rigor: bool = True
+    use_literature: bool = True
+    # Last new_query round's plan state (used when the user asks to revise the most recent plan)
+    last_question: str = ""
+    last_plan: dict = field(default_factory=dict)
+    last_neo4j_results: list = field(default_factory=list)
+    last_cypher_queries: list = field(default_factory=list)
+    last_complexity: str = "simple"
+    last_literature_result: str = ""
     created_at: float = field(default_factory=time.time)
     last_active: float = field(default_factory=time.time)
 
@@ -481,10 +480,15 @@ def _answer_from_context(history: list[dict], new_question: str, rigor: bool = T
 class ChatStartRequest(BaseModel):
     question: str = Field(..., description="First question to start the conversation")
     rigor: bool = Field(True, description="Use rigorous evidence-only mode")
+    use_literature: bool = Field(True, description="Include HIRN literature in the plan")
 
 class ChatMessageRequest(BaseModel):
     session_id: str = Field(..., description="Chat session ID from /chat/start")
     question: str = Field(..., description="Follow-up question")
+
+class ChatReviseRequest(BaseModel):
+    session_id: str = Field(..., description="Chat session ID")
+    prompt: str = Field(..., description="Revision instruction for the last plan")
 
 class ChatResponse(BaseModel):
     session_id: str
@@ -492,6 +496,8 @@ class ChatResponse(BaseModel):
     answer_markdown: str = Field(..., description="Markdown answer")
     route: str = Field(..., description="'new_query' or 'context_only'")
     round: int = Field(..., description="Conversation round number (1-indexed)")
+    plan_markdown: str = Field("", description="Plan summary for this round (new_query only)")
+    plan_json: Optional[dict] = Field(None, description="Plan JSON for this round (new_query only)")
     processing_time_ms: float
 
 class ChatHistoryResponse(BaseModel):
@@ -511,7 +517,11 @@ _request_lock = threading.Lock()
 
 
 def _run_query(question: str, rigor: bool = True) -> str:
-    """Run the full pipeline under the request lock and return the answer string."""
+    """Run the full pipeline under the request lock and return the answer string.
+
+    Deprecated: kept for any remaining callers, but the chat endpoints now use
+    ``_run_plan_pipeline`` + ``_run_confirm`` instead (plan-mode foundation).
+    """
     with _request_lock:
         _main_module.RIGOR_MODE = rigor
         reset_cypher_queries()
@@ -520,42 +530,55 @@ def _run_query(question: str, rigor: bool = True) -> str:
         return response
 
 
-def _run_query_streaming(question: str, buf: io.StringIO, rigor: bool = True) -> str:
-    """Run the pipeline while capturing emit() output into *buf*.
+def _run_plan_pipeline(question: str, use_literature: bool = True) -> dict:
+    """Wrap run_plan_start under the request lock. Returns the full plan dict
+    (plan, neo4j_results, cypher_queries, complexity, use_literature, literature_result)."""
+    clean_q = clean_user_question(question)
+    with _request_lock:
+        return {"interpreted_question": clean_q, **run_plan_start(clean_q, use_literature=use_literature)}
 
-    Returns the final answer string.
-    """
-    import stream_events as _se
 
-    # Temporarily redirect emit() output to the buffer instead of real stdout
-    original_write = sys.stdout.write
-    original_flush = sys.stdout.flush
-    buf_lock = threading.Lock()
+def _run_plan_revise(
+    original_question: str,
+    current_plan: dict,
+    neo4j_results: list,
+    user_prompt: str,
+    use_literature: bool,
+    literature_result: str,
+) -> dict:
+    """Wrap run_plan_revise under the request lock."""
+    with _request_lock:
+        return run_plan_revise(
+            original_question=original_question,
+            current_plan=current_plan,
+            neo4j_results=neo4j_results,
+            user_prompt=user_prompt,
+            use_literature=use_literature,
+            literature_result=literature_result,
+        )
 
-    def _capturing_write(s: str) -> int:
-        with buf_lock:
-            buf.write(s)
-        return len(s)
 
-    def _capturing_flush():
-        pass  # no-op; the async generator reads the buffer
-
+def _run_confirm(
+    question: str,
+    neo4j_results: list,
+    cypher_queries: list,
+    complexity: str,
+    use_literature: bool,
+    literature_result: str,
+    rigor: bool,
+) -> str:
+    """Wrap run_plan_confirm under the request lock. Returns the formatted answer JSON string."""
     with _request_lock:
         _main_module.RIGOR_MODE = rigor
-        reset_cypher_queries()
-        messages = []
-
-        # Monkey-patch stdout for the duration of the pipeline so emit() writes
-        # go into our buffer rather than the server's stdout.
-        sys.stdout.write = _capturing_write
-        sys.stdout.flush = _capturing_flush
-        try:
-            _, response = chat_one_round(messages, question)
-        finally:
-            sys.stdout.write = original_write
-            sys.stdout.flush = original_flush
-
-        return response
+        return run_plan_confirm(
+            question=question,
+            neo4j_results=neo4j_results,
+            cypher_queries=cypher_queries,
+            complexity=complexity,
+            use_literature=use_literature,
+            literature_result=literature_result,
+            rigor=rigor,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -570,13 +593,12 @@ async def root():
         "version": "2.1.0",
         "status": "running",
         "endpoints": {
-            "query": "POST /query — synchronous answer (stateless)",
-            "query_stream": "POST /query/stream — NDJSON streaming events (stateless)",
-            "chat_start": "POST /chat/start — start multi-turn dialogue session",
-            "chat_message": "POST /chat/message — send follow-up in a session",
+            "chat_start": "POST /chat/start — start multi-turn dialogue (runs plan + auto-confirms)",
+            "chat_message": "POST /chat/message — follow-up; smart-routed (plan+confirm or context-only)",
+            "chat_revise": "POST /chat/revise — revise the most recent plan in the session, auto-confirm",
             "chat_history": "GET /chat/history?session_id=X — get conversation history",
             "chat_end": "DELETE /chat/end?session_id=X — end session",
-            "plan_start": "POST /plan/start — start interactive plan session",
+            "plan_start": "POST /plan/start — start interactive plan session (manual confirm)",
             "plan_revise": "POST /plan/revise — revise plan with user prompt",
             "plan_confirm": "POST /plan/confirm — confirm plan and get final answer",
             "health": "GET /health — health check",
@@ -593,136 +615,6 @@ async def health():
         status="healthy",
         message="Server is running and ready to accept requests",
         uptime_seconds=uptime,
-    )
-
-
-@app.post("/query", response_model=QueryResponse)
-async def query(request: QueryRequest):
-    """
-    Process a natural language query (synchronous).
-
-    Returns the full formatted answer once processing is complete.
-    """
-    start_time = time.time()
-
-    if not request.question or not request.question.strip():
-        raise HTTPException(status_code=400, detail="Question cannot be empty")
-
-    question = request.question.strip()
-    rigor = request.rigor
-    logger.info(f"[/query] Received (rigor={rigor}): {question[:100]}...")
-
-    try:
-        # Run in a thread so we don't block the async event loop
-        loop = asyncio.get_running_loop()
-        response = await loop.run_in_executor(None, _run_query, question, rigor)
-
-        processing_time = (time.time() - start_time) * 1000
-        logger.info(f"[/query] Done in {processing_time:.0f}ms")
-
-        cleaned = clean_response_json(response)
-        md = extract_markdown(response)
-
-        _query_cypher = []
-        _query_follow_ups = []
-        try:
-            _qdata = json.loads(cleaned) if isinstance(cleaned, str) else cleaned
-            _qtext = _qdata.get("text", {})
-            if isinstance(_qtext, str):
-                _qtext = json.loads(_qtext)
-            _query_cypher = _qtext.get("cypher", [])
-            _query_follow_ups = _qtext.get("follow_up_questions", [])
-        except (json.JSONDecodeError, TypeError, AttributeError):
-            pass
-
-        _log_plan_event("query_" + uuid.uuid4().hex[:8], "direct_query", {
-            "question": question,
-            "cypher_queries": _query_cypher,
-            "final_answer_markdown": md[:5000],
-            "follow_up_questions": _query_follow_ups,
-            "rigor": rigor,
-            "processing_time_ms": round(processing_time, 1),
-        })
-
-        return QueryResponse(answer=cleaned, answer_markdown=md, processing_time_ms=processing_time)
-
-    except Exception as e:
-        logger.error(f"[/query] Error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-
-
-@app.post("/query/stream")
-async def query_stream(request: QueryRequest):
-    """
-    Process a natural language query with **streaming NDJSON events**.
-
-    Each line in the response body is a JSON object with the same schema as
-    the ``emit()`` events used throughout the pipeline::
-
-        {"event": "...", "ts": ..., "data": {...}}
-
-    The final event has ``"event": "final_response"`` and contains the
-    formatted answer in ``data.response``.
-
-    Content-Type: ``application/x-ndjson``
-    """
-    if not request.question or not request.question.strip():
-        raise HTTPException(status_code=400, detail="Question cannot be empty")
-
-    question = request.question.strip()
-    rigor = request.rigor
-    logger.info(f"[/query/stream] Received (rigor={rigor}): {question[:100]}...")
-
-    buf = io.StringIO()
-
-    async def _event_generator():
-        loop = asyncio.get_running_loop()
-
-        # Launch the pipeline in a background thread; it writes NDJSON lines
-        # into `buf` via the captured stdout.
-        future = loop.run_in_executor(None, _run_query_streaming, question, buf, rigor)
-
-        # Poll the buffer and yield lines as they appear.
-        # We yield bytes (UTF-8) because Starlette's StreamingResponse
-        # expects bytes from the async generator body.
-        pos = 0
-        while not future.done():
-            await asyncio.sleep(0.15)
-            buf.seek(pos)
-            chunk = buf.read()
-            if chunk:
-                pos += len(chunk)
-                yield chunk.encode("utf-8")
-
-        # Drain any remaining output after the pipeline finishes
-        buf.seek(pos)
-        chunk = buf.read()
-        if chunk:
-            yield chunk.encode("utf-8")
-
-        # Get the final answer and emit a closing event
-        try:
-            answer = future.result()
-            cleaned = clean_response_json(answer)
-            md = extract_markdown(answer)
-            closing = json.dumps({
-                "event": "final_response",
-                "ts": time.time(),
-                "data": {"response": cleaned, "response_markdown": md},
-            }, ensure_ascii=False) + "\n"
-            yield closing.encode("utf-8")
-        except Exception as e:
-            error_event = json.dumps({
-                "event": "error",
-                "ts": time.time(),
-                "data": {"message": str(e)},
-            }, ensure_ascii=False) + "\n"
-            yield error_event.encode("utf-8")
-
-    return StreamingResponse(
-        _event_generator(),
-        media_type="application/x-ndjson",
-        headers={"charset": "utf-8"},
     )
 
 
@@ -976,8 +868,9 @@ async def plan_confirm(request: PlanConfirmRequest):
 async def chat_start(request: ChatStartRequest):
     """Start a new multi-turn chat session.
 
-    The first question always runs the full pipeline (planner → sub-agents → format).
-    Returns a session_id for follow-up messages.
+    Each new_query round runs ``run_plan_start`` + ``run_plan_confirm`` (same
+    foundation as ``/plan/*``). The last plan is stashed on the session so the
+    user can call ``/chat/revise`` to refine it before asking a new question.
     """
     start_time = time.time()
 
@@ -986,24 +879,57 @@ async def chat_start(request: ChatStartRequest):
 
     question = request.question.strip()
     rigor = request.rigor
-    logger.info(f"[/chat/start] New session (rigor={rigor}): {question[:100]}...")
+    use_lit = request.use_literature
+    logger.info(f"[/chat/start] New session (rigor={rigor}, literature={use_lit}): {question[:100]}...")
 
     _cleanup_expired_chat_sessions()
 
-    # Run full pipeline for first question
+    # 1. Plan
+    loop = asyncio.get_running_loop()
     try:
-        loop = asyncio.get_running_loop()
-        response = await loop.run_in_executor(None, _run_query, question, rigor)
+        plan_result = await loop.run_in_executor(None, _run_plan_pipeline, question, use_lit)
     except Exception as e:
-        logger.error(f"[/chat/start] Error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Pipeline failed: {e}")
+        logger.error(f"[/chat/start] plan error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Planning failed: {e}")
+
+    interpreted = plan_result.get("interpreted_question", question)
+    plan = plan_result["plan"]
+    neo4j_results = plan_result["neo4j_results"]
+    cypher_queries = plan_result["cypher_queries"]
+    complexity = plan_result.get("complexity", "simple")
+    literature_result = plan_result.get("literature_result", "")
+    plan_md = format_plan_as_markdown(
+        interpreted, plan, neo4j_results,
+        use_literature=use_lit, literature_result=literature_result,
+    )
+
+    # 2. Auto-confirm → final answer
+    try:
+        response = await loop.run_in_executor(
+            None, _run_confirm,
+            interpreted, neo4j_results, cypher_queries, complexity,
+            use_lit, literature_result, rigor,
+        )
+    except Exception as e:
+        logger.error(f"[/chat/start] confirm error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Confirm failed: {e}")
 
     cleaned = clean_response_json(response)
     md = extract_markdown(response)
 
-    # Create session and store first round
+    # 3. Create session and stash state so the user can revise
     session_id = uuid.uuid4().hex[:12]
-    session = ChatSession(session_id=session_id, rigor=rigor)
+    session = ChatSession(
+        session_id=session_id,
+        rigor=rigor,
+        use_literature=use_lit,
+        last_question=interpreted,
+        last_plan=plan,
+        last_neo4j_results=neo4j_results,
+        last_cypher_queries=cypher_queries,
+        last_complexity=complexity,
+        last_literature_result=literature_result,
+    )
     session.history.append({"role": "user", "content": question})
     session.history.append({"role": "assistant", "content": md})
 
@@ -1011,12 +937,16 @@ async def chat_start(request: ChatStartRequest):
         _chat_sessions[session_id] = session
 
     processing_time = (time.time() - start_time) * 1000
-    logger.info(f"[/chat/start] Session {session_id} created in {processing_time:.0f}ms")
+    logger.info(f"[/chat/start] Session {session_id} done in {processing_time:.0f}ms")
 
     _log_plan_event(f"chat_{session_id}", "chat_start", {
         "question": question,
+        "interpreted_question": interpreted,
+        "plan_type": plan.get("plan_type"),
+        "plan_markdown": plan_md[:3000],
         "answer_markdown": md[:3000],
         "rigor": rigor,
+        "use_literature": use_lit,
         "processing_time_ms": round(processing_time, 1),
     })
 
@@ -1026,6 +956,8 @@ async def chat_start(request: ChatStartRequest):
         answer_markdown=md,
         route="new_query",
         round=1,
+        plan_markdown=plan_md,
+        plan_json=plan,
         processing_time_ms=processing_time,
     )
 
@@ -1035,7 +967,8 @@ async def chat_message(request: ChatMessageRequest):
     """Send a follow-up message in an existing chat session.
 
     Smart routing: Claude classifies whether the follow-up needs new database
-    queries (full pipeline) or can be answered from conversation context alone.
+    queries (plan → confirm) or can be answered from conversation context alone.
+    new_query rounds always go through the plan pipeline (same as ``/plan/*``).
     """
     start_time = time.time()
 
@@ -1048,33 +981,54 @@ async def chat_message(request: ChatMessageRequest):
 
     logger.info(f"[/chat/message] Session {session.session_id} round {current_round}: {question[:100]}...")
 
-    # Smart routing: classify the follow-up
     loop = asyncio.get_running_loop()
-    route = await loop.run_in_executor(
-        None, _classify_followup, session.history, question
-    )
-
+    route = await loop.run_in_executor(None, _classify_followup, session.history, question)
     logger.info(f"[/chat/message] Route: {route}")
 
+    plan_md = ""
+    plan_json: Optional[dict] = None
+
     if route == "context_only":
-        # Answer from conversation history — no database queries
+        # Answer from conversation history — no database queries, no plan
         md = await loop.run_in_executor(
             None, _answer_from_context, session.history, question, session.rigor
         )
         cleaned = json.dumps({"to": "user", "text": {"summary": md}})
     else:
-        # Run full pipeline
+        # Run plan + confirm, exactly like /plan/start + /plan/confirm
         try:
+            plan_result = await loop.run_in_executor(
+                None, _run_plan_pipeline, question, session.use_literature
+            )
+            interpreted = plan_result.get("interpreted_question", question)
+            plan = plan_result["plan"]
+            neo4j_results = plan_result["neo4j_results"]
+            cypher_queries = plan_result["cypher_queries"]
+            complexity = plan_result.get("complexity", "simple")
+            literature_result = plan_result.get("literature_result", "")
+            plan_md = format_plan_as_markdown(
+                interpreted, plan, neo4j_results,
+                use_literature=session.use_literature, literature_result=literature_result,
+            )
             response = await loop.run_in_executor(
-                None, _run_query, question, session.rigor
+                None, _run_confirm,
+                interpreted, neo4j_results, cypher_queries, complexity,
+                session.use_literature, literature_result, session.rigor,
             )
             cleaned = clean_response_json(response)
             md = extract_markdown(response)
+            plan_json = plan
+            # Stash so the user can /chat/revise
+            session.last_question = interpreted
+            session.last_plan = plan
+            session.last_neo4j_results = neo4j_results
+            session.last_cypher_queries = cypher_queries
+            session.last_complexity = complexity
+            session.last_literature_result = literature_result
         except Exception as e:
-            logger.error(f"[/chat/message] Pipeline error: {e}", exc_info=True)
+            logger.error(f"[/chat/message] plan+confirm error: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Pipeline failed: {e}")
 
-    # Append to history and trim if needed
     session.history.append({"role": "user", "content": question})
     session.history.append({"role": "assistant", "content": md})
     session.history = _trim_history(session.history)
@@ -1086,6 +1040,7 @@ async def chat_message(request: ChatMessageRequest):
         "question": question,
         "route": route,
         "round": current_round,
+        "plan_markdown": plan_md[:3000],
         "answer_markdown": md[:3000],
         "processing_time_ms": round(processing_time, 1),
     })
@@ -1096,6 +1051,106 @@ async def chat_message(request: ChatMessageRequest):
         answer_markdown=md,
         route=route,
         round=current_round,
+        plan_markdown=plan_md,
+        plan_json=plan_json,
+        processing_time_ms=processing_time,
+    )
+
+
+@app.post("/chat/revise", response_model=ChatResponse)
+async def chat_revise(request: ChatReviseRequest):
+    """Revise the most recent new_query plan in the chat session, then auto-confirm.
+
+    Lets users refine a plan (e.g. "also add QTL SNPs", "drop GO terms") without
+    starting a new question. The revised plan is auto-confirmed and the updated
+    answer replaces the last assistant turn in history.
+    """
+    start_time = time.time()
+
+    if not request.prompt or not request.prompt.strip():
+        raise HTTPException(status_code=400, detail="Revision prompt cannot be empty")
+
+    session = _get_chat_session(request.session_id)
+    if not session.last_plan or not session.last_question:
+        raise HTTPException(status_code=409, detail="No prior plan to revise in this session")
+
+    prompt = request.prompt.strip()
+    current_round = len(session.history) // 2  # revise updates the last round, not a new one
+    logger.info(f"[/chat/revise] Session {session.session_id} revising round {current_round}: {prompt[:100]}...")
+
+    loop = asyncio.get_running_loop()
+
+    try:
+        rev = await loop.run_in_executor(
+            None, _run_plan_revise,
+            session.last_question,
+            session.last_plan,
+            session.last_neo4j_results,
+            prompt,
+            session.use_literature,
+            session.last_literature_result,
+        )
+    except Exception as e:
+        logger.error(f"[/chat/revise] revise error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Revision failed: {e}")
+
+    # Update session with revised plan state
+    session.last_plan = rev["plan"]
+    session.last_neo4j_results = rev["neo4j_results"]
+    session.last_cypher_queries = rev["cypher_queries"]
+    session.last_complexity = rev.get("complexity", session.last_complexity)
+    session.use_literature = rev.get("use_literature", session.use_literature)
+    session.last_literature_result = rev.get("literature_result", session.last_literature_result)
+
+    plan_md = format_plan_as_markdown(
+        session.last_question, session.last_plan, session.last_neo4j_results,
+        use_literature=session.use_literature, literature_result=session.last_literature_result,
+    )
+    err = rev.get("error")
+    if err:
+        plan_md = f"> **Note:** {err}\n\n{plan_md}"
+
+    # Auto-confirm
+    try:
+        response = await loop.run_in_executor(
+            None, _run_confirm,
+            session.last_question, session.last_neo4j_results, session.last_cypher_queries,
+            session.last_complexity, session.use_literature, session.last_literature_result,
+            session.rigor,
+        )
+    except Exception as e:
+        logger.error(f"[/chat/revise] confirm error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Confirm failed: {e}")
+
+    cleaned = clean_response_json(response)
+    md = extract_markdown(response)
+
+    # Replace the last assistant turn with the revised answer (don't add a new round)
+    if session.history and session.history[-1].get("role") == "assistant":
+        session.history[-1] = {"role": "assistant", "content": md}
+    else:
+        session.history.append({"role": "user", "content": f"[revision] {prompt}"})
+        session.history.append({"role": "assistant", "content": md})
+    session.history = _trim_history(session.history)
+
+    processing_time = (time.time() - start_time) * 1000
+    logger.info(f"[/chat/revise] Session {session.session_id} done in {processing_time:.0f}ms")
+
+    _log_plan_event(f"chat_{session.session_id}", "chat_revise", {
+        "prompt": prompt,
+        "plan_markdown": plan_md[:3000],
+        "answer_markdown": md[:3000],
+        "processing_time_ms": round(processing_time, 1),
+    })
+
+    return ChatResponse(
+        session_id=session.session_id,
+        answer=cleaned,
+        answer_markdown=md,
+        route="new_query",
+        round=current_round,
+        plan_markdown=plan_md,
+        plan_json=session.last_plan,
         processing_time_ms=processing_time,
     )
 
@@ -1161,14 +1216,14 @@ if __name__ == "__main__":
     print(f"  - API docs: http://localhost:{port}/docs")
     print(f"  - Health check: http://localhost:{port}/health")
     print(f"\nEndpoints:")
-    print(f"  POST /query         — synchronous answer (stateless)")
-    print(f"  POST /query/stream  — NDJSON streaming events (stateless)")
-    print(f"  POST /chat/start    — start multi-turn dialogue session")
-    print(f"  POST /chat/message  — send follow-up in a session")
-    print(f"  GET  /chat/history  — get conversation history")
-    print(f"  POST /plan/start    — start interactive plan session")
-    print(f"  POST /plan/revise   — revise plan with user prompt")
-    print(f"  POST /plan/confirm  — confirm plan and get final answer")
+    print(f"  POST   /chat/start    — start dialogue (plan → auto-confirm)")
+    print(f"  POST   /chat/message  — follow-up (plan+confirm or context-only)")
+    print(f"  POST   /chat/revise   — revise last plan, auto-confirm")
+    print(f"  GET    /chat/history  — get conversation history")
+    print(f"  DELETE /chat/end      — end chat session")
+    print(f"  POST   /plan/start    — interactive plan session (manual confirm)")
+    print(f"  POST   /plan/revise   — revise plan with user prompt")
+    print(f"  POST   /plan/confirm  — confirm plan and get final answer")
     print("\nPress Ctrl+C to stop the server")
     print("=" * 60 + "\n")
 

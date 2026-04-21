@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PanKgraph AI Assistant — a multi-agent system for querying a Type 1 Diabetes (T1D) biomedical knowledge graph using natural language. A PlannerAgent orchestrates specialized sub-agents, uses a fine-tuned local LLM (via vLLM) for text-to-Cypher translation, and Claude Opus 4 for orchestration/formatting/reasoning.
+PanKgraph AI Assistant — a multi-agent, multi-source system for querying a Type 1 Diabetes knowledge graph in natural language. A PlannerAgent orchestrates specialized sub-pipelines: **Cypher (Neo4j KG)**, **SQL (PostgreSQL genomic coordinates)**, **ssGSEA (REST)**, and **HIRN literature**. Claude (Sonnet) handles orchestration/formatting/reasoning; a fine-tuned local vLLM (`cypher-writer`) handles text-to-Cypher AND text-to-SQL generation.
 
 ## Commands
 
@@ -12,157 +12,203 @@ PanKgraph AI Assistant — a multi-agent system for querying a Type 1 Diabetes (
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-server.txt   # for API server mode
-# Create config.py from config.py.example with API_KEY and OPENAI_API_KEY
+# Create config.py from config.py.example (or set ANTHROPIC_API_KEY in .env)
 # Create .env from .env.example
 ```
+
+Active env vars the system reads at startup:
+- `ANTHROPIC_API_KEY` (required — falls back to `CLAUDE_API_KEY` in .env via server.py alias)
+- `NEO4J_BOLT_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`, `NEO4J_DATABASE` (default `bolt://localhost:8687`, `neo4j`/`password`/`pankgraph`)
+- `VLLM_PORT` (default 8002)
+- `PORT` (server)
 
 ### Running
 ```bash
 python3 main.py                          # interactive REPL
-python3 main.py "your question here"     # single question
+python3 main.py "your question"          # single question
+python3 main.py --plan "your question"   # plan mode (show plan → confirm/revise/quit)
+python3 main.py --rigor "..."            # stricter evidence-only format
 python3 server.py                        # FastAPI server on port 8080
-python3 server.py 9000                   # custom port
-PORT=5000 python3 server.py              # port via env var
+python3 server.py 8001                   # custom port
 ```
 
-### vLLM (text-to-Cypher model, requires GPU)
+Background + logs:
 ```bash
-sbatch host_vllm.sbatch                  # HPC/Slurm
-# or manually:
-python -m vllm.entrypoints.openai.api_server \
-  --model /path/to/cypher_model --served-model-name text2cypher_merged \
-  --host 0.0.0.0 --port 8000 --gpu-memory-utilization 0.9 --max-model-len 8192 \
-  --max-num-seqs 32                      # multi-user support
+nohup python3 server.py 8001 > server.log 2>&1 & echo $! > server.pid && disown
+tail -f server.log
+kill $(cat server.pid)
 ```
+
+### vLLM (cypher-writer, required for Cypher + SQL generation)
+```bash
+nohup python -m vllm.entrypoints.openai.api_server \
+  --model /db/usr/rickyhan/cypher-writer --served-model-name cypher-writer \
+  --host 0.0.0.0 --port 8002 --gpu-memory-utilization 0.9 \
+  --max-model-len 8192 --max-num-seqs 32 > vllm.log 2>&1 & disown
+```
+
+### External services used at runtime
+- **Local Neo4j PanKgraph ADA** at `bolt://localhost:8687` / browser `:8475` — 5.4M nodes, schema in `PankBaseAgent/text_to_cypher/data/input/neo4j_schema_ada.json`
+- **Local PostgreSQL** at `localhost:5432` db `pankgraph` (user `serviceuser` / pw `password`), table `genomic_interval` (5.4M rows across 4 entity types)
+- **ssGSEA server** at `http://Robject-PanKgraph-ALB-1292067250.us-east-1.elb.amazonaws.com/` — endpoints `/genes`, `/donors`, `/ssgsea` (always returns scores for all 112 immune-cell pseudo-bulk donors)
+- **HIRN Abstracts API** — `glkb.dcmb.med.umich.edu/api/external/search_hirn_abstracts`
+- **RDS Lambda** — gene-name → Ensembl-ID resolution for text2sql
+- **Anthropic Claude** — Sonnet for orchestration + format, Haiku for chat follow-up classifier
 
 ### Tests
 ```bash
-# Cypher validator unit tests (pytest)
-pytest PankBaseAgent/text_to_cypher/test_dynamic_enrichment.py
-pytest PankBaseAgent/text_to_cypher/test_relationship_directions.py
-pytest PankBaseAgent/text_to_cypher/test_where_constraints.py
-pytest PankBaseAgent/text_to_cypher/test_with_clause_validation.py
+# Cypher validator unit tests
+pytest PankBaseAgent/text_to_cypher/test_*.py
 
-# HIRN publication retrieval tests (43 tests, mocked HTTP)
+# HIRN publication retrieval tests (mocked HTTP)
 pytest hirn_publication_retrieval/tests/
 
-# Integration tests (require running server)
-python3 test_server.py [port]
-python3 test_server_stream.py            # streaming endpoint tests
+# Standalone text-to-SQL smoke test (requires vLLM + PostgreSQL)
+python3 PankBaseAgent/text_to_sql/test_text2sql.py
 
-# Batch evaluation against full pipeline
-python3 batch_evaluator.py
+# Integration (require running server)
+python3 test_server.py [port]
+python3 test_server_stream.py
 ```
 
 ## Architecture
 
-### Agent Orchestration Flow
+### Agent orchestration flow
 
 ```
-User Question → PlannerAgent (main.py)
-  ├─ test-time scaling: N parallel planner candidates → select best by result quality
-  ├─ classifies complexity: "simple" | "complex"
-  ├─ dispatches in parallel (threads):
-  │   ├─ PankBaseAgent → query-planner skill → vLLM text2cypher → Neo4j API
-  │   ├─ GLKBAgent/HIRN Literature → semantic search + PubMed/PMC retrieval
-  │   ├─ TemplateToolAgent → rule-based triple extraction → RDS Lambda
-  │   └─ HPAPAgent → HPAP MySQL metadata (optional)
-  └─ routes to final pipeline:
-      ├─ FormatAgent (simple) → compress + format + hallucination check
+User question
+  ├─ PlannerAgent (main.py) — runs N=5 candidates in parallel, picks best by non-empty results
+  ├─ each candidate dispatches in threads:
+  │   ├─ pankbase_chat_one_round → query-planner skill → execute_plan()
+  │   │     ├─ plan_type "parallel":  KG steps combined via WITH + non-KG steps run; non-KG respects depends_on
+  │   │     ├─ plan_type "chain" (pure KG):  existing combine_chain() compound Cypher
+  │   │     └─ plan_type "chain" (cross-source): strict sequential, entities flow step→step
+  │   └─ hirn_chat_one_round → HIRN literature retrieval
+  └─ final pipeline:
+      ├─ FormatAgent (simple)  → compresses + formats + hallucination check
       └─ ReasoningAgent (complex) → multi-hop reasoning + hallucination check
 ```
 
-`PLANNER_CANDIDATES` (default 5) controls parallel planner instances. `RIGOR_MODE` (default `True` in server.py) switches to stricter `rigor-format-agent` / `rigor-reasoning-agent` variants.
+Two independent test-time-scaling loops:
+- **Outer** (`PLANNER_CANDIDATES=5` in `main.py`) — 5 top-level PlannerAgent candidates, score by non-empty Neo4j results
+- **Inner** (`NUM_CANDIDATES=1` in `qp_query_planner.py`) — per-sub-pipeline candidates
 
-### Agent Module Pattern
+`RIGOR_MODE` (True by default in server.py) routes to `rigor-format-agent` / `rigor-reasoning-agent` which enforce stricter evidence-only output.
 
-Every agent follows the same layout:
-- `ai_assistant.py` — entry point function (`chat_one_round_*`)
-- `claude.py` — LLM client wrapper
-- `utils.py` — tool/API functions
-- `prompts/` — system prompt templates (`general_prompt.txt`, `error_prompt.txt`)
+### Data sources and their query languages
 
-### Skills (modular pipeline components, in `skills/`)
-- `query-planner/` — QueryPlanner: plan → translate → combine → execute Cypher chains
-- `format-agent/` — FormatAgent: compresses Neo4j results, formats final answer
-- `reasoning-agent/` — ReasoningAgent: multi-hop reasoning for complex questions
-- `rigor-format-agent/` — stricter FormatAgent (used in production when `RIGOR_MODE=True`)
-- `rigor-reasoning-agent/` — stricter ReasoningAgent (used in production when `RIGOR_MODE=True`)
-- `hpap-database-metadata/` — queries HPAP (Human Pancreas Atlas Project) MySQL metadata
+| Source | Where | Generated by | Step `source` |
+|---|---|---|---|
+| Knowledge graph | Neo4j Bolt `localhost:8687` | vLLM `cypher-writer` via `Text2CypherAgent` | (none — KG default) |
+| Genomic coordinates | PostgreSQL `pankgraph` db | vLLM `cypher-writer` via `Text2SQLAgent` | `"genomic"` |
+| Immune enrichment | ssGSEA REST API | planner-supplied gene list (or from parent KG step) | `"ssgsea"` |
+| Literature | HIRN → PubMed/PMC | Claude-expanded search + passage retrieval | dispatched separately |
 
-### LLM Response Contract
+HPAP MySQL skill is **disabled** — donor metadata now lives in the Neo4j KG as `donor` nodes (193 donors with `diabetes_type`, `t1d_stage`, `aab_state`, `hla_status`, etc.). `_run_hpap_step` remains in `main.py` but is never wired (`hpap_handler=None` at all call sites).
 
-All Claude LLM calls produce JSON with this structure:
-```json
-{"draft": "...", "to": "system"|"user", "complexity": "simple"|"complex", "functions": [...], "text": "..."}
+### Cross-source chain plans (new)
+
+When a later step needs entities from an earlier step (e.g. "find effector genes → run ssGSEA on them"), the planner emits `plan_type: "chain"` with mixed sources. The executor:
+
+1. Runs steps strictly sequentially in `id` order.
+2. After each step, `_extract_entities_from_result()` pulls `gene_names`, `gene_ids`, `snv_ids`, `donor_ids` from either `records[*].nodes[*].properties` (KG) or `rows[*]` (SQL/ssGSEA rows).
+3. Passes them as `prior_entities` to the next step's handler.
+
+Handler signatures all accept the optional kwarg:
+```python
+def _run_<source>_step(question_text: str, prior_entities: dict | None = None) -> dict
 ```
-- `to: "system"` → function dispatch (functions array has `{name, arguments}`)
-- `to: "user"` → final response (text field has the answer)
 
-### Function Dispatch
+Key rule enforced in the planner prompt: **ssGSEA takes GENES only** — never depend on a donor/cohort step. Donor filtering is applied post-hoc by the FormatAgent.
 
-`utils.py:run_functions()` dispatches function calls in parallel threads. The three top-level callable functions are: `pankbase_chat_one_round`, `hirn_chat_one_round`, `template_chat_one_round`.
+### Neo4j ADA schema
 
-### Text-to-Cypher Pipeline (`PankBaseAgent/text_to_cypher/`)
+Current schema: `PankBaseAgent/text_to_cypher/data/input/neo4j_schema_ada.json` (loaded by `schema_loader.py`). Key changes from the legacy schema:
 
-1. **Schema loading** (`src/schema_loader.py`) — loads/caches Neo4j schema, produces minimal schema string for the LLM
-2. **Text2CypherAgent** (`src/text2cypher_agent.py`) — LangChain agent backed by local vLLM (`localhost:8002`), lazy singleton (initialized once on first call)
-3. **Cypher validator** (`src/cypher_validator.py`, ~2000 lines) — scores queries 0-100, auto-fixes: quote conversion, relationship variables, DISTINCT in collect(), direction validation, property/value normalization, LIMIT injection, etc.
-4. **Refinement loop** — if score < 90, iterates up to 5 times with feedback
+- `snv` replaces `snp`, `OCR_peak` replaces `OCR`, `anatomical_structure` replaces `cell_type`
+- New relationships: `OCR_peak_in`, `gene_activity_score_in`, `gene_detected_in`, `gene_enriched_in`, `T1D_DEG_in`, `pathway_annotation;KEGG`, `pathway_annotation;reactome`, `fGSEA_gene_enriched_in`, `fGSEA_enriched_in`
+- Relationship names with semicolons MUST be backtick-escaped in Cypher: `` [r:`function_annotation;GO`] ``
+- New nodes: `donor`, `Sample node`, `data_modality`, `anatomical_structure`, `kegg`, `reactome`
 
-### Experience Buffer
+### Server endpoints (`server.py`)
 
-`PankBaseAgent/experience_buffer.py` stores past successful planning examples for in-context learning. Raw logs go to `query_log.jsonl`; curated top patterns go to `experience_buffer.jsonl` (root level). The query-planner skill reads from this buffer to guide future plans.
+All agents are pre-initialized at startup via FastAPI lifespan. `server.py` loads `.env` before any module imports so that `ANTHROPIC_API_KEY` is available to `claude.py`/`qp_query_planner.py` (which read env at import/first-use time). An alias `CLAUDE_API_KEY → ANTHROPIC_API_KEY` is applied for backward-compat.
 
-### Server Endpoints (`server.py`)
+**Chat (multi-turn, built on plan mode):**
+- `POST /chat/start` — plan_start → auto plan_confirm → return answer, session_id, plan summary
+- `POST /chat/message` — Haiku-classified as `context_only` (answer from history) or `new_query` (plan + auto-confirm)
+- `POST /chat/revise` — revise the last plan in the session, auto-confirm, replace last assistant turn
+- `GET /chat/history` / `DELETE /chat/end`
 
-All agents are pre-initialized at startup via FastAPI lifespan hook for fast response times.
+**Plan (manual review flow):**
+- `POST /plan/start` — returns plan + session_id for user to review
+- `POST /plan/revise` — revise the plan (repeatable)
+- `POST /plan/confirm` — run the final format/reasoning pipeline on the session's neo4j_results
 
-- `POST /query` — synchronous query
-- `POST /query/stream` — streaming NDJSON response
-- `POST /plan/start`, `POST /plan/revise`, `POST /plan/confirm` — interactive user-guided planning with revision loop
+**NOTE**: legacy `/query` and `/query/stream` endpoints were removed — they went through `chat_one_round()` which has a bug path that returns 0 records silently. All public traffic should use `/chat/*` or `/plan/*` which go through the plan pipeline (`run_plan_start` → `run_plan_confirm`).
 
-### Streaming Protocol
+### Text-to-Cypher (`PankBaseAgent/text_to_cypher/`)
 
-`stream_events.py` emits NDJSON to stdout: `{"event": str, "ts": float, "data": dict}` per line, for real-time frontend rendering. Toggle with `set_streaming_enabled(bool)`. Event name prefixes: `planner_*`, `text2cypher_*`, `cypher_*`, `hirn_*`, `reasoning_*`, `format_*`, `hallucination_check_*`.
+1. `schema_loader.py` — caches schema, produces compact ~400-token string for vLLM
+2. `text2cypher_agent.py` — LangChain wrapper around vLLM (port 8002) — lazy singleton
+3. `cypher_validator.py` (~2000 lines) — scores 0-100, auto-fixes quotes, relationship variables, DISTINCT, direction, LIMIT injection for heavy relationships (`OCR_peak_in`, `gene_activity_score_in`, etc.)
+4. Refinement loop: if score < 90, retry up to 5 iterations with error feedback
 
-### FormatAgent Data Requirements
+### Text-to-SQL (`PankBaseAgent/text_to_sql/`)
 
-The format prompt (`prompts/format_prompt.txt`) enforces exhaustive data extraction — this is intentional and critical to output quality:
-- List **ALL** GO terms individually (10-15+), grouped by category — never summarize
-- List **ALL** SNPs with rsID, chromosome, PIP, tissue, effect size
-- Use **exact** numeric values, not summaries
-- Zero fabricated PubMed IDs (only cite IDs present in retrieved data)
+Mirrors the text2cypher pipeline for PostgreSQL genomic coordinate queries:
+- `src/text2sql_agent.py` — same vLLM model, system prompt tuned for PostgreSQL `genomic_interval` table
+- `src/sql_validator.py` — scores SQL, auto-quotes `"chr"`, `"start"`, `"end"` (reserved words), injects LIMIT, blocks destructive statements
+- `src/pg_schema_loader.py` — compact schema string
+- `src/gene_resolver.py` — pre-resolves gene symbols → Ensembl IDs via RDS Lambda before SQL generation
 
-### Hallucination Checker
+### ssGSEA (`skills/ssgsea/ssgsea_client.py`)
 
-`skills/format-agent/scripts/hallucination_checker.py` validates GO_XXXXXXX and PubMed IDs in the output against retrieved data via regex. `remove_hallucinated_ids()` strips fake IDs from the final text. Used in both FormatAgent and ReasoningAgent.
+Thin client for the immune-cell enrichment REST service. `_run_ssgsea_step` in `main.py`:
+1. Prefers gene list from `prior_entities.gene_names` (from parent KG step), capped at 200
+2. Falls back to NL extraction via regex + Claude Haiku
+3. Enriches scores with donor metadata (diabetes_status, age, sex, hba1c)
+4. Computes per-diabetes-status mean stats for the FormatAgent
+5. Returns top 15 donors by score (full 112 scores would blow the token budget)
 
-## External Services
+### Query planner skill (`skills/query-planner/scripts/`)
 
-- **PanKgraph Neo4j API**: `https://nzi5e9mb0f.execute-api.us-east-1.amazonaws.com/production/pankgraph-neo4j` — all Cypher queries
-- **RDS Lambda**: `https://nzi5e9mb0f.execute-api.us-east-1.amazonaws.com/production/RDSLambda` — gene name → Ensembl ID
-- **HIRN Abstracts API**: `https://glkb.dcmb.med.umich.edu/api/external/search_hirn_abstracts` — semantic search
-- **NCBI E-utilities / PMC Open Access** — PubMed/PMC article retrieval
-- **vLLM** (self-hosted) — fine-tuned cypher-writer model on port 8002
+Core executor: `qp_query_planner.py:execute_plan()` has three paths:
+- `_execute_pure_kg_chain()` — existing `combine_chain()` + single compound Cypher via WITH clauses
+- `_execute_cross_source_chain()` — sequential, entities flow via `depends_on`
+- `_execute_parallel_with_deps()` — KG in parallel + non-KG steps respect `depends_on`
 
-## Configuration
+### Streaming events (`stream_events.py`)
 
-Two config sources (API key resolution: env var → config.py):
-- `config.py` (from `config.py.example`): `API_KEY`, `OPENAI_API_KEY`
-- `.env` (from `.env.example`): `NEO4J_SCHEMA_PATH`, `SCHEMA_HINTS_PATH`, `VLLM_PORT`, `OPENAI_API_*`, `CLAUDE_API_KEY`
+NDJSON per line: `{"event": str, "ts": float, "data": dict}`. Event prefixes: `plan_*`, `planner_*`, `pipeline_*`, `cypher_*`, `text2cypher_*`, `ssgsea_*`, `genomic_*`, `chain_step_*`, `hirn_*`, `format_*`, `rigor_format_*`, `hallucination_check_*`.
 
-Key env vars: `PORT` (server), `VLLM_PORT` (default 8002), `ANTHROPIC_API_KEY`, `HIRN_ABSTRACT_SEARCH_URL`, `NCBI_API_KEY`.
+### Experience buffer
+
+`PankBaseAgent/experience_buffer.py` — in-context learning from past successful plans. Raw → `query_log.jsonl`; curated → `experience_buffer.jsonl` (repo root). Read by the query-planner skill to guide future plans.
+
+### Hallucination checker
+
+`skills/format-agent/scripts/hallucination_checker.py` — regex-validates `GO_XXXXXXX` and PubMed IDs in output against retrieved data. `remove_hallucinated_ids()` strips fabricated IDs. Called from both FormatAgent and ReasoningAgent (and their rigor variants).
+
+### FormatAgent data requirements
+
+`prompts/format_prompt.txt` enforces exhaustive extraction — intentional and critical:
+- List ALL GO terms individually (grouped by category), ALL SNPs (rsID, chromosome, PIP, tissue, effect), exact numeric values
+- Zero fabricated PubMed IDs — only cite IDs present in retrieved data
+
+When a cross-source chain runs, the format agent gets a hint in its user_input explaining that ssGSEA gene sets were retrieved from a prior KG step — enabling coherent narrative summaries.
+
+### Thread-based parallelism
+
+`_thread.start_new_thread` + `Queue` for sub-agent calls. `multi_thread_workers.py` provides `map_once()` and `map_infinite_retry()` helpers. Thread-local storage in `utils.py` prevents Planner test-time-scaling candidates from corrupting each other's cypher/result buffers.
 
 ## Conventions
 
-- PEP 8, 4-space indentation, snake_case functions, PascalCase classes
-- Commit messages: short, present-tense subject lines ("Add format agent", "reduce amount of iterations")
-- Prompt templates: `<agent>/prompts/<purpose>_prompt.txt`
-- Thread-based parallelism with `_thread.start_new_thread` + `Queue` for sub-agent calls; `multi_thread_workers.py` provides `map_once()` and `map_infinite_retry()` helpers
-- `performance_monitor.py` wraps functions with timing decorators, logs to `logs/performance.log`
-- Hallucination checker validates GO terms and PubMed IDs in outputs against retrieved data
+- PEP 8, snake_case functions, PascalCase classes
+- Prompt templates: `<agent>/prompts/<purpose>_prompt.txt`; skill prompts in `skills/<skill>/scripts/prompts.py`
+- Commit messages: short, present-tense ("Add format agent", "fix cross-source chain ordering")
+- Performance: `performance_monitor.py` decorators log to `logs/performance.log`
 
-## RL Training (`rl_implementation/`)
+## RL training (`rl_implementation/`)
 
-Reinforcement learning pipeline for improving Cypher generation quality. `CypherGeneratorAgent` runs multi-turn episodes (max 5 steps) against `GraphReasoningEnvironment` (wraps Neo4j executor). `train_collaborative_system.py` orchestrates training via the `rllm` framework. `DualResourcePoolManager` manages separate GPU pools for the Cypher Generator and Orchestrator models.
+Reinforcement learning for Cypher generation quality. `CypherGeneratorAgent` runs multi-turn episodes (max 5 steps) against `GraphReasoningEnvironment` (wraps Neo4j executor). `train_collaborative_system.py` orchestrates via the `rllm` framework. `DualResourcePoolManager` manages separate GPU pools for Cypher Generator + Orchestrator. Not wired into the live server — training infrastructure only.

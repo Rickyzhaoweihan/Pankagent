@@ -207,7 +207,7 @@ def interpret_question(question: str) -> str:
 # 1. plan_query  —  Claude generates the plan JSON
 # ---------------------------------------------------------------------------
 
-def plan_query(question: str) -> dict:
+def plan_query(question: str, chat_history_context: str = "") -> dict:
     """Call Claude with the QueryPlanner prompt and return a plan dict.
 
     The plan has the shape::
@@ -220,6 +220,10 @@ def plan_query(question: str) -> dict:
                 ...
             ]
         }
+
+    If ``chat_history_context`` is provided, it is prepended as a priming
+    exchange so the planner can resolve pronouns and entity references
+    ("it", "those genes") against prior conversation turns.
     """
     client = _get_anthropic_client()
 
@@ -229,12 +233,27 @@ def plan_query(question: str) -> dict:
         "Output ONLY the JSON, no additional text, no markdown code blocks."
     )
 
+    messages = []
+    if chat_history_context:
+        messages.append({
+            "role": "user",
+            "content": (
+                "[Prior conversation — use to resolve entity references in the new question]\n"
+                f"{chat_history_context}\n\nNow plan queries for:"
+            ),
+        })
+        messages.append({
+            "role": "assistant",
+            "content": "Understood. Planning queries for the new question.",
+        })
+    messages.append({"role": "user", "content": question})
+
     response = client.messages.create(
         model=CLAUDE_MODEL,
         max_tokens=2048,
         temperature=0.2,
         system=system,
-        messages=[{"role": "user", "content": question}],
+        messages=messages,
     )
 
     _in_tok = response.usage.input_tokens

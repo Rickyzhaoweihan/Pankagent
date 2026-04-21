@@ -349,6 +349,10 @@ class ChatSession:
     last_cypher_queries: list = field(default_factory=list)
     last_complexity: str = "simple"
     last_literature_result: str = ""
+    # Pending plan review state: set when /chat/message routes a new_query that
+    # needs user confirmation via /chat/plan/confirm. Cleared on confirm.
+    pending_question: str = ""
+    pending_plan_session_id: str = ""
     created_at: float = field(default_factory=time.time)
     last_active: float = field(default_factory=time.time)
 
@@ -396,9 +400,17 @@ def _trim_history(history: list[dict]) -> list[dict]:
 
 
 def _classify_followup(history: list[dict], new_question: str) -> str:
-    """Classify whether a follow-up needs new database queries or can be answered from context.
+    """Binary classifier for multi-turn chat: is the new question a follow-up
+    to the previously retrieved context, or a genuinely new query?
 
-    Returns 'new_query' or 'context_only'.
+    Returns ``'follow_up'`` or ``'new_query'``.
+
+    - ``follow_up``: same entities, same retrieved data applies. The rigor-format
+      or rigor-reasoning agent re-answers using the session's stored
+      ``last_neo4j_results`` — no new DB queries.
+    - ``new_query``: new entities or new data dimensions needed. Triggers full
+      plan mode (with dialogue history as context) and returns the plan for
+      user review.
     """
     import anthropic
 
@@ -413,19 +425,24 @@ def _classify_followup(history: list[dict], new_question: str) -> str:
         client = anthropic.Anthropic()
         response = client.messages.create(
             model="claude-haiku-4-5-20251001",
-            max_tokens=10,
+            max_tokens=15,
             system=(
                 "You classify follow-up questions in a biomedical Q&A system.\n"
-                "Respond with EXACTLY one word: 'new_query' or 'context_only'.\n\n"
+                "Respond with EXACTLY one word: 'follow_up' or 'new_query'.\n\n"
+                "Reply 'follow_up' if the question is a continuation of the prior "
+                "turn — it asks to explain, expand, reframe, summarise, clarify, "
+                "compare, or add one more dimension to data ALREADY retrieved.\n"
+                "It references the same entities (genes, SNPs, diseases) as before "
+                "and does NOT introduce a new entity or new data source.\n"
+                "Examples: 'what do those GO terms mean', 'summarise this',\n"
+                "'why is that significant', 'rephrase for a clinician',\n"
+                "'which of those has the highest PIP'.\n\n"
                 "Reply 'new_query' if the question:\n"
-                "- Asks about a NEW gene, SNP, disease, or entity not in prior answers\n"
-                "- Asks for NEW data types (expression, QTL, pathways) not yet retrieved\n"
-                "- Asks to run ssGSEA, search literature, or query a database\n\n"
-                "Reply 'context_only' if the question:\n"
-                "- Asks to rephrase, summarize, or simplify a prior answer\n"
-                "- Asks a clarification about data already shown\n"
-                "- Compares or contrasts information already in the conversation\n"
-                "- Asks 'why' or 'what does this mean' about prior results"
+                "- Introduces a NEW gene, SNP, disease, or entity not in prior answers\n"
+                "- Needs NEW data types or sources not yet retrieved (ssGSEA,\n"
+                "  genomic coordinates, literature, a different pathway)\n"
+                "- Needs multi-step or cross-source analysis\n"
+                "- Is ambiguous enough that a plan review is warranted"
             ),
             messages=[{
                 "role": "user",
@@ -433,12 +450,80 @@ def _classify_followup(history: list[dict], new_question: str) -> str:
             }],
         )
         answer = response.content[0].text.strip().lower()
-        if "context" in answer:
-            return "context_only"
-        return "new_query"
+        if "follow" in answer:
+            return "follow_up"
+        return "new_query"  # safe fallback: plan mode
     except Exception as exc:
         logger.warning(f"Follow-up classification failed: {exc}")
         return "new_query"  # safe fallback: always run pipeline
+
+
+# ---------------------------------------------------------------------------
+# History context builder for follow-up mode
+# ---------------------------------------------------------------------------
+
+_HISTORY_CONTEXT_LIMIT = 25_000  # chars; above this, compress older turns via Haiku
+
+
+def _build_history_context(history: list[dict]) -> tuple[str, bool]:
+    """Build the full-dialogue context string passed to the format/reasoning
+    agent for ``follow_up`` rounds.
+
+    Returns ``(context_str, was_compressed)``. If the concatenated history is
+    under ``_HISTORY_CONTEXT_LIMIT`` chars, every turn is included verbatim.
+    Otherwise, all but the most recent Q+A pair are summarised via Claude
+    Haiku and ``was_compressed=True`` — the frontend should display a notice.
+    """
+    if not history:
+        return "", False
+
+    def _fmt(turns: list[dict]) -> str:
+        return "\n".join(
+            f"{'User' if m['role'] == 'user' else 'Assistant'}: {m['content']}"
+            for m in turns
+        )
+
+    full_text = _fmt(history)
+    if len(full_text) <= _HISTORY_CONTEXT_LIMIT:
+        return f"[Prior conversation]\n{full_text}", False
+
+    # Compress: keep the last Q+A verbatim, summarise everything before
+    recent = history[-2:] if len(history) >= 2 else history[:]
+    older = history[:-2] if len(history) >= 2 else []
+
+    summary = ""
+    if older:
+        try:
+            import anthropic
+            client = anthropic.Anthropic()
+            resp = client.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=500,
+                messages=[{
+                    "role": "user",
+                    "content": (
+                        "Summarise this biomedical research conversation into a compact "
+                        "paragraph (2-5 sentences). Preserve ALL gene names, SNP IDs "
+                        "(rsIDs), disease terms, key numeric values, and conclusions "
+                        "reached. Write in past tense, as if reporting what was "
+                        "discussed:\n\n"
+                        + _fmt(older)
+                    ),
+                }],
+            )
+            summary = resp.content[0].text.strip()
+        except Exception as exc:
+            logger.warning(f"History compression failed: {exc}")
+            # Fallback: hard-truncate older turns
+            summary = _fmt(older)[-4000:]
+
+    context = (
+        "[Prior conversation — older turns summarised]\n"
+        f"Summary: {summary}\n\n"
+        "[Most recent exchange]\n"
+        f"{_fmt(recent)}"
+    )
+    return context, True
 
 
 def _answer_from_context(history: list[dict], new_question: str, rigor: bool = True) -> str:
@@ -492,13 +577,31 @@ class ChatReviseRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     session_id: str
-    answer: str = Field("", description="Full pipeline JSON (only for new_query route)")
+    answer: str = Field("", description="Full pipeline JSON")
     answer_markdown: str = Field(..., description="Markdown answer")
-    route: str = Field(..., description="'new_query' or 'context_only'")
+    route: str = Field(..., description="'follow_up' | 'new_query' | 'new_query_pending'")
     round: int = Field(..., description="Conversation round number (1-indexed)")
     plan_markdown: str = Field("", description="Plan summary for this round (new_query only)")
     plan_json: Optional[dict] = Field(None, description="Plan JSON for this round (new_query only)")
+    pending_plan_session_id: Optional[str] = Field(
+        None,
+        description="Set when route='new_query_pending'. Client should display the "
+                    "plan_markdown to the user and call /chat/plan/confirm with this ID to complete.",
+    )
+    history_compressed: bool = Field(
+        False,
+        description="True when prior conversation history was summarised to fit "
+                    "context limits. Frontend should display a notice to the user.",
+    )
     processing_time_ms: float
+
+class ChatPlanConfirmRequest(BaseModel):
+    chat_session_id: str = Field(..., description="Chat session ID")
+    plan_session_id: str = Field(..., description="Pending plan session ID from the last /chat/message")
+    revision_prompt: Optional[str] = Field(
+        None,
+        description="Optional revision to apply before confirming (e.g., 'also add eQTLs')",
+    )
 
 class ChatHistoryResponse(BaseModel):
     session_id: str
@@ -530,12 +633,20 @@ def _run_query(question: str, rigor: bool = True) -> str:
         return response
 
 
-def _run_plan_pipeline(question: str, use_literature: bool = True) -> dict:
+def _run_plan_pipeline(question: str, use_literature: bool = True,
+                       chat_history: list[dict] | None = None) -> dict:
     """Wrap run_plan_start under the request lock. Returns the full plan dict
-    (plan, neo4j_results, cypher_queries, complexity, use_literature, literature_result)."""
+    (plan, neo4j_results, cypher_queries, complexity, use_literature, literature_result).
+
+    If ``chat_history`` is provided, it is forwarded to ``run_plan_start`` so
+    the planner can resolve entity references against prior conversation.
+    """
     clean_q = clean_user_question(question)
     with _request_lock:
-        return {"interpreted_question": clean_q, **run_plan_start(clean_q, use_literature=use_literature)}
+        return {
+            "interpreted_question": clean_q,
+            **run_plan_start(clean_q, use_literature=use_literature, chat_history=chat_history),
+        }
 
 
 def _run_plan_revise(
@@ -566,8 +677,16 @@ def _run_confirm(
     use_literature: bool,
     literature_result: str,
     rigor: bool,
+    pre_final_answer: str = "",
+    chat_history: list[dict] | None = None,
 ) -> str:
-    """Wrap run_plan_confirm under the request lock. Returns the formatted answer JSON string."""
+    """Wrap run_plan_confirm under the request lock. Returns the formatted answer JSON string.
+
+    ``pre_final_answer`` is forwarded to the format/reasoning agent where it
+    is appended to the user input (prior conversation context for follow-ups).
+    ``chat_history`` is an alternative — if provided and ``pre_final_answer``
+    is empty, the last 4 turns are built into a context string downstream.
+    """
     with _request_lock:
         _main_module.RIGOR_MODE = rigor
         return run_plan_confirm(
@@ -578,6 +697,8 @@ def _run_confirm(
             use_literature=use_literature,
             literature_result=literature_result,
             rigor=rigor,
+            pre_final_answer=pre_final_answer,
+            chat_history=chat_history,
         )
 
 
@@ -594,8 +715,9 @@ async def root():
         "status": "running",
         "endpoints": {
             "chat_start": "POST /chat/start — start multi-turn dialogue (runs plan + auto-confirms)",
-            "chat_message": "POST /chat/message — follow-up; smart-routed (plan+confirm or context-only)",
-            "chat_revise": "POST /chat/revise — revise the most recent plan in the session, auto-confirm",
+            "chat_message": "POST /chat/message — follow-up; smart-routed (follow_up reuses stored data, new_query returns pending plan)",
+            "chat_plan_confirm": "POST /chat/plan/confirm — confirm (and optionally revise) pending new_query plan from /chat/message",
+            "chat_revise": "POST /chat/revise — revise the most recent confirmed plan in the session, auto-confirm",
             "chat_history": "GET /chat/history?session_id=X — get conversation history",
             "chat_end": "DELETE /chat/end?session_id=X — end session",
             "plan_start": "POST /plan/start — start interactive plan session (manual confirm)",
@@ -966,9 +1088,20 @@ async def chat_start(request: ChatStartRequest):
 async def chat_message(request: ChatMessageRequest):
     """Send a follow-up message in an existing chat session.
 
-    Smart routing: Claude classifies whether the follow-up needs new database
-    queries (plan → confirm) or can be answered from conversation context alone.
-    new_query rounds always go through the plan pipeline (same as ``/plan/*``).
+    Binary smart routing:
+
+    - ``follow_up``: Claude decides this is a continuation of the prior turn.
+      Reuses the session's stored ``last_neo4j_results`` + ``last_cypher_queries``
+      and re-runs only the rigor-format / rigor-reasoning agent with the new
+      question. No new database queries. The full dialogue history is passed
+      as prior-conversation context (compressed via Haiku if too long — the
+      response sets ``history_compressed=True`` so the frontend can notify).
+
+    - ``new_query``: Claude decides this is a genuinely new question. Runs
+      ``run_plan_start`` with dialogue history as planner context (text only,
+      no raw retrieved data) and returns the plan for user review. Response
+      carries ``route='new_query_pending'`` and a ``pending_plan_session_id``.
+      The client must call ``/chat/plan/confirm`` to complete the round.
     """
     start_time = time.time()
 
@@ -987,54 +1120,102 @@ async def chat_message(request: ChatMessageRequest):
 
     plan_md = ""
     plan_json: Optional[dict] = None
+    history_compressed = False
+    pending_plan_session_id: Optional[str] = None
+    cleaned = ""
+    md = ""
 
-    if route == "context_only":
-        # Answer from conversation history — no database queries, no plan
-        md = await loop.run_in_executor(
-            None, _answer_from_context, session.history, question, session.rigor
-        )
-        cleaned = json.dumps({"to": "user", "text": {"summary": md}})
-    else:
-        # Run plan + confirm, exactly like /plan/start + /plan/confirm
+    if route == "follow_up":
+        # Reuse stored session data — no new DB queries. Re-run just the
+        # rigor-format or rigor-reasoning agent with the new question plus the
+        # full dialogue history as pre_final_answer (compressed if too long).
+        if not session.last_neo4j_results and not session.last_cypher_queries:
+            # Edge case: first turn was routed as follow_up (shouldn't happen
+            # since /chat/start creates stored state). Fall through to new_query.
+            logger.info(f"[/chat/message] No stored context for follow_up — promoting to new_query")
+            route = "new_query"
+        else:
+            history_context, history_compressed = _build_history_context(session.history)
+            try:
+                response = await loop.run_in_executor(
+                    None, _run_confirm,
+                    question,
+                    session.last_neo4j_results,
+                    session.last_cypher_queries,
+                    session.last_complexity,
+                    session.use_literature,
+                    session.last_literature_result,
+                    session.rigor,
+                    history_context,   # pre_final_answer
+                    None,              # no chat_history planner context
+                )
+                cleaned = clean_response_json(response)
+                md = extract_markdown(response)
+                # NOTE: session.last_* fields are NOT updated — same retrieved
+                # data stays active for subsequent follow-ups in this thread.
+            except Exception as e:
+                logger.error(f"[/chat/message] follow_up error: {e}", exc_info=True)
+                raise HTTPException(status_code=500, detail=f"Follow-up failed: {e}")
+
+    if route == "new_query":
+        # Run plan + create PlanSession. Plan is NOT auto-confirmed — the user
+        # reviews it and calls /chat/plan/confirm (optionally with revisions).
         try:
             plan_result = await loop.run_in_executor(
-                None, _run_plan_pipeline, question, session.use_literature
+                None, _run_plan_pipeline, question, session.use_literature, session.history,
             )
             interpreted = plan_result.get("interpreted_question", question)
             plan = plan_result["plan"]
             neo4j_results = plan_result["neo4j_results"]
             cypher_queries = plan_result["cypher_queries"]
             complexity = plan_result.get("complexity", "simple")
+            use_lit_round = plan_result.get("use_literature", session.use_literature)
             literature_result = plan_result.get("literature_result", "")
+
+            # Reuse existing PlanSession infrastructure so /chat/plan/confirm
+            # can look up the pending plan just like /plan/confirm does.
+            pending_plan_session_id = uuid.uuid4().hex[:12]
+            plan_session = PlanSession(
+                session_id=pending_plan_session_id,
+                original_question=interpreted,
+                rigor=session.rigor,
+                current_plan=plan,
+                neo4j_results=neo4j_results,
+                cypher_queries=cypher_queries,
+                complexity=complexity,
+                use_literature=use_lit_round,
+                literature_result=literature_result,
+            )
+            with _sessions_lock:
+                _plan_sessions[pending_plan_session_id] = plan_session
+
+            # Stash pending state on the chat session (cleared on confirm)
+            session.pending_question = question
+            session.pending_plan_session_id = pending_plan_session_id
+
             plan_md = format_plan_as_markdown(
                 interpreted, plan, neo4j_results,
-                use_literature=session.use_literature, literature_result=literature_result,
+                use_literature=use_lit_round, literature_result=literature_result,
             )
-            response = await loop.run_in_executor(
-                None, _run_confirm,
-                interpreted, neo4j_results, cypher_queries, complexity,
-                session.use_literature, literature_result, session.rigor,
-            )
-            cleaned = clean_response_json(response)
-            md = extract_markdown(response)
             plan_json = plan
-            # Stash so the user can /chat/revise
-            session.last_question = interpreted
-            session.last_plan = plan
-            session.last_neo4j_results = neo4j_results
-            session.last_cypher_queries = cypher_queries
-            session.last_complexity = complexity
-            session.last_literature_result = literature_result
+            # route is updated for the response — history NOT appended yet
+            route = "new_query_pending"
         except Exception as e:
-            logger.error(f"[/chat/message] plan+confirm error: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Pipeline failed: {e}")
+            logger.error(f"[/chat/message] plan error: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Planning failed: {e}")
 
-    session.history.append({"role": "user", "content": question})
-    session.history.append({"role": "assistant", "content": md})
-    session.history = _trim_history(session.history)
+    # Only append to history for completed rounds. For new_query_pending the
+    # question + answer are recorded when /chat/plan/confirm is called.
+    if route != "new_query_pending":
+        session.history.append({"role": "user", "content": question})
+        session.history.append({"role": "assistant", "content": md})
+        session.history = _trim_history(session.history)
 
     processing_time = (time.time() - start_time) * 1000
-    logger.info(f"[/chat/message] Session {session.session_id} round {current_round} done ({route}) in {processing_time:.0f}ms")
+    logger.info(
+        f"[/chat/message] Session {session.session_id} round {current_round} "
+        f"done ({route}, compressed={history_compressed}) in {processing_time:.0f}ms"
+    )
 
     _log_plan_event(f"chat_{session.session_id}", "chat_message", {
         "question": question,
@@ -1042,6 +1223,8 @@ async def chat_message(request: ChatMessageRequest):
         "round": current_round,
         "plan_markdown": plan_md[:3000],
         "answer_markdown": md[:3000],
+        "history_compressed": history_compressed,
+        "pending_plan_session_id": pending_plan_session_id,
         "processing_time_ms": round(processing_time, 1),
     })
 
@@ -1053,6 +1236,8 @@ async def chat_message(request: ChatMessageRequest):
         round=current_round,
         plan_markdown=plan_md,
         plan_json=plan_json,
+        pending_plan_session_id=pending_plan_session_id,
+        history_compressed=history_compressed,
         processing_time_ms=processing_time,
     )
 
@@ -1155,6 +1340,141 @@ async def chat_revise(request: ChatReviseRequest):
     )
 
 
+@app.post("/chat/plan/confirm", response_model=ChatResponse)
+async def chat_plan_confirm(request: ChatPlanConfirmRequest):
+    """Confirm (and optionally revise) the pending plan from the last
+    ``/chat/message`` ``new_query_pending`` response. Executes the
+    format/reasoning pipeline using the stored retrieved data, updates the
+    chat session's history and ``last_*`` fields, and returns the final answer.
+
+    If ``revision_prompt`` is provided, the plan is revised via
+    ``run_plan_revise`` before confirmation.
+    """
+    start_time = time.time()
+
+    chat_session = _get_chat_session(request.chat_session_id)
+    plan_session = _get_session(request.plan_session_id)
+
+    if chat_session.pending_plan_session_id != request.plan_session_id:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"plan_session_id '{request.plan_session_id}' is not the pending "
+                f"plan for chat session '{chat_session.session_id}'"
+            ),
+        )
+
+    logger.info(
+        f"[/chat/plan/confirm] chat={chat_session.session_id} "
+        f"plan={plan_session.session_id} (revise={bool(request.revision_prompt)})"
+    )
+
+    loop = asyncio.get_running_loop()
+
+    # Optional revision before confirmation
+    if request.revision_prompt and request.revision_prompt.strip():
+        prompt = request.revision_prompt.strip()
+        try:
+            rev = await loop.run_in_executor(
+                None, _run_plan_revise,
+                plan_session.original_question,
+                plan_session.current_plan,
+                plan_session.neo4j_results,
+                prompt,
+                plan_session.use_literature,
+                plan_session.literature_result,
+            )
+        except Exception as e:
+            logger.error(f"[/chat/plan/confirm] revise error: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Revision failed: {e}")
+
+        plan_session.current_plan = rev["plan"]
+        plan_session.neo4j_results = rev["neo4j_results"]
+        plan_session.cypher_queries = rev["cypher_queries"]
+        plan_session.complexity = rev.get("complexity", plan_session.complexity)
+        plan_session.use_literature = rev.get("use_literature", plan_session.use_literature)
+        plan_session.literature_result = rev.get("literature_result", plan_session.literature_result)
+
+    # Confirm — run the format/reasoning pipeline. Chat history provides
+    # prior-conversation context to the format/reasoning agent.
+    try:
+        response = await loop.run_in_executor(
+            None, _run_confirm,
+            plan_session.original_question,
+            plan_session.neo4j_results,
+            plan_session.cypher_queries,
+            plan_session.complexity,
+            plan_session.use_literature,
+            plan_session.literature_result,
+            plan_session.rigor,
+            "",                           # pre_final_answer — let chat_history build it
+            chat_session.history,         # chat_history
+        )
+    except Exception as e:
+        logger.error(f"[/chat/plan/confirm] confirm error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Confirm failed: {e}")
+
+    cleaned = clean_response_json(response)
+    md = extract_markdown(response)
+
+    plan_md = format_plan_as_markdown(
+        plan_session.original_question,
+        plan_session.current_plan,
+        plan_session.neo4j_results,
+        use_literature=plan_session.use_literature,
+        literature_result=plan_session.literature_result,
+    )
+
+    # Append Q+A to chat history using the original pending question (not the
+    # revision prompt — the revision refines the plan, not the user's question)
+    pending_q = chat_session.pending_question or plan_session.original_question
+    chat_session.history.append({"role": "user", "content": pending_q})
+    chat_session.history.append({"role": "assistant", "content": md})
+    chat_session.history = _trim_history(chat_session.history)
+
+    # Update chat session's stored plan state for future follow_up rounds
+    chat_session.last_question = plan_session.original_question
+    chat_session.last_plan = plan_session.current_plan
+    chat_session.last_neo4j_results = plan_session.neo4j_results
+    chat_session.last_cypher_queries = plan_session.cypher_queries
+    chat_session.last_complexity = plan_session.complexity
+    chat_session.use_literature = plan_session.use_literature
+    chat_session.last_literature_result = plan_session.literature_result
+
+    # Clear pending flags and delete the PlanSession
+    chat_session.pending_question = ""
+    chat_session.pending_plan_session_id = ""
+    with _sessions_lock:
+        _plan_sessions.pop(plan_session.session_id, None)
+
+    current_round = len(chat_session.history) // 2
+    processing_time = (time.time() - start_time) * 1000
+    logger.info(
+        f"[/chat/plan/confirm] chat={chat_session.session_id} "
+        f"round {current_round} done in {processing_time:.0f}ms"
+    )
+
+    _log_plan_event(f"chat_{chat_session.session_id}", "chat_plan_confirm", {
+        "plan_session_id": plan_session.session_id,
+        "revision_prompt": request.revision_prompt,
+        "question": pending_q,
+        "plan_markdown": plan_md[:3000],
+        "answer_markdown": md[:3000],
+        "processing_time_ms": round(processing_time, 1),
+    })
+
+    return ChatResponse(
+        session_id=chat_session.session_id,
+        answer=cleaned,
+        answer_markdown=md,
+        route="new_query",
+        round=current_round,
+        plan_markdown=plan_md,
+        plan_json=plan_session.current_plan,
+        processing_time_ms=processing_time,
+    )
+
+
 @app.get("/chat/history", response_model=ChatHistoryResponse)
 async def chat_history(session_id: str):
     """Retrieve conversation history for a chat session."""
@@ -1216,11 +1536,12 @@ if __name__ == "__main__":
     print(f"  - API docs: http://localhost:{port}/docs")
     print(f"  - Health check: http://localhost:{port}/health")
     print(f"\nEndpoints:")
-    print(f"  POST   /chat/start    — start dialogue (plan → auto-confirm)")
-    print(f"  POST   /chat/message  — follow-up (plan+confirm or context-only)")
-    print(f"  POST   /chat/revise   — revise last plan, auto-confirm")
-    print(f"  GET    /chat/history  — get conversation history")
-    print(f"  DELETE /chat/end      — end chat session")
+    print(f"  POST   /chat/start         — start dialogue (plan → auto-confirm)")
+    print(f"  POST   /chat/message       — follow-up (follow_up reuses data; new_query returns pending plan)")
+    print(f"  POST   /chat/plan/confirm  — confirm/revise pending plan from /chat/message")
+    print(f"  POST   /chat/revise        — revise last confirmed plan, auto-confirm")
+    print(f"  GET    /chat/history       — get conversation history")
+    print(f"  DELETE /chat/end           — end chat session")
     print(f"  POST   /plan/start    — interactive plan session (manual confirm)")
     print(f"  POST   /plan/revise   — revise plan with user prompt")
     print(f"  POST   /plan/confirm  — confirm plan and get final answer")

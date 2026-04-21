@@ -1189,14 +1189,21 @@ def _score_plan_results(plan: dict, neo4j_results: list[dict]) -> int:
 
 
 def _run_plan_candidate(question: str, candidate_id: int, q: Queue,
-                        prebuilt_plan: dict | None = None) -> None:
+                        prebuilt_plan: dict | None = None,
+                        history_context: str = "") -> None:
     """Worker: run plan_query + translate_plan + execute_plan for one candidate.
 
     If *prebuilt_plan* is provided, skip plan_query (reuse the plan from a
     prior call) and go straight to translate + execute.
+
+    ``history_context`` is a compact string of prior conversation turns that
+    helps the planner resolve pronouns/entity references in follow-up questions.
     """
     try:
-        plan = prebuilt_plan if prebuilt_plan is not None else plan_query(question)
+        plan = (
+            prebuilt_plan if prebuilt_plan is not None
+            else plan_query(question, chat_history_context=history_context)
+        )
         plan = translate_plan(plan)
         neo4j_results = execute_plan(plan, hpap_handler=None, genomic_handler=_run_genomic_step, ssgsea_handler=_run_ssgsea_step)
         score = _score_plan_results(plan, neo4j_results)
@@ -1218,27 +1225,43 @@ def clean_user_question(question: str) -> str:
         return question
 
 
-def run_plan_start(question: str, use_literature: bool = True) -> dict:
+def run_plan_start(question: str, use_literature: bool = True,
+                   chat_history: list[dict] | None = None) -> dict:
     """Run best-of-N plan candidates with test-time scaling.
 
     *question* is expected to be already cleaned (via ``clean_user_question``).
+
+    If ``chat_history`` is provided (list of ``{"role", "content"}`` dicts from
+    a multi-turn chat session), a compact context string is built and passed
+    to each candidate's ``plan_query`` so the planner can resolve pronouns
+    and entity references against prior turns.
 
     Returns dict with keys: plan, neo4j_results, cypher_queries, complexity,
                             use_literature, literature_result.
     """
     n = PLAN_START_CANDIDATES
 
+    # Build compact history context for the planner (text-only, no raw data)
+    history_context = ""
+    if chat_history:
+        turns = [
+            f"{'User' if m['role'] == 'user' else 'Assistant'}: {m['content'][:600]}"
+            for m in chat_history[-6:]
+        ]
+        history_context = "\n".join(turns)
+
     emit("plan_test_time_start", {
         "num_candidates": n,
         "question": question[:300],
         "use_literature": use_literature,
+        "has_history_context": bool(history_context),
     })
 
     t0 = time.time()
     q: Queue = Queue()
 
     for i in range(n):
-        start_new_thread(_run_plan_candidate, (question, i, q))
+        start_new_thread(_run_plan_candidate, (question, i, q, None, history_context))
 
     # Launch HIRN literature search in parallel with the clean question
     hirn_q: Queue = Queue()
@@ -1499,12 +1522,23 @@ def run_plan_confirm(
     use_literature: bool = False,
     literature_result: str = "",
     rigor: bool = True,
+    pre_final_answer: str = "",
+    chat_history: list[dict] | None = None,
 ) -> str:
     """Execute the final format/reasoning pipeline on already-retrieved data.
 
     If use_literature is True and literature_result contains HIRN data,
     it is incorporated into functions_result so the format/reasoning agents
     can reference publications in their output.
+
+    ``pre_final_answer`` is forwarded to the format/reasoning pipeline where
+    it is appended to the user input (see ``format_response.py``). Use it to
+    pass prior conversation context (for follow-up questions) or a
+    pre-formatted planner answer.
+
+    If ``chat_history`` is provided and ``pre_final_answer`` is empty, a
+    compact context string is built from the last 4 turns and used as
+    ``pre_final_answer`` so the format/reasoning agent sees prior dialogue.
     """
     global RIGOR_MODE
     prev_rigor = RIGOR_MODE
@@ -1516,6 +1550,13 @@ def run_plan_confirm(
             if functions_result:
                 final_functions_result = functions_result + "\n" + literature_result
 
+        if chat_history and not pre_final_answer:
+            turns = [
+                f"{'User' if m['role'] == 'user' else 'Assistant'}: {m['content'][:500]}"
+                for m in chat_history[-4:]
+            ]
+            pre_final_answer = "[Prior conversation]\n" + "\n".join(turns)
+
         is_complex = complexity == "complex"
         return _select_pipeline(
             is_complex=is_complex,
@@ -1524,6 +1565,7 @@ def run_plan_confirm(
             cypher_queries=cypher_queries,
             functions_result=final_functions_result,
             use_glkb=use_literature,
+            pre_final_answer=pre_final_answer,
         )
     finally:
         RIGOR_MODE = prev_rigor

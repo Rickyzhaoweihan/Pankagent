@@ -40,10 +40,10 @@ All examples in this doc use the production URL. When developing locally, substi
 
 | Path | When to use | Pattern |
 |---|---|---|
-| **Chat** (`/chat/*`) | Multi-turn conversational UX (ChatGPT-style) | `chat/start` → many `chat/message` → `chat/end` |
+| **Chat** (`/chat/*`) | Multi-turn conversational UX (ChatGPT-style) | `chat/start` → `chat/plan/confirm` → many `chat/message` (+ `chat/plan/confirm` on new-query rounds) → `chat/end` |
 | **Plan** (`/plan/*`) | Single-shot query with explicit plan review UX | `plan/start` → (optional `plan/revise`) → `plan/confirm` |
 
-Both use the same underlying pipelines. Chat endpoints additionally maintain conversation history and auto-route follow-ups to a fast path.
+Both use the same underlying pipelines. Chat endpoints additionally maintain conversation history and auto-route follow-ups to a fast path. `/chat/start` returns a plan for user review by default; pass `auto_confirm: true` to run the first round in one shot.
 
 **CORS:** currently `allow_origins=["*"]` — tighten in production.
 
@@ -114,14 +114,17 @@ This is the **primary** integration surface for a conversational frontend.
 
 ### 4.1 `POST /chat/start` — start a chat session
 
-Runs the full plan pipeline on the first question and **auto-confirms** (no user review on the first turn). Returns the final answer plus a new `session_id` the client stores for subsequent calls.
+Runs the plan pipeline on the first question and, **by default, returns the plan for user review** (`route: "new_query_pending"`) without running the format/reasoning agent. The client must then call `POST /chat/plan/confirm` with the returned `pending_plan_session_id` to produce the final answer. This is the same two-stage flow as `/chat/message` when it classifies a question as a new query.
+
+Pass `auto_confirm: true` to skip review and run everything in one shot (returns `route: "new_query"` with the final answer). Off by default — only opt in when your UI explicitly does not need plan review.
 
 **Request body (`ChatStartRequest`):**
 ```json
 {
   "question": "Tell me about PTPN22 in T1D",
   "rigor": true,
-  "use_literature": true
+  "use_literature": true,
+  "auto_confirm": false
 }
 ```
 | Field | Type | Default | Notes |
@@ -129,8 +132,31 @@ Runs the full plan pipeline on the first question and **auto-confirms** (no user
 | `question` | string | required | The first user question. Non-empty. |
 | `rigor` | bool | `true` | Evidence-only mode. Keep `true` for production. |
 | `use_literature` | bool | `true` | Include HIRN abstract search in parallel. |
+| `auto_confirm` | bool | `false` | `false`: returns the plan as `new_query_pending` (client must call `/chat/plan/confirm`). `true`: run plan + format in one shot, returns the final answer. |
 
-**Response 200 (`ChatResponse`):**
+**Response 200 (`ChatResponse`) — default (`auto_confirm: false`):**
+```json
+{
+  "session_id": "4701b4ba16d4",
+  "answer": "",
+  "answer_markdown": "",
+  "route": "new_query_pending",
+  "round": 1,
+  "plan_markdown": "## Interpreted Question\n\n...\n\n## Query Plan (parallel)\n...",
+  "plan_json": { "plan_type": "parallel", "steps": [...] },
+  "pending_plan_session_id": "615e4a05808a",
+  "history_compressed": false,
+  "processing_time_ms": 18391.0
+}
+```
+
+**What the client should do (default flow):**
+- Save `session_id` for all subsequent calls.
+- `answer_markdown` is empty — do **not** render it as a chat bubble.
+- Render `plan_markdown` in a plan-review card with Confirm / Revise / Cancel buttons.
+- Store `pending_plan_session_id` — it's required for `/chat/plan/confirm`.
+
+**Response 200 (`ChatResponse`) — with `auto_confirm: true`:**
 ```json
 {
   "session_id": "4701b4ba16d4",
@@ -146,7 +172,7 @@ Runs the full plan pipeline on the first question and **auto-confirms** (no user
 }
 ```
 
-**What the client should do:**
+**What the client should do (auto-confirm flow):**
 - Save `session_id` for all subsequent calls.
 - Render `answer_markdown` as the assistant's first message.
 - Optionally show `plan_markdown` in a collapsed "What I did" section.
@@ -219,7 +245,7 @@ The system planned a new query but **did not execute the format step**. The user
 
 Store the returned `pending_plan_session_id` — it's required for `/chat/plan/confirm`.
 
-> **Note:** `route` values you may see in the response: `"follow_up"`, `"new_query_pending"`. `"new_query"` only appears after confirmation (in `/chat/plan/confirm`'s response).
+> **Note:** `route` values you may see in the response: `"follow_up"`, `"new_query_pending"`. `"new_query"` only appears after confirmation (in `/chat/plan/confirm` or `/chat/revise` responses, or in `/chat/start` responses when `auto_confirm: true`).
 
 **Errors:**
 - `400` — empty question
@@ -592,19 +618,32 @@ Unhandled server exceptions are caught by `global_exception_handler` and returne
 
 ## 11. Full Flow Examples
 
-### Example A — Simple chat (no plan review triggered)
+### Example A — Default chat (plan review on first turn, then a follow-up)
 
 ```js
-// 1. Start session
+// 1. Start session — returns the plan for review (auto_confirm defaults to false)
 const start = await fetch("https://jieliulab3.dcmb.med.umich.edu/pankgraph-agent/chat/start", {
   method: "POST", headers: {"Content-Type": "application/json"},
   body: JSON.stringify({ question: "Tell me about PTPN22 in T1D" })
 }).then(r => r.json());
 
 const sessionId = start.session_id;
-renderAssistant(start.answer_markdown);
+// start.route === "new_query_pending", start.answer_markdown === ""
+showPlanReview({
+  plan: start.plan_markdown,
+  onConfirm: async () => {
+    const answer = await fetch("https://jieliulab3.dcmb.med.umich.edu/pankgraph-agent/chat/plan/confirm", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        chat_session_id: sessionId,
+        plan_session_id: start.pending_plan_session_id,
+      })
+    }).then(r => r.json());
+    renderAssistant(answer.answer_markdown);
+  },
+});
 
-// 2. Follow-up — classifier routes to follow_up
+// 2. Follow-up — classifier routes to follow_up, answered immediately
 const msg1 = await fetch("https://jieliulab3.dcmb.med.umich.edu/pankgraph-agent/chat/message", {
   method: "POST", headers: {"Content-Type": "application/json"},
   body: JSON.stringify({
@@ -619,6 +658,19 @@ if (msg1.history_compressed) showBanner("Older messages were summarised to fit c
 
 // 3. End session
 await fetch(`https://jieliulab3.dcmb.med.umich.edu/pankgraph-agent/chat/end?session_id=${sessionId}`, { method: "DELETE" });
+```
+
+### Example A' — One-shot start (opt-in auto-confirm, skips plan review on first turn)
+
+```js
+const start = await fetch("https://jieliulab3.dcmb.med.umich.edu/pankgraph-agent/chat/start", {
+  method: "POST", headers: {"Content-Type": "application/json"},
+  body: JSON.stringify({ question: "Tell me about PTPN22 in T1D", auto_confirm: true })
+}).then(r => r.json());
+
+// start.route === "new_query", start.answer_markdown is populated
+const sessionId = start.session_id;
+renderAssistant(start.answer_markdown);
 ```
 
 ### Example B — Chat with plan review on a new_query
@@ -733,7 +785,8 @@ Render differently based on `route`:
 - `follow_up` — show typing indicator, expect ~5–25 s
 - `new_query_pending` — show "planning..." indicator, expect ~15–30 s (plan only, format hasn't run yet)
 - `/chat/plan/confirm` — show "running query..." indicator, expect ~5–30 s
-- `/chat/start` — show "analyzing your question..." indicator, expect ~30–60 s
+- `/chat/start` (default, `auto_confirm: false`) — show "planning your query..." indicator, expect ~15–30 s (plan only)
+- `/chat/start` (`auto_confirm: true`) — show "analyzing your question..." indicator, expect ~30–60 s (plan + format)
 
 ### 12.3 `history_compressed` notice
 
@@ -790,7 +843,7 @@ The server serialises all pipeline calls under a single internal request lock. D
 |---|---|---|---|
 | `GET` | `/` | — | API info |
 | `GET` | `/health` | — | Health check |
-| `POST` | `/chat/start` | `ChatStartRequest` | Start chat, auto-confirm first Q |
+| `POST` | `/chat/start` | `ChatStartRequest` | Start chat; returns plan for review by default (`auto_confirm: true` to skip) |
 | `POST` | `/chat/message` | `ChatMessageRequest` | Follow-up; smart-routed |
 | `POST` | `/chat/plan/confirm` | `ChatPlanConfirmRequest` | Confirm pending `new_query_pending` |
 | `POST` | `/chat/revise` | `ChatReviseRequest` | Revise last confirmed plan |

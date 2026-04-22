@@ -9,7 +9,7 @@ Endpoints
   GET    /health        — health check
 
   Multi-turn dialogue (session-based):
-  POST   /chat/start    — start a chat session (first question runs full pipeline)
+  POST   /chat/start    — start a chat session (returns plan for review by default; opt-in auto_confirm)
   POST   /chat/message  — follow-up; smart-routed to pipeline or context-only
   GET    /chat/history  — retrieve conversation history
   DELETE /chat/end      — end session and free memory
@@ -566,6 +566,12 @@ class ChatStartRequest(BaseModel):
     question: str = Field(..., description="First question to start the conversation")
     rigor: bool = Field(True, description="Use rigorous evidence-only mode")
     use_literature: bool = Field(True, description="Include HIRN literature in the plan")
+    auto_confirm: bool = Field(
+        False,
+        description="If True, run plan and auto-confirm in one shot (route='new_query'). "
+                    "If False (default), return the plan as 'new_query_pending' and wait "
+                    "for /chat/plan/confirm.",
+    )
 
 class ChatMessageRequest(BaseModel):
     session_id: str = Field(..., description="Chat session ID from /chat/start")
@@ -714,7 +720,7 @@ async def root():
         "version": "2.1.0",
         "status": "running",
         "endpoints": {
-            "chat_start": "POST /chat/start — start multi-turn dialogue (runs plan + auto-confirms)",
+            "chat_start": "POST /chat/start — start multi-turn dialogue (returns plan for review; auto_confirm=true to run in one shot)",
             "chat_message": "POST /chat/message — follow-up; smart-routed (follow_up reuses stored data, new_query returns pending plan)",
             "chat_plan_confirm": "POST /chat/plan/confirm — confirm (and optionally revise) pending new_query plan from /chat/message",
             "chat_revise": "POST /chat/revise — revise the most recent confirmed plan in the session, auto-confirm",
@@ -1002,7 +1008,11 @@ async def chat_start(request: ChatStartRequest):
     question = request.question.strip()
     rigor = request.rigor
     use_lit = request.use_literature
-    logger.info(f"[/chat/start] New session (rigor={rigor}, literature={use_lit}): {question[:100]}...")
+    auto_confirm = request.auto_confirm
+    logger.info(
+        f"[/chat/start] New session (rigor={rigor}, literature={use_lit}, "
+        f"auto_confirm={auto_confirm}): {question[:100]}..."
+    )
 
     _cleanup_expired_chat_sessions()
 
@@ -1025,7 +1035,68 @@ async def chat_start(request: ChatStartRequest):
         use_literature=use_lit, literature_result=literature_result,
     )
 
-    # 2. Auto-confirm → final answer
+    session_id = uuid.uuid4().hex[:12]
+
+    if not auto_confirm:
+        # Plan-review mode: stash a PlanSession, return new_query_pending.
+        # The user must call /chat/plan/confirm (with the pending id) to run
+        # the format/reasoning pipeline. History is NOT appended yet.
+        pending_plan_session_id = uuid.uuid4().hex[:12]
+        plan_session = PlanSession(
+            session_id=pending_plan_session_id,
+            original_question=interpreted,
+            rigor=rigor,
+            current_plan=plan,
+            neo4j_results=neo4j_results,
+            cypher_queries=cypher_queries,
+            complexity=complexity,
+            use_literature=use_lit,
+            literature_result=literature_result,
+        )
+        with _sessions_lock:
+            _plan_sessions[pending_plan_session_id] = plan_session
+
+        session = ChatSession(
+            session_id=session_id,
+            rigor=rigor,
+            use_literature=use_lit,
+            pending_question=question,
+            pending_plan_session_id=pending_plan_session_id,
+        )
+        with _chat_sessions_lock:
+            _chat_sessions[session_id] = session
+
+        processing_time = (time.time() - start_time) * 1000
+        logger.info(
+            f"[/chat/start] Session {session_id} pending plan "
+            f"{pending_plan_session_id} in {processing_time:.0f}ms"
+        )
+
+        _log_plan_event(f"chat_{session_id}", "chat_start", {
+            "question": question,
+            "interpreted_question": interpreted,
+            "plan_type": plan.get("plan_type"),
+            "plan_markdown": plan_md[:3000],
+            "route": "new_query_pending",
+            "pending_plan_session_id": pending_plan_session_id,
+            "rigor": rigor,
+            "use_literature": use_lit,
+            "processing_time_ms": round(processing_time, 1),
+        })
+
+        return ChatResponse(
+            session_id=session_id,
+            answer="",
+            answer_markdown="",
+            route="new_query_pending",
+            round=1,
+            plan_markdown=plan_md,
+            plan_json=plan,
+            pending_plan_session_id=pending_plan_session_id,
+            processing_time_ms=processing_time,
+        )
+
+    # Auto-confirm mode (opt-in): run format/reasoning and return the answer.
     try:
         response = await loop.run_in_executor(
             None, _run_confirm,
@@ -1039,8 +1110,6 @@ async def chat_start(request: ChatStartRequest):
     cleaned = clean_response_json(response)
     md = extract_markdown(response)
 
-    # 3. Create session and stash state so the user can revise
-    session_id = uuid.uuid4().hex[:12]
     session = ChatSession(
         session_id=session_id,
         rigor=rigor,
@@ -1536,7 +1605,7 @@ if __name__ == "__main__":
     print(f"  - API docs: http://localhost:{port}/docs")
     print(f"  - Health check: http://localhost:{port}/health")
     print(f"\nEndpoints:")
-    print(f"  POST   /chat/start         — start dialogue (plan → auto-confirm)")
+    print(f"  POST   /chat/start         — start dialogue (returns pending plan; auto_confirm=true to run in one shot)")
     print(f"  POST   /chat/message       — follow-up (follow_up reuses data; new_query returns pending plan)")
     print(f"  POST   /chat/plan/confirm  — confirm/revise pending plan from /chat/message")
     print(f"  POST   /chat/revise        — revise last confirmed plan, auto-confirm")

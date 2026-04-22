@@ -209,6 +209,16 @@ When a cross-source chain runs, the format agent gets a hint in its user_input e
 - Commit messages: short, present-tense ("Add format agent", "fix cross-source chain ordering")
 - Performance: `performance_monitor.py` decorators log to `logs/performance.log`
 
+### Git remote policy
+
+**Push target:** all pushes go ONLY to `rickyzhao` (`git@github.com:Rickyzhaoweihan/Pankagent.git`). Do NOT push to `origin` (`wangyiqunumich/pank3-ai-agent.git`) — that remote is read-only from this repo's perspective.
+
+The local `main` branch tracks `origin/Dev(Ricky)` for historical reasons; ignore the tracking and use an explicit refspec:
+
+```bash
+git push rickyzhao HEAD:main
+```
+
 ## RL training (`rl_implementation/`)
 
 Reinforcement learning for Cypher generation quality. `CypherGeneratorAgent` runs multi-turn episodes (max 5 steps) against `GraphReasoningEnvironment` (wraps Neo4j executor). `train_collaborative_system.py` orchestrates via the `rllm` framework. `DualResourcePoolManager` manages separate GPU pools for Cypher Generator + Orchestrator. Not wired into the live server — training infrastructure only.

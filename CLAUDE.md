@@ -211,13 +211,7 @@ When a cross-source chain runs, the format agent gets a hint in its user_input e
 
 ### Git remote policy
 
-**Push target:** all pushes go ONLY to `rickyzhao` (`git@github.com:Rickyzhaoweihan/Pankagent.git`). Do NOT push to `origin` (`wangyiqunumich/pank3-ai-agent.git`) — that remote is read-only from this repo's perspective.
-
-The local `main` branch tracks `origin/Dev(Ricky)` for historical reasons; ignore the tracking and use an explicit refspec:
-
-```bash
-git push rickyzhao HEAD:main
-```
+The ONLY remote configured is `rickyzhao` (`git@github.com:Rickyzhaoweihan/Pankagent.git`). `main` tracks `rickyzhao/main`, so a bare `git push` publishes there. Do not add any other remote (in particular, not `wangyiqunumich/pank3-ai-agent` — that repo is unrelated to this working copy).
 
 ## RL training (`rl_implementation/`)
 

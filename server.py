@@ -155,6 +155,31 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"Experience buffer not available: {e}")
 
+        # 5. Initialize SQLite session store and restore non-expired sessions
+        try:
+            import session_store
+            session_store.init_db()
+            now = time.time()
+            restored_plan = 0
+            for s in session_store.load_all_plan_sessions():
+                if now - s.created_at > SESSION_TTL_SECONDS:
+                    continue  # expired — row stays on disk per keep-forever policy
+                _plan_sessions[s.session_id] = s
+                restored_plan += 1
+            restored_chat = 0
+            for s in session_store.load_all_chat_sessions():
+                if now - s.last_active > CHAT_SESSION_TTL_SECONDS:
+                    continue
+                _chat_sessions[s.session_id] = s
+                restored_chat += 1
+            logger.info(
+                f"✓ Session store: restored {restored_plan} plan, "
+                f"{restored_chat} chat sessions from SQLite"
+            )
+        except Exception as e:
+            logger.error(f"✗ Session store init / restore failed: {e}", exc_info=True)
+            raise
+
         elapsed = time.time() - start_time
         logger.info(f"✓ All agents initialized in {elapsed:.2f}s")
         logger.info("=" * 60)
@@ -168,6 +193,11 @@ async def lifespan(app: FastAPI):
     yield  # Server runs here
 
     logger.info("Shutting down server...")
+    try:
+        import session_store
+        session_store.close_db()
+    except Exception as e:
+        logger.warning(f"session_store close on shutdown failed: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -222,6 +252,25 @@ class PlanSession:
 
 _plan_sessions: dict[str, PlanSession] = {}
 _sessions_lock = threading.Lock()
+
+
+def _persist_plan_session(s: "PlanSession") -> None:
+    """Synchronous write to the SQLite session store.
+
+    Called by every handler that mutates a PlanSession, inside the
+    ``_sessions_lock`` block, before returning the HTTP response. Raises on
+    failure — losing a session's disk record silently is worse than a 500.
+
+    Lock order: caller holds ``_sessions_lock``; this acquires
+    ``session_store._conn_lock``. Never the reverse.
+    """
+    import session_store
+    session_store.upsert_plan_session(s)
+
+
+def _delete_plan_session_row(session_id: str) -> None:
+    import session_store
+    session_store.delete_plan_session(session_id)
 
 
 def _get_session(session_id: str) -> PlanSession:
@@ -304,6 +353,17 @@ def _log_plan_event(session_id: str, event: str, data: dict) -> None:
         except Exception:
             pass
 
+    # Mirror to SQLite events table (log-and-continue — JSONL is the safety net)
+    try:
+        import session_store
+        payload = data if isinstance(data, dict) else {"raw": str(data)[:2000]}
+        session_store.record_event(session_id, event, payload)
+    except Exception as exc:
+        try:
+            logger.warning("[sqlite-events] %s for %s failed: %s", event, session_id, exc)
+        except Exception:
+            pass
+
 
 class PlanStartRequest(BaseModel):
     question: str = Field(..., description="Natural language question")
@@ -358,6 +418,17 @@ class ChatSession:
 
 _chat_sessions: dict[str, ChatSession] = {}
 _chat_sessions_lock = threading.Lock()
+
+
+def _persist_chat_session(s: "ChatSession") -> None:
+    """Sibling of ``_persist_plan_session`` for ChatSession — see that docstring."""
+    import session_store
+    session_store.upsert_chat_session(s)
+
+
+def _delete_chat_session_row(session_id: str) -> None:
+    import session_store
+    session_store.delete_chat_session(session_id)
 
 # Token budget: ~50K tokens ≈ ~160K chars for history
 _MAX_HISTORY_CHARS = 150_000
@@ -830,6 +901,7 @@ async def plan_start(request: PlanStartRequest):
 
     with _sessions_lock:
         _plan_sessions[session_id] = session
+        _persist_plan_session(session)
 
     processing_time = (time.time() - start_time) * 1000
     logger.info(f"[/plan/start] Session {session_id} created with {len(result['plan'].get('steps', []))} steps, literature={session.use_literature}")
@@ -911,6 +983,9 @@ async def plan_revise(request: PlanReviseRequest):
         plan_md = f"> **Note:** {error_msg}\n\n{plan_md}"
 
     session.chat_history.append({"role": "assistant", "content": plan_md})
+
+    with _sessions_lock:
+        _persist_plan_session(session)
 
     processing_time = (time.time() - start_time) * 1000
     logger.info(f"[/plan/revise] Session {session.session_id} revised to {len(result['plan'].get('steps', []))} steps, literature={session.use_literature}")
@@ -1007,6 +1082,7 @@ async def plan_confirm(request: PlanConfirmRequest):
     # Clean up the session after successful execution
     with _sessions_lock:
         _plan_sessions.pop(session.session_id, None)
+        _delete_plan_session_row(session.session_id)
 
     logger.info(f"[/plan/confirm] Done in {processing_time:.0f}ms")
 
@@ -1080,6 +1156,7 @@ async def chat_start(request: ChatStartRequest):
         )
         with _sessions_lock:
             _plan_sessions[pending_plan_session_id] = plan_session
+            _persist_plan_session(plan_session)
 
         session = ChatSession(
             session_id=session_id,
@@ -1090,6 +1167,7 @@ async def chat_start(request: ChatStartRequest):
         )
         with _chat_sessions_lock:
             _chat_sessions[session_id] = session
+            _persist_chat_session(session)
 
         processing_time = (time.time() - start_time) * 1000
         logger.info(
@@ -1151,6 +1229,7 @@ async def chat_start(request: ChatStartRequest):
 
     with _chat_sessions_lock:
         _chat_sessions[session_id] = session
+        _persist_chat_session(session)
 
     processing_time = (time.time() - start_time) * 1000
     logger.info(f"[/chat/start] Session {session_id} done in {processing_time:.0f}ms")
@@ -1295,10 +1374,13 @@ async def chat_message(request: ChatMessageRequest):
             )
             with _sessions_lock:
                 _plan_sessions[pending_plan_session_id] = plan_session
+                _persist_plan_session(plan_session)
 
             # Stash pending state on the chat session (cleared on confirm)
             session.pending_question = question
             session.pending_plan_session_id = pending_plan_session_id
+            with _chat_sessions_lock:
+                _persist_chat_session(session)
 
             plan_md = format_plan_as_markdown(
                 interpreted, plan, neo4j_results,
@@ -1317,6 +1399,8 @@ async def chat_message(request: ChatMessageRequest):
         session.history.append({"role": "user", "content": question})
         session.history.append({"role": "assistant", "content": md})
         session.history = _trim_history(session.history)
+        with _chat_sessions_lock:
+            _persist_chat_session(session)
 
     processing_time = (time.time() - start_time) * 1000
     logger.info(
@@ -1425,6 +1509,9 @@ async def chat_revise(request: ChatReviseRequest):
         session.history.append({"role": "assistant", "content": md})
     session.history = _trim_history(session.history)
 
+    with _chat_sessions_lock:
+        _persist_chat_session(session)
+
     processing_time = (time.time() - start_time) * 1000
     logger.info(f"[/chat/revise] Session {session.session_id} done in {processing_time:.0f}ms")
 
@@ -1501,6 +1588,8 @@ async def chat_plan_confirm(request: ChatPlanConfirmRequest):
         plan_session.complexity = rev.get("complexity", plan_session.complexity)
         plan_session.use_literature = rev.get("use_literature", plan_session.use_literature)
         plan_session.literature_result = rev.get("literature_result", plan_session.literature_result)
+        with _sessions_lock:
+            _persist_plan_session(plan_session)
 
     # Confirm — run the format/reasoning pipeline. Chat history provides
     # prior-conversation context to the format/reasoning agent.
@@ -1551,8 +1640,11 @@ async def chat_plan_confirm(request: ChatPlanConfirmRequest):
     # Clear pending flags and delete the PlanSession
     chat_session.pending_question = ""
     chat_session.pending_plan_session_id = ""
+    with _chat_sessions_lock:
+        _persist_chat_session(chat_session)
     with _sessions_lock:
         _plan_sessions.pop(plan_session.session_id, None)
+        _delete_plan_session_row(plan_session.session_id)
 
     current_round = len(chat_session.history) // 2
     processing_time = (time.time() - start_time) * 1000
@@ -1598,6 +1690,8 @@ async def chat_end(session_id: str):
     """End a chat session and free memory."""
     with _chat_sessions_lock:
         removed = _chat_sessions.pop(session_id, None)
+        if removed is not None:
+            _delete_chat_session_row(session_id)
     if removed is None:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
     logger.info(f"[/chat/end] Session {session_id} ended ({len(removed.history) // 2} rounds)")

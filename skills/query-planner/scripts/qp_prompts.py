@@ -113,6 +113,8 @@ Output ONLY a valid JSON object (no markdown, no extra text):
   - "Get genes that have gene_activity_score_in relationships with Beta Cell"
   - "Get OCR peaks that have OCR_peak_in relationships with Beta Cell"
   - "Get genes that have function_annotation;GO relationships with gene ontology terms"
+  - "Get genes that have pathway_annotation;KEGG relationships with KEGG pathways"
+  - "Get genes that have pathway_annotation;reactome relationships with Reactome pathways"
   - "Get genes that have signal_COLOC_with relationships with type 1 diabetes"
   - "Get SNVs that have part_of_GWAS_signal relationships with type 1 diabetes"
   - "Get genes that have physical_interaction relationships with gene CFTR"
@@ -276,6 +278,24 @@ Output ONLY a valid JSON object (no markdown, no extra text):
   "steps": [
     {"id": 1, "natural_language": "Get genes that have T1D_DEG_in relationships with Beta Cell", "join_var": "g", "depends_on": null},
     {"id": 2, "natural_language": "Get genes that have function_annotation;GO relationships with gene ontology terms", "join_var": null, "depends_on": 1}
+  ]
+}
+```
+
+### Example 9b (PARALLEL — Functional Annotation TRIAD: GO + KEGG + Reactome)
+**Question**: "What biological processes / functions / pathways is CTLA4 annotated with?"
+
+**Why three steps, not one**: `function_annotation;GO` covers Gene Ontology but says NOTHING about pathways. KEGG and Reactome are separate pathway resources stored on their own edge types. Whenever the user asks about functions, annotations, or pathways of a gene — or you are doing a comprehensive gene lookup — fire ALL THREE edges in parallel.
+
+```json
+{
+  "plan_type": "parallel",
+  "reasoning": "Functional-annotation triad for CTLA4: GO covers biological processes / molecular functions, but KEGG and Reactome carry curated pathway membership that GO does NOT. Treat all three as co-equal functional annotations and fetch in parallel.",
+  "steps": [
+    {"id": 1, "natural_language": "Find gene with name CTLA4", "join_var": null, "depends_on": null},
+    {"id": 2, "natural_language": "Get genes that have function_annotation;GO relationships with gene ontology terms for gene CTLA4", "join_var": null, "depends_on": null},
+    {"id": 3, "natural_language": "Get genes that have pathway_annotation;KEGG relationships with KEGG pathways for gene CTLA4", "join_var": null, "depends_on": null},
+    {"id": 4, "natural_language": "Get genes that have pathway_annotation;reactome relationships with Reactome pathways for gene CTLA4", "join_var": null, "depends_on": null}
   ]
 }
 ```
@@ -491,13 +511,15 @@ have no join_var and no depends_on — they are always independent/parallel.
 ```json
 {
   "plan_type": "parallel",
-  "reasoning": "Comprehensive gene lookup: basic info and relationships from KG, chromosomal position from genomic coordinate database.",
+  "reasoning": "Comprehensive gene lookup: basic info, expression/DEG and functional-annotation TRIAD (GO + KEGG + Reactome — pathways are as important as GO terms), chromosomal position from genomic DB.",
   "steps": [
     {"id": 1, "natural_language": "Find gene with name INS", "join_var": null, "depends_on": null},
     {"id": 2, "natural_language": "Get genes that have gene_detected_in relationships with cell types for gene INS", "join_var": null, "depends_on": null},
     {"id": 3, "natural_language": "Get genes that have T1D_DEG_in relationships with cell types for gene INS", "join_var": null, "depends_on": null},
     {"id": 4, "natural_language": "Get genes that have function_annotation;GO relationships with gene ontology terms for gene INS", "join_var": null, "depends_on": null},
-    {"id": 5, "natural_language": "What is the genomic location of gene INS and what OCR peaks overlap it?", "source": "genomic", "join_var": null, "depends_on": null}
+    {"id": 5, "natural_language": "Get genes that have pathway_annotation;KEGG relationships with KEGG pathways for gene INS", "join_var": null, "depends_on": null},
+    {"id": 6, "natural_language": "Get genes that have pathway_annotation;reactome relationships with Reactome pathways for gene INS", "join_var": null, "depends_on": null},
+    {"id": 7, "natural_language": "What is the genomic location of gene INS and what OCR peaks overlap it?", "source": "genomic", "join_var": null, "depends_on": null}
   ]
 }
 ```
@@ -743,6 +765,7 @@ Non-KG steps can consume: gene_names, gene_ids, snv_ids, donor_ids.
 - DO NOT make an ssGSEA step `depends_on` a donor/cohort KG step — ssGSEA takes GENES, not donors. The cohort filter is applied POST-HOC; add it as a separate parallel KG step.
 - DO NOT create an ssGSEA step without a gene source — either list genes in natural_language OR set `depends_on` to a KG step that retrieves genes. If no genes are specified and none can be defaulted, DO NOT add an ssGSEA step.
 - DO NOT phrase an ssGSEA step as "Run ssGSEA on donors X" — donors cannot be ssGSEA input. Phrase it as "Run ssGSEA on the genes from step N" or "Run ssGSEA for genes A, B, C".
+- DO NOT query `function_annotation;GO` in isolation when the user asks about a gene's **functions, annotations, biology, or pathways**. GO covers ontology terms but NOT pathway membership. ALWAYS pair a GO step with parallel `pathway_annotation;KEGG` and `pathway_annotation;reactome` steps (the "functional-annotation triad"). Pathway annotations are as informative as GO and often more actionable for T1D mechanisms. See Example 9b.
 
 ---
 
@@ -757,7 +780,8 @@ Non-KG steps can consume: gene_names, gene_ids, snv_ids, donor_ids.
 7. If the question asks about spatial overlap or proximity, add `"source": "genomic"` steps for those queries.
 8. If the question asks for ssGSEA: the ssGSEA step needs GENES as input (never donors). Either embed the gene list in natural_language OR make the step `depends_on` a KG step that retrieves genes. If the user wants ssGSEA for a specific donor cohort, add a SEPARATE parallel KG step for the cohort — do NOT wire the cohort into ssGSEA.
 9. If no gene list is specified for ssGSEA, default to T1D effector genes by adding a KG step for `effector_gene_of → disease 'type 1 diabetes'` and making the ssGSEA step `depends_on` it.
-10. Output valid JSON — nothing else.
+10. **Functional-annotation triad**: whenever you emit a `function_annotation;GO` step for a gene's biology/function/annotation/pathway question, ALSO emit parallel `pathway_annotation;KEGG` and `pathway_annotation;reactome` steps for the same gene. GO alone under-reports pathway biology. For comprehensive gene lookups (e.g., "Tell me about gene X"), include all three.
+11. Output valid JSON — nothing else.
 """
 
 
@@ -832,6 +856,22 @@ include these two extra fields:
   add: `{"id": N, "natural_language": "Find GWAS SNPs within 1Mb of gene INS", "source": "genomic", "join_var": null, "depends_on": null}`
 - User says "where is this gene located?" →
   add: `{"id": N, "natural_language": "What is the genomic location of gene INS?", "source": "genomic", "join_var": null, "depends_on": null}`
+
+### Functional-annotation triad (GO + KEGG + Reactome)
+- When the user asks to **add GO terms, annotations, or pathways** for a gene (or when a
+  revision is broadening the scope), always emit THREE parallel KG steps together:
+  `function_annotation;GO`, `pathway_annotation;KEGG`, and `pathway_annotation;reactome`.
+- When the user asks only about pathways and GO is not relevant, the GO step may be
+  dropped — but KEGG and Reactome should still both be present (they are complementary
+  pathway resources).
+- When the user asks to remove GO/pathway/annotation content, drop all three together.
+
+**Revision examples:**
+- User says "also include GO terms" OR "also show pathways" for gene INS →
+  add three steps:
+  `{"id": N,   "natural_language": "Get genes that have function_annotation;GO relationships with gene ontology terms for gene INS", ...}`,
+  `{"id": N+1, "natural_language": "Get genes that have pathway_annotation;KEGG relationships with KEGG pathways for gene INS", ...}`,
+  `{"id": N+2, "natural_language": "Get genes that have pathway_annotation;reactome relationships with Reactome pathways for gene INS", ...}`.
 
 ### ssGSEA steps
 - Steps with `"source": "ssgsea"` run single-sample Gene Set Enrichment Analysis on

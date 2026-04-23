@@ -220,6 +220,34 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def strip_trailing_slash(request: Request, call_next):
+    """Normalize a trailing ``/`` on the request path so e.g. ``POST /chat/start/``
+    is routed exactly like ``POST /chat/start``.
+
+    Why: FastAPI's default ``redirect_slashes=True`` answers any trailing-slash
+    request with a ``307 Temporary Redirect`` whose ``Location`` is built from
+    the request's host header. When we sit behind an nginx reverse-proxy that
+    strips a path prefix (here: ``/pankgraph-agent``), nginx rewrites only the
+    host in the redirected ``Location`` — NOT the stripped prefix — so the
+    client follows the redirect to a path that nginx does not route, which
+    returns **404**.
+
+    Rewriting ``path`` / ``raw_path`` on the ASGI scope makes the downstream
+    router see the no-slash form directly, so no redirect is ever issued. This
+    is applied before every route handler, including mounted sub-apps.
+
+    The root path (``/``) is left alone — rstrip on ``/`` would produce the
+    empty string, which ASGI treats as a missing path and 404s.
+    """
+    path = request.scope.get("path", "/")
+    if path != "/" and path.endswith("/"):
+        new_path = path.rstrip("/") or "/"
+        request.scope["path"] = new_path
+        request.scope["raw_path"] = new_path.encode("latin-1")
+    return await call_next(request)
+
+
 # ---------------------------------------------------------------------------
 # Request / Response models
 # ---------------------------------------------------------------------------

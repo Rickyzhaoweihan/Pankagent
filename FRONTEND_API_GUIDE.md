@@ -7,6 +7,7 @@ Complete reference for all HTTP endpoints exposed by `server.py`. Aimed at front
 ## Table of Contents
 
 1. [Quick Start](#1-quick-start)
+   - [All endpoints at a glance](#11-all-endpoints-at-a-glance)
 2. [Core Concepts](#2-core-concepts)
 3. [System Endpoints](#3-system-endpoints)
    - `GET /` — API info
@@ -21,8 +22,8 @@ Complete reference for all HTTP endpoints exposed by `server.py`. Aimed at front
 5. [Plan Endpoints (Standalone Manual Review)](#5-plan-endpoints-standalone-manual-review)
    - `POST /plan/start`, `POST /plan/revise`, `POST /plan/confirm`
 6. [Data Models Reference](#6-data-models-reference)
-7. [Smart Router — Deep Dive](#7-smart-router--deep-dive)
-8. [Session Lifecycle & TTLs](#8-session-lifecycle--ttls)
+7. [Smart Router — Deep Dive](#7-smart-router-deep-dive)
+8. [Session Lifecycle & TTLs](#8-session-lifecycle-ttls)
 9. [Parsing the Final Answer](#9-parsing-the-final-answer)
 10. [Error Handling](#10-error-handling)
 11. [Full Flow Examples](#11-full-flow-examples)
@@ -49,6 +50,32 @@ Both use the same underlying pipelines. Chat endpoints additionally maintain con
 
 **Timeouts:** a single `new_query` round can take **30–90 s** (plan + multi-source execution + format agent). Set frontend fetch timeouts to ≥ **180 s**.
 
+**Durability:** all session state is mirrored to SQLite (`logs/sessions.sqlite`) on every mutation. Sessions survive server restarts — a user whose chat was mid-flight during a restart will find their `session_id` still valid and their history intact. See [§8](#8-session-lifecycle-ttls) for TTL and retention details.
+
+### 1.1 All endpoints at a glance
+
+| Method | Path | Purpose | Request body | Response highlights |
+|---|---|---|---|---|
+| `GET` | `/` | Service descriptor | — | `service`, `version`, `endpoints` |
+| `GET` | `/health` | Liveness probe | — | `status`, `uptime_seconds` |
+| `POST` | `/chat/start` | Open a chat session; run the first plan | `question`, `rigor?`, `use_literature?`, `auto_confirm?` | `session_id`, `route` (`new_query_pending` by default, `new_query` if `auto_confirm=true`), `plan_markdown`/`plan_json`, `pending_plan_session_id` |
+| `POST` | `/chat/message` | Send a follow-up; smart-router picks path | `session_id`, `question` | `route` (`follow_up` \| `new_query_pending` \| `new_query`), `answer_markdown`, optional `pending_plan_session_id`, `history_compressed` flag |
+| `POST` | `/chat/plan/confirm` | Confirm (optionally revise first) a pending plan | `chat_session_id`, `plan_session_id`, `revision_prompt?` | Final `answer_markdown`, updated `round`, deletes the pending `PlanSession` |
+| `POST` | `/chat/revise` | Revise the last *confirmed* plan + replace the last assistant turn | `session_id`, `prompt` | Updated `answer_markdown` for the current round |
+| `GET` | `/chat/history` | Fetch the full conversation history | query `?session_id=…` | `rounds`, `history: [{role, content}, …]` |
+| `DELETE` | `/chat/end` | End and free a chat session | query `?session_id=…` | `status: "ended"`, deletes row from SQLite |
+| `POST` | `/plan/start` | Start a single-shot plan review | `question`, `rigor?`, `use_literature?` | `session_id`, `plan_markdown`, `plan_json` |
+| `POST` | `/plan/revise` | Iterate the plan | `session_id`, `prompt` | Updated plan markdown / JSON |
+| `POST` | `/plan/confirm` | Execute + format the confirmed plan | `session_id` | Final `answer_markdown`, `cypher_queries`, `reasoning_trace`; deletes the `PlanSession` |
+
+Quick routing logic:
+
+- **Start a conversation:** `POST /chat/start` (non-auto) → user reviews plan → `POST /chat/plan/confirm` → answer.
+- **Continue the conversation:** `POST /chat/message` — server picks `follow_up` (instant reuse) or `new_query_pending` (new plan for review → user confirms via `POST /chat/plan/confirm`).
+- **One-shot query without a conversation:** `POST /chat/start` with `auto_confirm: true` — returns the final answer in one round.
+- **Standalone plan-review UX (no chat state):** `POST /plan/start` → `POST /plan/revise` (optional, repeatable) → `POST /plan/confirm`.
+- **Interactive API docs:** `GET /docs` (auto-generated Swagger UI from the Pydantic models).
+
 ---
 
 ## 2. Core Concepts
@@ -68,7 +95,7 @@ When you call `POST /chat/message`, a Haiku classifier decides one of two routes
 - **`follow_up`** — the question extends the previous turn. Reuses the session's stored retrieved data. Fast (~5–25 s). No plan review.
 - **`new_query`** — the question is genuinely new. Runs the full planner, creates a pending `PlanSession`, returns the plan for the user to review. You must then call `/chat/plan/confirm` to complete the round.
 
-See [§7](#7-smart-router--deep-dive) for details.
+See [§7](#7-smart-router-deep-dive) for details.
 
 ### 2.5 History compression
 The full dialogue is sent to the format agent for `follow_up` rounds. If the history exceeds ~25 KB, older turns are summarised via Haiku before being passed. The API signals this via `history_compressed: true` in the response — show a visual indicator to the user.
@@ -543,6 +570,18 @@ Treat `new_query_pending` as a **two-stage** `new_query`.
 - `PlanSession` expired → `410 Gone` from `/chat/plan/confirm` (frontend should re-ask the question)
 
 **History size cap:** the server auto-trims history at 150 KB total to keep future calls under token budgets. The first Q+A pair is always preserved; oldest pairs after that are dropped.
+
+### 8.1 Durability (SQLite persistence)
+
+Every mutation to a `ChatSession` or `PlanSession` is synchronously mirrored to SQLite at `logs/sessions.sqlite` before the HTTP response returns. This has three consequences a frontend needs to know:
+
+- **Sessions survive server restarts / crashes.** A user whose chat was mid-flight during a deploy or crash can keep using the same `session_id` after the server comes back — the in-memory dicts are restored from disk at startup (TTL still applies). Frontends that cache `session_id` in `localStorage` no longer need to defensively drop it on every page load.
+- **TTL evictions are in-memory only; disk retention is keep-forever.** An expired row is NOT automatically deleted from SQLite — the server just stops restoring it on startup and returns `410 Gone` to new requests. This gives analytics / experience-buffer pipelines a durable history of every query, plan, revision, and answer.
+- **Explicit deletes remove the row.** `DELETE /chat/end` and `POST /chat/plan/confirm` (on the pending plan) delete the corresponding row. Frontends that want "forget my conversation" UX should call `/chat/end`.
+
+There is also an `events` table that mirrors `logs/plan_sessions.jsonl` (a JSONL audit log, kept unchanged). Writes to the events table are log-and-continue — a failure there does not fail the request.
+
+Nothing in this section changes the HTTP contract — it's an internal durability improvement. Code written against the pre-persistence API continues to work unchanged; it just gets more robust against restarts for free.
 
 ---
 

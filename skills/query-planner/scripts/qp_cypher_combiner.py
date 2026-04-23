@@ -12,19 +12,19 @@ Single-pass design:
     relationship variable names.  Each re-MATCH adds one edge variable while
     carrying all previously collected variables forward.
 
-  Example (3-step chain: SNP→Disease, SNP→Gene, Gene→GO):
+  Example (3-step chain: SNV→Disease, SNV→Gene, Gene→GO):
 
-    MATCH (s:snp)-[r1:part_of_GWAS_signal]->(d:disease) WHERE d.name = "type 1 diabetes"
+    MATCH (s:snv)-[r1:part_of_GWAS_signal]->(d:disease) WHERE d.name = "type 1 diabetes"
     WITH s, d LIMIT 50
     MATCH (s)-[r2:part_of_QTL_signal]->(g:gene)
     WITH s, d, g LIMIT 50
-    MATCH (g)-[r3:function_annotation]->(fo:gene_ontology)
+    MATCH (g)-[r3:`function_annotation;GO`]->(fo:gene_ontology)
     WITH s, d, g, fo LIMIT 200
     MATCH (s)-[r4:part_of_GWAS_signal]->(d)
     WITH s, d, g, fo, r4 LIMIT 200
     MATCH (s)-[r5:part_of_QTL_signal]->(g)
     WITH s, d, g, fo, r4, r5 LIMIT 200
-    MATCH (g)-[r6:function_annotation]->(fo)
+    MATCH (g)-[r6:`function_annotation;GO`]->(fo)
     WITH collect(DISTINCT s)+collect(DISTINCT d)+collect(DISTINCT g)+collect(DISTINCT fo) AS nodes,
          collect(DISTINCT r4)+collect(DISTINCT r5)+collect(DISTINCT r6) AS edges
     RETURN nodes, edges

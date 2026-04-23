@@ -472,18 +472,24 @@ def _get_step_result(
 
 
 _EDGE_DISPLAY_NAMES = {
-    "function_annotation": "GO terms",
+    "function_annotation;GO": "GO terms",
+    "pathway_annotation;KEGG": "KEGG pathways",
+    "pathway_annotation;reactome": "Reactome pathways",
     "physical_interaction": "interactions",
     "genetic_interaction": "genetic interactions",
-    "expression_level_in": "expression",
-    "DEG_in": "differential expression",
+    "gene_detected_in": "expression",
+    "gene_enriched_in": "cell-type markers",
+    "T1D_DEG_in": "differential expression",
     "part_of_QTL_signal": "QTL signals",
     "part_of_GWAS_signal": "GWAS signals",
     "signal_COLOC_with": "colocalization",
     "effector_gene_of": "effector genes",
-    "OCR_activity": "chromatin accessibility",
-    "OCR_activity_in": "chromatin accessibility",
-    "OCR_locate_in": "OCR localization",
+    "OCR_peak_in": "OCR peaks",
+    "gene_activity_score_in": "chromatin accessibility",
+    "fGSEA_gene_enriched_in": "fGSEA gene enrichment",
+    "fGSEA_enriched_in": "fGSEA pathway enrichment",
+    "has_donor": "donor link",
+    "has_sample": "sample link",
 }
 
 

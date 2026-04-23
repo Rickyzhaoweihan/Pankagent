@@ -528,15 +528,15 @@ def _execute_cypher(cypher: str, timeout: int = 60) -> dict:
         return {"error": str(exc)[:2000], "query": cypher}
 
 
-_HEAVY_RELS = re.compile(r'\b(OCR_peak_in|gene_activity_score_in|OCR_activity|OCR_locate_in)\b', re.IGNORECASE)
+_HEAVY_RELS = re.compile(r'\b(OCR_peak_in|gene_activity_score_in)\b', re.IGNORECASE)
 
 
 def _ensure_limit_before_collect(cypher: str, limit: int = 50) -> str:
     """Inject a LIMIT before collect() when needed.
 
     Two cases:
-      1. OCR-related queries (OCR_activity, OCR_locate_in) — ALWAYS get a
-         LIMIT because these tables are massive in Neo4j.
+      1. OCR-related queries (OCR_peak_in, gene_activity_score_in) — ALWAYS
+         get a LIMIT because these tables are massive in Neo4j.
       2. Unconstrained queries (no WHERE) — broad scans need a cap.
 
     Queries that already have a LIMIT are never modified.

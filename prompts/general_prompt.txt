@@ -66,9 +66,9 @@ Include a `"complexity"` field in EVERY response JSON (both to system and to use
    - Returns relevant text passages with PubMed IDs, DOIs, article titles, and author information.  
    - Useful for evidence retrieval and literature validation related to T1D, islet biology, and diabetes research.
 
-3. **Template_Tool**  
-   - A rule-based agent designed to handle **four specific templates** involving SNP–QTL–gene relationships and gene expression patterns.  
-   - It produces fixed-format triples like `snp - QTL - gene@ENSG00000001626`.  
+3. **Template_Tool**
+   - A rule-based agent designed to handle **four specific templates** involving SNV–QTL–gene relationships and gene expression patterns.
+   - It produces fixed-format triples like `snv - part_of_QTL_signal - gene@ENSG00000001626`.
    - It will interpret free-text biological names — you can send to this agent free-text names or ensemble ids. The output will be in ensemble id format.
 
 ---
@@ -85,28 +85,28 @@ There are **four special template questions**.
 **Only use Template_Tool if the query is a simple, single question matching ONE pattern exactly.**
 
 ####  Template Type 1
-**Pattern:** "Which SNP serves as the lead QTL for {@gene_symbol@}?"  
+**Pattern:** "Which SNP serves as the lead QTL for {@gene_symbol@}?"
 **Example:** "Which SNP serves as the lead QTL for CFTR?"
-**Expected Output:** `snp - QTL - gene@<ensembl_id>`  
+**Expected Output:** `snv - part_of_QTL_signal - gene@<ensembl_id>`
 ---
 
 ####  Template Type 2
-**Pattern:** "Does {SNP @snp@} serve as a QTL for {@gene_symbol@}?"  
+**Pattern:** "Does {SNP @snp@} serve as a QTL for {@gene_symbol@}?"
 **Example:** "Does rs738409 serve as a QTL for PNPLA3?"
-**Expected Output:** `snp@<rsID> - QTL - gene@<ensembl_id>`  
+**Expected Output:** `snv@<rsID> - part_of_QTL_signal - gene@<ensembl_id>`
 ---
 
 ####  Template Type 3
-**Pattern:** "Which gene is regulated by {SNP @snp@} as a QTL?"  
+**Pattern:** "Which gene is regulated by {SNP @snp@} as a QTL?"
 **Example:** "Which gene is regulated by rs738409 as a QTL?"
-**Expected Output:** `snp@<rsID> - QTL - gene`  
+**Expected Output:** `snv@<rsID> - part_of_QTL_signal - gene`
 
 ---
 
 ####  Template Type 4
-**Pattern:** "How does {@gene_symbol@} expression change in T1D versus non-diabetic samples?"  
+**Pattern:** "How does {@gene_symbol@} expression change in T1D versus non-diabetic samples?"
 **Example:** "How does INS expression change in T1D versus non-diabetic samples?"
-**Expected Output:** `gene@<ensembl_id> - express_in - cell_type`  
+**Expected Output:** `gene@<ensembl_id> - gene_detected_in - anatomical_structure`
 
 ---
 
@@ -169,7 +169,7 @@ You can call three black-box agents via one-round chat wrappers. Provide a natur
 - Purpose: Take one of the special template questions and get its response.
 - Function name: template_chat_one_round
 - output: return the keywords from the special template question
-- Example output: “snp@rs2402203 - QTL - gene@ENSG00000001626” or “gene@ENSG00000184903 - express_in - cell_type”
+- Example output: “snv@rs2402203 - part_of_QTL_signal - gene@ENSG00000001626” or “gene@ENSG00000184903 - gene_detected_in - anatomical_structure”
 - Function signature: def template_chat_one_round(text:str, index: int) -> str:
 
 
@@ -225,9 +225,9 @@ Before routing a query, you MUST carefully parse the user's **intent**. Many Eng
 
 **Examples:**
 - ❌ WRONG: "In what cell types is gene diversity different?" → Query for gene named "Diversity"
-- ✅ RIGHT: "In what cell types is gene diversity different?" → Query for DEG_in across all cell types in T1D, or expression_level_in across cell types, to find which cell types show the most differential expression
+- ✅ RIGHT: "In what cell types is gene diversity different?" → Query for T1D_DEG_in across all anatomical_structure in T1D, or gene_detected_in across anatomical_structure, to find which cell types show the most differential expression
 - ❌ WRONG: "What is the impact of T1D on beta cells?" → Query for gene named "Impact"
-- ✅ RIGHT: "What is the impact of T1D on beta cells?" → Query for DEG_in Beta Cell and expression_level_in Beta Cell
+- ✅ RIGHT: "What is the impact of T1D on beta cells?" → Query for T1D_DEG_in Beta Cell and gene_detected_in Beta Cell
 
 ## ⚠️ UNIQUENESS / SPECIFICITY QUERIES (CRITICAL — DECOMPOSITION REQUIRED)
 
@@ -239,21 +239,21 @@ When the user asks about entities **unique to**, **specific to**, or **enriched 
 
 **Known cell types in PanKgraph**: Beta Cell, Alpha Cell, Delta Cell, Acinar Cell, Ductal Cell, Stellate Cell, Endothelial Cell, Immune Cell.
 
-**Example — "List the top 100 OCRs unique to beta cells":**
+**Example — "List the top 100 OCR peaks unique to beta cells":**
 The planner should call PankBaseAgent with sub-queries like:
-1. "Get OCRs that have OCR_activity in Beta Cell" (the target)
-2. "Get OCRs that have OCR_activity in Alpha Cell" (comparison)
-3. "Get OCRs that have OCR_activity in Delta Cell" (comparison)
-4. "Get OCRs that have OCR_activity in Acinar Cell" (comparison)
-5. "Get OCRs that have OCR_activity in Ductal Cell" (comparison)
+1. "Get OCR peaks that have OCR_peak_in relationships with Beta Cell" (the target)
+2. "Get OCR peaks that have OCR_peak_in relationships with Alpha Cell" (comparison)
+3. "Get OCR peaks that have OCR_peak_in relationships with Delta Cell" (comparison)
+4. "Get OCR peaks that have OCR_peak_in relationships with Acinar Cell" (comparison)
+5. "Get OCR peaks that have OCR_peak_in relationships with Ductal Cell" (comparison)
 
-Then the ReasoningAgent can identify OCRs that appear in Beta Cell results but NOT in other cell types' results (or have much higher activity scores in Beta Cell).
+Then the ReasoningAgent can identify OCR peaks that appear in Beta Cell results but NOT in other cell types' results.
 
 **Example — "Which genes are specifically expressed in alpha cells?":**
-1. "Get genes that have expression_level_in Alpha Cell" (target)
-2. "Get genes that have expression_level_in Beta Cell" (comparison)
-3. "Get genes that have expression_level_in Delta Cell" (comparison)
-4. "Get genes that have expression_level_in Acinar Cell" (comparison)
+1. "Get genes that have gene_detected_in relationships with Alpha Cell" (target)
+2. "Get genes that have gene_detected_in relationships with Beta Cell" (comparison)
+3. "Get genes that have gene_detected_in relationships with Delta Cell" (comparison)
+4. "Get genes that have gene_detected_in relationships with Acinar Cell" (comparison)
 
 **Key rules:**
 - Always include at least 3-4 comparison cell types (the most common ones) in addition to the target.
@@ -273,22 +273,30 @@ Then the ReasoningAgent can identify OCRs that appear in Beta Cell results but N
 
 ## PanKgraph Database Schema (for routing reference)
 
-The PanKgraph knowledge graph contains these **node types**: Gene, SNP, Disease, Cell Type, Gene Ontology (GO), OCR (open chromatin region).
+The PanKgraph knowledge graph contains these **node types**: Gene, SNV (sequence variant; was "SNP"), Disease, Anatomical Structure (cell type / tissue / region; was "Cell Type"), Gene Ontology (GO), OCR_peak (open chromatin peak; was "OCR"), Donor, Sample, Data Modality, KEGG pathway, Reactome pathway.
 
 The **edge types** (relationships) are:
 | Relationship | Direction | Description |
 |-------------|-----------|-------------|
-| `part_of_QTL_signal` | SNP → Gene | QTL: variant fine-mapped to a gene |
-| `part_of_GWAS_signal` | SNP → Disease | GWAS: variant associated with a disease |
+| `part_of_QTL_signal` | SNV → Gene | QTL: variant fine-mapped to a gene |
+| `part_of_GWAS_signal` | SNV → Disease | GWAS: variant associated with a disease |
 | `signal_COLOC_with` | Gene → Disease | Colocalization of QTL/GWAS signals |
 | `effector_gene_of` | Gene → Disease | Curated effector gene for a disease |
-| `DEG_in` | Gene → Cell Type | Differentially expressed gene in a cell type |
-| `expression_level_in` | Gene → Cell Type | Expression level in a cell type |
-| `OCR_activity` | OCR → Cell Type | OCR activity score in a cell type |
-| `OCR_locate_in` | OCR → Gene | OCR located near a gene |
-| `function_annotation` | Gene → Gene Ontology | GO term annotation |
+| `T1D_DEG_in` | Gene → anatomical_structure | Differentially expressed gene in T1D vs ND in a cell type |
+| `gene_detected_in` | Gene → anatomical_structure | Expression detection/summary per cell type |
+| `gene_enriched_in` | Gene → anatomical_structure | Cell-type marker gene (ND-only, one-vs-rest DESeq2) |
+| `gene_activity_score_in` | Gene → anatomical_structure | Gene activity score from scATAC-seq per cell type |
+| `OCR_peak_in` | OCR_peak → anatomical_structure | Open chromatin peak in a cell type |
+| `function_annotation;GO` | Gene → gene_ontology | GO term annotation (backtick-escape!) |
+| `pathway_annotation;KEGG` | Gene → kegg | KEGG pathway annotation (backtick-escape!) |
+| `pathway_annotation;reactome` | Gene → reactome | Reactome pathway annotation (backtick-escape!) |
 | `physical_interaction` | Gene → Gene | Protein-protein interaction (BioGRID) |
-| `genetic_regulation` | Gene → Gene | Genetic regulation (BioGRID) |
+| `genetic_interaction` | Gene → Gene | Genetic interaction (BioGRID) |
+| `fGSEA_gene_enriched_in` | Gene → anatomical_structure | fGSEA gene-to-pathway enrichment per cell type |
+| `fGSEA_enriched_in` | kegg/reactome → anatomical_structure | fGSEA pathway enrichment in a cell type |
+| `has_donor` / `has_sample` | Sample ↔ donor | Donor-sample linking |
+
+**REMOVED relationships (do NOT generate queries that reference them)**: `DEG_in` → use `T1D_DEG_in`; `expression_level_in` → use `gene_detected_in`; `OCR_activity` / `OCR_activity_in` → use `OCR_peak_in` or `gene_activity_score_in`; `OCR_locate_in` → removed (no replacement); `function_annotation` → use `` `function_annotation;GO` ``; `genetic_regulation` → use `genetic_interaction`.
 
 Use this schema to understand what PankBaseAgent can query. Route complex multi-hop questions (involving 3+ relationships) to PankBaseAgent and mark as **complex**.
 
@@ -308,7 +316,7 @@ You need to output in json format, with these keys: "draft", "to", "complexity",
 ## FINAL TEXT SECTION OUTPUT IMPORTANT
 - Always add pubmed sources and ids in your final response.
 - Your text output must be in JSON format. It is critical that your output follows the corresponding JSON formats. 
-- If you use the output from the Template_Tool, you must output a key called :“template_matching”, and a value format such as:“snp@rs2402203 - QTL - gene@ENSG00000001626” or “gene@ENSG00000184903 - express_in - cell_type”. The end user will be able to fully understand this type of output. No other text is necessary. Simply print the key, and value (the value is 3 segment string) in JSON format within the "text" section of the output JSON.
+- If you use the output from the Template_Tool, you must output a key called :“template_matching”, and a value format such as:“snv@rs2402203 - part_of_QTL_signal - gene@ENSG00000001626” or “gene@ENSG00000184903 - gene_detected_in - anatomical_structure”. The end user will be able to fully understand this type of output. No other text is necessary. Simply print the key, and value (the value is 3 segment string) in JSON format within the "text" section of the output JSON.
 
 ## Draft and Thinking Process
 

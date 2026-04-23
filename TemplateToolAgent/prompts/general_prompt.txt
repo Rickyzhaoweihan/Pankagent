@@ -14,45 +14,45 @@ Do **not** explain, reason, or output anything except the concise triple.
   - If the input contains an **Ensembl ID** (e.g., `ENSG00000184903`), prefix it with `gene@` (→ `gene@ENSG00000184903`).
   - If the input contains a **gene name/symbol** (e.g., `INS`), use it directly WITHOUT `gene@`.
   - Do **not** substitute, translate, or infer IDs/names.
-- Relationships are always lowercase (e.g., `- QTL -`, `- express_in -`).
+- Relationships are always written verbatim from the PanKgraph ADA schema (e.g., `- part_of_QTL_signal -`, `- gene_detected_in -`).
 
 ---
 
 ### Question Types
 
-#### 1. Lead QTL SNP for a given gene
-**Input pattern:**  
-> "Which SNP serves as the lead QTL for {@gene_symbol@}?"
+#### 1. Lead QTL SNV for a given gene
+**Input pattern:**
+> "Which SNV (or SNP) serves as the lead QTL for {@gene_symbol@}?"
 
-**Output:**  
-> `snp - QTL - <gene_identifier>`
-
----
-
-#### 2. Check if a specific SNP serves as a QTL for a given gene
-**Input pattern:**  
-> "Does {SNP @snp@} serve as a QTL for {@gene_symbol@}?"
-
-**Output:**  
-> `snp@<rsID> - QTL - <gene_identifier>`
+**Output:**
+> `snv - part_of_QTL_signal - <gene_identifier>`
 
 ---
 
-#### 3. Gene regulated by a specific SNP as a QTL
-**Input pattern:**  
-> "Which gene is regulated by {SNP @snp@} as a QTL?"
+#### 2. Check if a specific SNV serves as a QTL for a given gene
+**Input pattern:**
+> "Does {SNV @rsID@} (or SNP) serve as a QTL for {@gene_symbol@}?"
 
-**Output:**  
-> `snp@<rsID> - QTL - gene`
+**Output:**
+> `snv@<rsID> - part_of_QTL_signal - <gene_identifier>`
+
+---
+
+#### 3. Gene regulated by a specific SNV as a QTL
+**Input pattern:**
+> "Which gene is regulated by {SNV @rsID@} (or SNP) as a QTL?"
+
+**Output:**
+> `snv@<rsID> - part_of_QTL_signal - gene`
 
 ---
 
 #### 4. Expression of a given gene in T1D vs non-diabetic samples
-**Input pattern:**  
+**Input pattern:**
 > "How does {@gene_symbol@} expression change in T1D versus non-diabetic samples?"
 
-**Output:**  
-> `<gene_identifier> - express_in - cell_type`
+**Output:**
+> `<gene_identifier> - gene_detected_in - anatomical_structure`
 
 ---
 
@@ -60,10 +60,10 @@ Do **not** explain, reason, or output anything except the concise triple.
 
 | Input | Output |
 |-------|---------|
-| Which SNP serves as the lead QTL for {@INS@}? | `snp - QTL - INS` |
-| Which SNP serves as the lead QTL for {@ENSG00000001626@}? | `snp - QTL - gene@ENSG00000001626` |
-| Does {SNP @rs2402203@} serve as a QTL for {@ENSG00000001626@}? | `snp@rs2402203 - QTL - gene@ENSG00000001626` |
-| Does {SNP @rs2402203@} serve as a QTL for {@INS@}? | `snp@rs2402203 - QTL - INS` |
-| Which gene is regulated by {SNP @rs2402203@} as a QTL? | `snp@rs2402203 - QTL - gene` |
-| How does {@ENSG00000184903@} expression change in T1D versus non-diabetic samples? | `gene@ENSG00000184903 - express_in - cell_type` |
-| How does {@INS@} expression change in T1D versus non-diabetic samples? | `INS - express_in - cell_type` |
+| Which SNP serves as the lead QTL for {@INS@}? | `snv - part_of_QTL_signal - INS` |
+| Which SNP serves as the lead QTL for {@ENSG00000001626@}? | `snv - part_of_QTL_signal - gene@ENSG00000001626` |
+| Does {SNP @rs2402203@} serve as a QTL for {@ENSG00000001626@}? | `snv@rs2402203 - part_of_QTL_signal - gene@ENSG00000001626` |
+| Does {SNP @rs2402203@} serve as a QTL for {@INS@}? | `snv@rs2402203 - part_of_QTL_signal - INS` |
+| Which gene is regulated by {SNP @rs2402203@} as a QTL? | `snv@rs2402203 - part_of_QTL_signal - gene` |
+| How does {@ENSG00000184903@} expression change in T1D versus non-diabetic samples? | `gene@ENSG00000184903 - gene_detected_in - anatomical_structure` |
+| How does {@INS@} expression change in T1D versus non-diabetic samples? | `INS - gene_detected_in - anatomical_structure` |

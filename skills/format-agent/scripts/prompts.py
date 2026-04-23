@@ -80,10 +80,15 @@ Each node looks like:
 |---|---|
 | `:gene:coding_elements` | `name` (HGNC symbol), `id` (Ensembl ID), `chr`, `start_loc`, `end_loc`, `strand`, `description`, `GC_percentage` |
 | `:ontology:disease` | `name`, `id` (MONDO ID), `definition`, `synonyms` |
-| `:ontology:cell_type` | `name`, `id` (CL ID) |
+| `:anatomical_structure` | `name` (UBERON/CL canonical name), `id` (CL/UBERON), `category` (cell_type/region/tissue), `source` |
 | `:ontology:gene_ontology` | `name`, `id` (GO ID), `description` |
-| `:regulatory_elements:OCR` | `name`, `id`, `chr`, `start_loc`, `end_loc` |
-| `:SNP` | `name` (rsID), `id`, `chr`, `position` |
+| `:ontology:kegg` | `name`, `id` (KEGG pathway ID) |
+| `:ontology:reactome` | `name`, `id` (Reactome pathway ID) |
+| `:regulatory_elements:OCR_peak` | `name`, `id`, `chr`, `start_loc`, `end_loc` |
+| `:variants:sequence_variant:snv` | `name` (rsID), `id`, `chr`, `position` |
+| `:donor` | `id`, `diabetes_type`, `derived_diabetes_status`, `t1d_stage`, `aab_state`, `hla_status`, `gender`, `age`, `bmi`, `hba1c_percentage` |
+| `:\`Sample node\`` | `id`, `donor_id`, `modality` |
+| `:data_modality` | `name`, `assay_type` |
 
 ---
 
@@ -94,7 +99,7 @@ Each edge looks like:
 [:relationship_type {prop1: value1, start: "NODE_ID_A", end: "NODE_ID_B", ...}]
 ```
 
-- **Relationship type** appears after the colon, e.g. `:effector_gene_of`, `:DEG_in`, `:QTL`.
+- **Relationship type** appears after the colon, e.g. `:effector_gene_of`, `:T1D_DEG_in`, `:part_of_QTL_signal`. Relationship types containing `;` (e.g., `function_annotation;GO`, `pathway_annotation;KEGG`, `pathway_annotation;reactome`) MUST be backtick-escaped in Cypher.
 - **`start` and `end` properties** tell you WHICH nodes this edge connects:
   - `start` = the `id` of the source node
   - `end` = the `id` of the target node
@@ -117,14 +122,22 @@ edges: [[:effector_gene_of {start: "ENSG00000001626", end: "MONDO_0005147", evid
 | Edge Type | Meaning | Key Properties |
 |---|---|---|
 | `effector_gene_of` | Gene is a predicted effector gene of a disease | `evidence`, `data_source`, `data_source_url` |
-| `DEG_in` | Gene is differentially expressed in a cell type | `Log2FoldChange`, `padj`, `condition` |
-| `expression_level_in` | Gene expression summary in a cell type | `NonDiabetic__expression_mean`, `Type1Diabetic__expression_mean` |
-| `QTL` | SNP is a QTL for a gene | `pip`, `tissue_name`, `slope` |
-| `function_annotation` | Gene has a GO term annotation | (links gene → GO term) |
-| `OCR_activity` / `OCR_activity_in` | OCR is active in a cell type | activity scores |
-| `OCR_locate_in` | OCR is located in/near a gene | genomic coordinates |
-| `colocalization` | Colocalization signal between entities | `coloc_score`, `posterior_prob` |
-| `physical_interaction` | Protein-protein interaction | `interaction_type`, `data_source` |
+| `T1D_DEG_in` | Gene is differentially expressed in T1D vs ND in a cell type | `Log2FoldChange`, `Adjusted_P_value`, `UpOrDownRegulation` (`"Upregulated in T1D"`/`"Downregulated in T1D"`) |
+| `gene_detected_in` | Gene expression summary in a cell type (per-cell-type stats) | `mean_donor_logCPM`, `median_pct_cells_expressing`, `total_cells`, `cell_type`, `expression_call` |
+| `gene_enriched_in` | Gene is a cell-type marker (ND one-vs-rest DESeq2) | `log2FoldChange`, `padj`, `cell_type_label`, `rank_in_cell_type` |
+| `part_of_QTL_signal` | SNV is fine-mapped as a QTL to a gene | `pip`, `tissue_name`, `slope`, `nominal_p`, `gene_name` |
+| `part_of_GWAS_signal` | SNV is part of a GWAS signal for a disease | `pip`, `p_value`, `locus_name`, `lead_status` |
+| `signal_COLOC_with` | Gene colocalizes with a disease signal | `PP.H4.abf`, `QTL_locus_name`, `GWAS_locus_name` |
+| `function_annotation;GO` | Gene has a GO term annotation (backtick-escape!) | links gene → gene_ontology |
+| `pathway_annotation;KEGG` | Gene is annotated with a KEGG pathway (backtick-escape!) | links gene → kegg |
+| `pathway_annotation;reactome` | Gene is annotated with a Reactome pathway (backtick-escape!) | links gene → reactome |
+| `OCR_peak_in` | Open chromatin peak is in a cell type | (OCR_peak → anatomical_structure) |
+| `gene_activity_score_in` | Gene activity score (scATAC-seq) in a cell type | `OCR_GeneActivityScore_mean`, `type_1_diabetes__OCR_GeneActivityScore_mean` |
+| `physical_interaction` | Protein-protein interaction (BioGRID) | `experimental_system`, `score` |
+| `genetic_interaction` | Genetic interaction (BioGRID) | `experimental_system` |
+| `fGSEA_gene_enriched_in` | fGSEA gene-to-pathway enrichment in a cell type | `pathway_collection`, `NES`, `padj` |
+| `fGSEA_enriched_in` | fGSEA pathway enriched in a cell type | `pathway_collection`, `NES`, `padj` |
+| `has_donor` / `has_sample` | Sample↔donor link | |
 
 ---
 
@@ -140,10 +153,13 @@ nodes and ALL connecting edges. To reconstruct the path:
 
 **Example multi-hop result:**
 ```
-nodes: [(:OCR {id: "OCR_001"}), (:gene {id: "ENSG001", name: "GENE_A"}), (:gene_ontology {id: "GO_0005254", name: "chloride channel"})]
-edges: [[:OCR_locate_in {start: "OCR_001", end: "ENSG001"}], [:function_annotation {start: "ENSG001", end: "GO_0005254"}]]
+nodes: [(:OCR_peak {id: "OCR_001"}), (:anatomical_structure {id: "CL_0000169", name: "type B pancreatic cell (beta cell)"}), (:gene {id: "ENSG001", name: "GENE_A"}), (:gene_ontology {id: "GO_0005254", name: "chloride channel"})]
+edges: [[:OCR_peak_in {start: "OCR_001", end: "CL_0000169"}], [:gene_detected_in {start: "ENSG001", end: "CL_0000169", cell_type: "Beta"}], [:`function_annotation;GO` {start: "ENSG001", end: "GO_0005254"}]]
 ```
-→ Path: OCR_001 --[OCR_locate_in]--> GENE_A --[function_annotation]--> chloride channel (GO:0005254)
+→ Paths:
+  • OCR_001 --[OCR_peak_in]--> beta cell
+  • GENE_A --[gene_detected_in {Beta}]--> beta cell
+  • GENE_A --[function_annotation;GO]--> chloride channel (GO:0005254)
 
 ---
 
@@ -183,8 +199,8 @@ _TEMPLATE_MATCHING = """
 ### Template Matching Case
 
 If the response is in a recognized agent format such as:
-- `snp@rs2402203 - QTL - gene@ENSG00000001626`
-- `gene@ENSG00000184903 - express_in - cell_type`
+- `snv@rs2402203 - part_of_QTL_signal - gene@ENSG00000001626`
+- `gene@ENSG00000184903 - gene_detected_in - anatomical_structure`
 
 Then output only that template in this JSON form:
 ```json
@@ -269,9 +285,9 @@ caveats. Failure to observe these rules will produce misleading biological claim
 
 #### A. Edge-Level Interpretation Rules
 
-**1. `DEG_in` edges (Differential Expression in a Cell Type)**
+**1. `T1D_DEG_in` edges (Differential Expression in a Cell Type, T1D vs ND)**
 
-When interpreting DEG_in edges, treat any endocrine hormone DE signal detected in
+When interpreting T1D_DEG_in edges, treat any endocrine hormone DE signal detected in
 non-cognate cell types (e.g., INS outside beta, GCG not in alpha) as a **high-risk
 technical artefact** unless validated by additional evidence. Human islet droplet
 scRNA-seq is known to have ambient/cell-free hormone RNA contamination and "conflicted
@@ -280,19 +296,21 @@ and distort cluster/pseudobulk means.
 
 - **DO NOT** state "Alpha cells express INS" as a biological fact.
 - **DO** phrase as: "INS signal in α-cells may reflect ambient RNA / doublets / mixed-hormone artefacts."
-- Always report log2FC direction and padj, and state the cell type explicitly.
+- Always report `Log2FoldChange`, `Adjusted_P_value`, `UpOrDownRegulation` (full strings `"Upregulated in T1D"` / `"Downregulated in T1D"`), and state the cell type explicitly.
 
-**2. `expression_level_in` edges (Expression Summary Statistics)**
+**2. `gene_detected_in` edges (Expression Summary Statistics)**
 
 **CRITICAL: Current PanKgraph expression data was NOT normalized across cell types.
 DO NOT make cross-cell-type expression level comparisons.**
 
-When interpreting expression_level_in edges, treat the reported summary statistics as
+When interpreting gene_detected_in edges, treat the reported summary statistics as
 potentially inflated for strong/dominant genes across multiple cell types. In droplet-
 based islet data, ambient RNA (INS/GCG-rich background) and mixed/doublet contamination
 can systematically elevate apparent hormone expression in non-cognate populations
 because hormone transcripts can dominate libraries.
 
+- Key properties: `mean_donor_logCPM`, `median_donor_logCPM`, `median_pct_cells_expressing`,
+  `total_cells`, `cell_type` (short label on the edge, e.g., "Beta"), `expression_call`.
 - If hormone genes show measurable signal in a non-cognate type (e.g., INS in α cells),
   annotate it as **"potential ambient/contamination signal"** unless there is strong
   literature support.
@@ -306,6 +324,16 @@ because hormone transcripts can dominate libraries.
 - Prefer cautious phrasing like: "No robust signal detected under the current
   pseudobulk/thresholding settings."
 
+**3. `gene_enriched_in` edges (Cell-Type Marker Genes, ND-only DESeq2 one-vs-rest)**
+
+These are **marker genes** — genes enriched in one cell type relative to all others in
+non-diabetic donors. They answer "what is a marker of cell type X?", not "is gene X
+differentially expressed in T1D?" or "how much is gene X expressed in cell type X?".
+
+- Key properties: `log2FoldChange`, `padj`, `cell_type_label` (no-space variant, e.g.,
+  "ActiveStellate"), `rank_in_cell_type`, `effect_direction` (always "positive").
+- Report cell_type_label explicitly; don't confuse with gene_detected_in.cell_type.
+
 ---
 
 #### B. Node-Level Interpretation Rules
@@ -316,13 +344,16 @@ When describing a gene node, prioritize stable identifiers (HGNC symbol, Ensembl
 ID) and clearly separate gene-level facts from dataset-derived signals. Do not conflate
 the gene's known biology with expression/DE statistics from a single dataset.
 
-**2. Cell-type nodes (`ontology;cell_type`)**
+**2. Anatomical-structure nodes (`anatomical_structure`)**
 
-When describing a cell-type node (e.g., α, β, δ), treat the label as an annotation
-that can be imperfect. If contradictory marker patterns appear (e.g., mixed INS/GCG
-signatures), interpret as potential doublets, ambient RNA, or annotation ambiguity
-rather than a new biology claim.
+When describing an anatomical_structure node (cell types like α, β, δ, or tissues like
+pancreas / pancreatic islet), treat the label as an annotation that can be imperfect.
+If contradictory marker patterns appear (e.g., mixed INS/GCG signatures), interpret as
+potential doublets, ambient RNA, or annotation ambiguity rather than a new biology claim.
 
+- The graph stores long canonical names (`"type B pancreatic cell (beta cell)"`) on the
+  node, but expression/DEG edges carry a separate short `cell_type` or `cell_type_label`
+  property (`"Beta"`).
 - Prefer language like: "This cluster is annotated as α based on marker panel X;
   mixed hormone signatures may indicate technical mixture."
 
@@ -330,30 +361,34 @@ rather than a new biology claim.
 
 #### C. Complex / Multi-Modal Subgraph Interpretation
 
-When interpreting a subgraph that includes **DEG_in** and/or **expression_level_in**
-and/or **OCR_activity_in** and/or **OCR_locate_in**, treat these as **MULTI-MODAL
-signals** and never summarize them as if they come from the same measurement.
+When interpreting a subgraph that includes **T1D_DEG_in** and/or **gene_detected_in**
+and/or **gene_enriched_in** and/or **gene_activity_score_in** and/or **OCR_peak_in**,
+treat these as **MULTI-MODAL signals** and never summarize them as if they come from
+the same measurement.
 
 Enforce strict modality separation and provenance:
 
-1. **RNA differential expression (DEG_in)** — describes change in RNA abundance between
-   conditions (e.g., T1D vs ND) within a specified cell type and analysis design
-   (pseudobulk vs cell-level); report log2FC direction and padj, and state the cell
-   type explicitly.
+1. **RNA differential expression (T1D_DEG_in)** — describes change in RNA abundance
+   between T1D and ND within a specified cell type; report `Log2FoldChange`,
+   `Adjusted_P_value`, `UpOrDownRegulation`, and state the cell type explicitly.
 
-2. **RNA expression_level_in** — describes within-condition expression summaries
-   (mean/median/percent detected) and can be biased by ambient RNA, doublets,
-   pseudobulk thresholds, donor imbalance, and normalization; avoid absolute
-   presence/absence claims, and flag non-cognate hormone signals as likely artefacts
-   unless supported by literature. **Expression values are NOT normalized across cell
-   types — do NOT compare expression levels between different cell types.**
+2. **RNA expression summary (gene_detected_in)** — within-condition expression
+   summaries (mean/median logCPM, percent cells expressing); can be biased by ambient
+   RNA, doublets, pseudobulk thresholds, donor imbalance, and normalization; avoid
+   absolute presence/absence claims. **Values are NOT normalized across cell types —
+   do NOT compare across cell types.**
 
-3. **OCR_activity_in** — is chromatin accessibility / gene-activity derived from
-   ATAC/OCR and is **NOT RNA expression**; **never** call OCR activity "expression
-   counts" or "expression data".
+3. **Cell-type marker genes (gene_enriched_in)** — ND-only one-vs-rest DESeq2 markers.
+   High `log2FoldChange` + low `padj` means the gene is enriched in that cell type
+   relative to others; NOT a T1D vs ND comparison.
 
-4. **OCR_locate_in** — indicates genomic/regulatory localization of OCRs (e.g.,
-   enhancer/promoter regions) and supports regulatory context, not transcript abundance.
+4. **Chromatin accessibility score (gene_activity_score_in)** — gene-level ATAC/OCR
+   activity aggregated per cell type. **NOT RNA expression** — never call gene activity
+   "expression counts" or "expression data".
+
+5. **OCR peak in cell type (OCR_peak_in)** — peak-level chromatin accessibility of a
+   specific OCR peak in a specific cell type. Use for identifying peaks unique to or
+   shared between cell types.
 
 **Cross-modality discordance handling:**
 - If RNA indicates upregulation while OCR activity decreases (or vice versa), do NOT
@@ -482,7 +517,7 @@ You will receive RAW DATA directly from sub-agents (no pre-synthesis). Your job 
 - Produce **only valid JSON**.
 - Include **all unique** Cypher queries (ordered by relevance), no duplicates.
 - Output the summary as one essay-style string with the required headed sections.
-- **ALWAYS apply the Data Interpretation Guidelines** when edges like DEG_in, expression_level_in, OCR_activity_in, or OCR_locate_in appear in the data.
+- **ALWAYS apply the Data Interpretation Guidelines** when edges like T1D_DEG_in, gene_detected_in, gene_enriched_in, gene_activity_score_in, or OCR_peak_in appear in the data.
 
 **⚠️ DATA UTILIZATION IS YOUR PRIMARY METRIC ⚠️**
 - Include: Ensembl IDs, ALL GO term IDs, chromosome positions, ALL SNP IDs with PIP scores, expression values, p-values
@@ -597,7 +632,7 @@ You will receive:
 - Produce **only valid JSON**.
 - Include **all unique** Cypher queries (ordered by relevance), no duplicates.
 - Output the summary as one essay-style string with the required headed sections.
-- **ALWAYS apply the Data Interpretation Guidelines** when edges like DEG_in, expression_level_in, OCR_activity_in, or OCR_locate_in appear in the data.
+- **ALWAYS apply the Data Interpretation Guidelines** when edges like T1D_DEG_in, gene_detected_in, gene_enriched_in, gene_activity_score_in, or OCR_peak_in appear in the data.
 
 **⚠️ DATA UTILIZATION IS YOUR PRIMARY METRIC ⚠️**
 - Include: Ensembl IDs, ALL GO term IDs, chromosome positions, ALL SNP IDs with PIP scores, expression values, p-values

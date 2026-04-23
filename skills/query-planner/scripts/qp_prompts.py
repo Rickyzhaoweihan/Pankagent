@@ -21,27 +21,41 @@ will translate into Cypher.  You do NOT write Cypher yourself.
 | Node type | Key properties | Cypher label |
 |-----------|---------------|--------------|
 | Gene | name, id (Ensembl), chr, description | `:gene` |
-| SNP | id (rsID), chr, type | `:snp` |
+| SNV (variant) | id (rsID), chr, type | `:snv` |
 | Disease | name, id (MONDO) | `:disease` |
-| Cell Type | name, id (CL) | `:cell_type` |
+| Anatomical Structure (cell type / tissue) | name, id (CL/UBERON) | `:anatomical_structure` |
 | Gene Ontology | name, id (GO:xxxx), description | `:gene_ontology` |
-| OCR | id (OCR_ENSGxxx) | `:OCR` |
+| OCR Peak | id, chr, start_loc, end_loc | `:OCR_peak` |
+| Donor | id, diabetes_type, t1d_stage, aab_state, hla_status | `:donor` |
+| KEGG Pathway | id, name | `:kegg` |
+| Reactome Pathway | id, name | `:reactome` |
+
+**CRITICAL label rules**: use `snv` (NOT `snp`), `anatomical_structure` (NOT `cell_type`), `OCR_peak` (NOT `OCR`).
 
 ## Graph Schema — Edges (ALL relationships)
 
 | # | Relationship | Direction | Description |
 |---|-------------|-----------|-------------|
-| 1 | `part_of_QTL_signal` | SNP → Gene | QTL: variant fine-mapped to a gene |
-| 2 | `part_of_GWAS_signal` | SNP → Disease | GWAS: variant associated with a disease |
+| 1 | `part_of_QTL_signal` | snv → Gene | QTL: variant fine-mapped to a gene |
+| 2 | `part_of_GWAS_signal` | snv → Disease | GWAS: variant associated with a disease |
 | 3 | `signal_COLOC_with` | Gene → Disease | Colocalization of QTL/GWAS signals |
 | 4 | `effector_gene_of` | Gene → Disease | Curated effector gene for a disease |
-| 5 | `DEG_in` | Gene → Cell Type | Differentially expressed gene in a cell type |
-| 6 | `expression_level_in` | Gene → Cell Type | Expression level in a cell type |
-| 7 | `OCR_activity` | OCR → Cell Type | OCR activity score in a cell type |
-| 8 | `OCR_locate_in` | OCR → Gene | Which gene an OCR is located near |
-| 9 | `function_annotation` | Gene → Gene Ontology | GO term annotation |
-| 10 | `physical_interaction` | Gene → Gene | Protein-protein interaction (BioGRID) |
-| 11 | `genetic_regulation` | Gene → Gene | Genetic regulation (BioGRID) |
+| 5 | `T1D_DEG_in` | Gene → anatomical_structure | Differentially expressed gene in T1D vs non-diabetic |
+| 6 | `gene_detected_in` | Gene → anatomical_structure | Expression detection and statistics per cell type (mean expression, fraction detected, NonDiabetic/T1D means) |
+| 7 | `gene_enriched_in` | Gene → anatomical_structure | Cell-type marker genes (ND-only, one-vs-rest DESeq2) |
+| 8 | `gene_activity_score_in` | Gene → anatomical_structure | Gene activity scores from scATAC-seq per cell type |
+| 9 | `OCR_peak_in` | OCR_peak → anatomical_structure | Open chromatin peaks in a cell type |
+| 10 | `function_annotation;GO` | Gene → gene_ontology | GO term annotation (backtick-escape in Cypher) |
+| 11 | `pathway_annotation;KEGG` | Gene → kegg | KEGG pathway annotation (backtick-escape in Cypher) |
+| 12 | `pathway_annotation;reactome` | Gene → reactome | Reactome pathway annotation (backtick-escape in Cypher) |
+| 13 | `physical_interaction` | Gene → Gene | Protein-protein interaction (BioGRID) |
+| 14 | `genetic_interaction` | Gene → Gene | Genetic interaction (BioGRID) |
+| 15 | `fGSEA_gene_enriched_in` | Gene → anatomical_structure | fGSEA: gene-to-enriched-pathway-in-cell-type |
+| 16 | `fGSEA_enriched_in` | kegg/reactome → anatomical_structure | fGSEA: pathway enriched in a cell type |
+| 17 | `has_donor` | Sample → donor | Sample linked to donor |
+| 18 | `has_sample` | donor → Sample | Donor linked to biological sample |
+
+**REMOVED relationships (do NOT use)**: `DEG_in` (use `T1D_DEG_in`), `expression_level_in` (use `gene_detected_in`), `OCR_activity` (use `OCR_peak_in` or `gene_activity_score_in`), `OCR_locate_in` (removed), `snp` (use `snv`), `function_annotation` (use `function_annotation;GO` with backticks).
 
 ---
 
@@ -88,17 +102,19 @@ Output ONLY a valid JSON object (no markdown, no extra text):
 ### Rules for `natural_language`
 - Each step must be a **single-hop** query: one MATCH with one relationship type.
 - Always include filtering when the user specifies an entity:
-  "Get OCRs that have OCR_activity in Beta Cell" (filtered by Beta Cell)
+  "Get genes that have gene_detected_in relationships with Beta Cell" (filtered by Beta Cell)
 - Use exact names: "Beta Cell" (not "beta cell"), "type 1 diabetes" (not "T1D").
 - The text2cypher model understands these patterns well:
   - "Find gene with name CFTR"
-  - "Get SNPs that have part_of_QTL_signal relationships with gene CFTR"
-  - "Get genes that have DEG_in relationships with Beta Cell"
-  - "Get OCRs that have OCR_activity in Beta Cell"
-  - "Get OCRs that have OCR_locate_in relationships with genes"
-  - "Get genes that have function_annotation relationships with gene ontology terms"
+  - "Get SNVs that have part_of_QTL_signal relationships with gene CFTR"
+  - "Get genes that have T1D_DEG_in relationships with Beta Cell"
+  - "Get genes that have gene_detected_in relationships with Beta Cell" (expression stats)
+  - "Get genes that have gene_enriched_in relationships with Beta Cell" (marker genes)
+  - "Get genes that have gene_activity_score_in relationships with Beta Cell"
+  - "Get OCR peaks that have OCR_peak_in relationships with Beta Cell"
+  - "Get genes that have function_annotation;GO relationships with gene ontology terms"
   - "Get genes that have signal_COLOC_with relationships with type 1 diabetes"
-  - "Get SNPs that have part_of_GWAS_signal relationships with type 1 diabetes"
+  - "Get SNVs that have part_of_GWAS_signal relationships with type 1 diabetes"
   - "Get genes that have physical_interaction relationships with gene CFTR"
   - "Get genes that have effector_gene_of relationships with type 1 diabetes"
 
@@ -110,7 +126,7 @@ Output ONLY a valid JSON object (no markdown, no extra text):
     - `"o"` for OCR nodes
     - `"g"` for gene nodes
     - `"s"` for SNP nodes
-    - `"ct"` for cell_type nodes
+    - `"ct"` for anatomical_structure nodes
     - `"d"` for disease nodes
     - `"go"` for gene_ontology nodes
 - For the LAST step in a chain, join_var is null.
@@ -126,35 +142,33 @@ Output ONLY a valid JSON object (no markdown, no extra text):
 ## Few-Shot Examples
 
 ### Example 1 (CHAIN — Category A)
-**Question**: "Which GO terms are associated with genes that have OCR active in Beta cells?"
-**Path**: OCR -[OCR_activity]-> Beta Cell, OCR -[OCR_locate_in]-> Gene, Gene -[function_annotation]-> GO
+**Question**: "Which GO terms are associated with genes that have open chromatin peaks in Beta cells?"
+**Path**: OCR_peak -[OCR_peak_in]-> Beta Cell, Gene -[function_annotation;GO]-> GO
 
 ```json
 {
   "plan_type": "chain",
-  "interpreted_question": "Which Gene Ontology terms are associated with genes that have open chromatin regions active in Beta cells?",
-  "reasoning": "3-hop chain: OCR->CellType, OCR->Gene, Gene->GO. Join on OCR (o) then Gene (g).",
+  "interpreted_question": "Which Gene Ontology terms are associated with genes that have open chromatin peaks in Beta cells?",
+  "reasoning": "2-hop chain: get OCR peaks in Beta Cell, then get GO terms for genes enriched in Beta Cell. Join on gene (g).",
   "steps": [
-    {"id": 1, "natural_language": "Get OCRs that have OCR_activity in Beta Cell", "join_var": "o", "depends_on": null},
-    {"id": 2, "natural_language": "Get OCRs that have OCR_locate_in relationships with genes", "join_var": "g", "depends_on": 1},
-    {"id": 3, "natural_language": "Get genes that have function_annotation relationships with gene ontology terms", "join_var": null, "depends_on": 2}
+    {"id": 1, "natural_language": "Get OCR peaks that have OCR_peak_in relationships with Beta Cell", "join_var": "g", "depends_on": null},
+    {"id": 2, "natural_language": "Get genes that have function_annotation;GO relationships with gene ontology terms", "join_var": null, "depends_on": 1}
   ]
 }
 ```
 
 ### Example 2 (CHAIN — Category A)
-**Question**: "For T1D GWAS variants, which variants also fine-map as QTLs to genes with OCR active in Beta cells?"
-**Path**: SNP -[part_of_GWAS_signal]-> T1D, SNP -[part_of_QTL_signal]-> Gene, OCR -[OCR_locate_in]-> Gene, OCR -[OCR_activity]-> Beta Cell
+**Question**: "For T1D GWAS variants, which variants also fine-map as QTLs to genes differentially expressed in Beta cells?"
+**Path**: snv -[part_of_GWAS_signal]-> T1D, snv -[part_of_QTL_signal]-> Gene, Gene -[T1D_DEG_in]-> Beta Cell
 
 ```json
 {
   "plan_type": "chain",
-  "reasoning": "4-hop chain: SNP->Disease(T1D), SNP->Gene, OCR->Gene, OCR->CellType. Join on SNP (s), Gene (g), OCR (o).",
+  "reasoning": "3-hop chain: SNV->Disease(T1D), SNV->Gene, Gene->anatomical_structure. Join on SNV (s), Gene (g).",
   "steps": [
-    {"id": 1, "natural_language": "Get SNPs that have part_of_GWAS_signal relationships with type 1 diabetes", "join_var": "s", "depends_on": null},
-    {"id": 2, "natural_language": "Get SNPs that have part_of_QTL_signal relationships with genes", "join_var": "g", "depends_on": 1},
-    {"id": 3, "natural_language": "Get OCRs that have OCR_locate_in relationships with genes", "join_var": "o", "depends_on": 2},
-    {"id": 4, "natural_language": "Get OCRs that have OCR_activity in Beta Cell", "join_var": null, "depends_on": 3}
+    {"id": 1, "natural_language": "Get SNVs that have part_of_GWAS_signal relationships with type 1 diabetes", "join_var": "s", "depends_on": null},
+    {"id": 2, "natural_language": "Get SNVs that have part_of_QTL_signal relationships with genes", "join_var": "g", "depends_on": 1},
+    {"id": 3, "natural_language": "Get genes that have T1D_DEG_in relationships with Beta Cell", "join_var": null, "depends_on": 2}
   ]
 }
 ```
@@ -176,7 +190,7 @@ Output ONLY a valid JSON object (no markdown, no extra text):
 
 ### Example 4 (CHAIN — Category B)
 **Question**: "Among genes colocalized with T1D, which are differentially expressed in Beta cells?"
-**Path**: Gene -[signal_COLOC_with]-> T1D, Gene -[DEG_in]-> Beta Cell
+**Path**: Gene -[signal_COLOC_with]-> T1D, Gene -[T1D_DEG_in]-> Beta Cell
 
 ```json
 {
@@ -184,21 +198,21 @@ Output ONLY a valid JSON object (no markdown, no extra text):
   "reasoning": "2-hop chain: Gene->Disease(COLOC), Gene->CellType(DEG). Join on Gene (g).",
   "steps": [
     {"id": 1, "natural_language": "Get genes that have signal_COLOC_with relationships with type 1 diabetes", "join_var": "g", "depends_on": null},
-    {"id": 2, "natural_language": "Get genes that have DEG_in relationships with Beta Cell", "join_var": null, "depends_on": 1}
+    {"id": 2, "natural_language": "Get genes that have T1D_DEG_in relationships with Beta Cell", "join_var": null, "depends_on": 1}
   ]
 }
 ```
 
 ### Example 5 (CHAIN — Category C)
 **Question**: "Which DE genes in Beta cells are also QTL targets?"
-**Path**: Gene -[DEG_in]-> Beta Cell, SNP -[part_of_QTL_signal]-> Gene
+**Path**: Gene -[T1D_DEG_in]-> Beta Cell, snv -[part_of_QTL_signal]-> Gene
 
 ```json
 {
   "plan_type": "chain",
   "reasoning": "2-hop chain: Gene->CellType(DEG), SNP->Gene(QTL). Join on Gene (g).",
   "steps": [
-    {"id": 1, "natural_language": "Get genes that have DEG_in relationships with Beta Cell", "join_var": "g", "depends_on": null},
+    {"id": 1, "natural_language": "Get genes that have T1D_DEG_in relationships with Beta Cell", "join_var": "g", "depends_on": null},
     {"id": 2, "natural_language": "Get SNPs that have part_of_QTL_signal relationships with genes", "join_var": null, "depends_on": 1}
   ]
 }
@@ -206,7 +220,7 @@ Output ONLY a valid JSON object (no markdown, no extra text):
 
 ### Example 6 (CHAIN — Category D)
 **Question**: "Which PPI partners of CFTR are differentially expressed in Beta cells?"
-**Path**: CFTR -[physical_interaction]-> Gene, Gene -[DEG_in]-> Beta Cell
+**Path**: CFTR -[physical_interaction]-> Gene, Gene -[T1D_DEG_in]-> Beta Cell
 
 ```json
 {
@@ -214,24 +228,23 @@ Output ONLY a valid JSON object (no markdown, no extra text):
   "reasoning": "2-hop chain: Gene(CFTR)->Gene(PPI), Gene->CellType(DEG). Join on Gene (g2).",
   "steps": [
     {"id": 1, "natural_language": "Get genes that have physical_interaction relationships with gene CFTR", "join_var": "g2", "depends_on": null},
-    {"id": 2, "natural_language": "Get genes that have DEG_in relationships with Beta Cell", "join_var": null, "depends_on": 1}
+    {"id": 2, "natural_language": "Get genes that have T1D_DEG_in relationships with Beta Cell", "join_var": null, "depends_on": 1}
   ]
 }
 ```
 
 ### Example 7 (CHAIN — Category E)
-**Question**: "For T1D GWAS-to-QTL mapped genes, which cell types have OCR linked to those genes?"
-**Path**: SNP -[part_of_GWAS_signal]-> T1D, SNP -[part_of_QTL_signal]-> Gene, OCR -[OCR_locate_in]-> Gene, OCR -[OCR_activity]-> Cell Type
+**Question**: "For T1D GWAS-to-QTL mapped genes, which cell types have open chromatin peaks?"
+**Path**: snv -[part_of_GWAS_signal]-> T1D, snv -[part_of_QTL_signal]-> Gene, Gene -[gene_activity_score_in]-> anatomical_structure
 
 ```json
 {
   "plan_type": "chain",
-  "reasoning": "4-hop chain: SNP->Disease, SNP->Gene, OCR->Gene, OCR->CellType. Join on SNP (s), Gene (g), OCR (o).",
+  "reasoning": "3-hop chain: SNV->Disease, SNV->Gene, Gene->anatomical_structure (activity). Join on SNV (s), Gene (g).",
   "steps": [
-    {"id": 1, "natural_language": "Get SNPs that have part_of_GWAS_signal relationships with type 1 diabetes", "join_var": "s", "depends_on": null},
-    {"id": 2, "natural_language": "Get SNPs that have part_of_QTL_signal relationships with genes", "join_var": "g", "depends_on": 1},
-    {"id": 3, "natural_language": "Get OCRs that have OCR_locate_in relationships with genes", "join_var": "o", "depends_on": 2},
-    {"id": 4, "natural_language": "Get OCRs that have OCR_activity relationships with cell types", "join_var": null, "depends_on": 3}
+    {"id": 1, "natural_language": "Get SNVs that have part_of_GWAS_signal relationships with type 1 diabetes", "join_var": "s", "depends_on": null},
+    {"id": 2, "natural_language": "Get SNVs that have part_of_QTL_signal relationships with genes", "join_var": "g", "depends_on": 1},
+    {"id": 3, "natural_language": "Get genes that have gene_activity_score_in relationships with anatomical structures", "join_var": null, "depends_on": 2}
   ]
 }
 ```
@@ -254,15 +267,15 @@ Output ONLY a valid JSON object (no markdown, no extra text):
 
 ### Example 9 (CHAIN — Category C)
 **Question**: "Which genes are differentially expressed in Beta Cell and have GO term insulin secretion?"
-**Path**: Gene -[DEG_in]-> Beta Cell, Gene -[function_annotation]-> GO
+**Path**: Gene -[T1D_DEG_in]-> Beta Cell, Gene -[function_annotation;GO]-> gene_ontology
 
 ```json
 {
   "plan_type": "chain",
-  "reasoning": "2-hop chain: Gene->CellType(DEG), Gene->GO(function_annotation). Join on Gene (g).",
+  "reasoning": "2-hop chain: Gene->anatomical_structure(T1D_DEG_in), Gene->gene_ontology(function_annotation;GO). Join on Gene (g).",
   "steps": [
-    {"id": 1, "natural_language": "Get genes that have DEG_in relationships with Beta Cell", "join_var": "g", "depends_on": null},
-    {"id": 2, "natural_language": "Get genes that have function_annotation relationships with gene ontology terms", "join_var": null, "depends_on": 1}
+    {"id": 1, "natural_language": "Get genes that have T1D_DEG_in relationships with Beta Cell", "join_var": "g", "depends_on": null},
+    {"id": 2, "natural_language": "Get genes that have function_annotation;GO relationships with gene ontology terms", "join_var": null, "depends_on": 1}
   ]
 }
 ```
@@ -296,36 +309,36 @@ Use these comparison cell types: Beta Cell, Alpha Cell, Delta Cell, Acinar Cell,
 
 ### Example 11 (PARALLEL — Uniqueness)
 **Question**: "List the top 100 open chromatin regions that are unique to beta cells"
-**Strategy**: Query OCR_activity for Beta Cell + several other cell types so the
-downstream agent can compare and identify truly unique OCRs.
+**Strategy**: Query OCR_peak_in for Beta Cell + several other cell types so the
+downstream agent can compare and identify truly unique OCR peaks.
 
 ```json
 {
   "plan_type": "parallel",
-  "reasoning": "Uniqueness requires cross-cell-type comparison. Fetch OCR_activity for Beta Cell and 4 other major cell types so the ReasoningAgent can identify OCRs present only in Beta Cell.",
+  "reasoning": "Uniqueness requires cross-cell-type comparison. Fetch OCR_peak_in for Beta Cell and 4 other major cell types so the ReasoningAgent can identify OCR peaks present only in Beta Cell.",
   "steps": [
-    {"id": 1, "natural_language": "Get OCRs that have OCR_activity in Beta Cell", "join_var": null, "depends_on": null},
-    {"id": 2, "natural_language": "Get OCRs that have OCR_activity in Alpha Cell", "join_var": null, "depends_on": null},
-    {"id": 3, "natural_language": "Get OCRs that have OCR_activity in Delta Cell", "join_var": null, "depends_on": null},
-    {"id": 4, "natural_language": "Get OCRs that have OCR_activity in Acinar Cell", "join_var": null, "depends_on": null},
-    {"id": 5, "natural_language": "Get OCRs that have OCR_activity in Ductal Cell", "join_var": null, "depends_on": null}
+    {"id": 1, "natural_language": "Get OCR peaks that have OCR_peak_in relationships with Beta Cell", "join_var": null, "depends_on": null},
+    {"id": 2, "natural_language": "Get OCR peaks that have OCR_peak_in relationships with Alpha Cell", "join_var": null, "depends_on": null},
+    {"id": 3, "natural_language": "Get OCR peaks that have OCR_peak_in relationships with Delta Cell", "join_var": null, "depends_on": null},
+    {"id": 4, "natural_language": "Get OCR peaks that have OCR_peak_in relationships with Acinar Cell", "join_var": null, "depends_on": null},
+    {"id": 5, "natural_language": "Get OCR peaks that have OCR_peak_in relationships with Ductal Cell", "join_var": null, "depends_on": null}
   ]
 }
 ```
 
 ### Example 12 (PARALLEL — Specificity)
 **Question**: "Which genes are specifically expressed in alpha cells?"
-**Strategy**: Query expression_level_in for Alpha Cell + comparison cell types.
+**Strategy**: Query gene_detected_in for Alpha Cell + comparison cell types (gene_detected_in stores per-cell-type expression statistics including NonDiabetic/T1D means).
 
 ```json
 {
   "plan_type": "parallel",
-  "reasoning": "Specificity requires comparing expression across cell types. Fetch expression_level_in for Alpha Cell and 3 other major cell types.",
+  "reasoning": "Specificity requires comparing expression across cell types. Fetch gene_detected_in for Alpha Cell and 3 other major cell types.",
   "steps": [
-    {"id": 1, "natural_language": "Get genes that have expression_level_in Alpha Cell", "join_var": null, "depends_on": null},
-    {"id": 2, "natural_language": "Get genes that have expression_level_in Beta Cell", "join_var": null, "depends_on": null},
-    {"id": 3, "natural_language": "Get genes that have expression_level_in Delta Cell", "join_var": null, "depends_on": null},
-    {"id": 4, "natural_language": "Get genes that have expression_level_in Acinar Cell", "join_var": null, "depends_on": null}
+    {"id": 1, "natural_language": "Get genes that have gene_detected_in relationships with Alpha Cell", "join_var": null, "depends_on": null},
+    {"id": 2, "natural_language": "Get genes that have gene_detected_in relationships with Beta Cell", "join_var": null, "depends_on": null},
+    {"id": 3, "natural_language": "Get genes that have gene_detected_in relationships with Delta Cell", "join_var": null, "depends_on": null},
+    {"id": 4, "natural_language": "Get genes that have gene_detected_in relationships with Acinar Cell", "join_var": null, "depends_on": null}
   ]
 }
 ```
@@ -437,9 +450,9 @@ and OCR peak in the knowledge graph.
 - Cross-entity spatial overlaps (e.g., GWAS SNPs landing inside OCR peaks)
 
 **What the knowledge graph answers instead:**
-- Biological relationships: expression, DEG, QTL signals, GO terms, protein interactions, disease associations
-- OCR activity scores per cell type (OCR_activity edges)
-- OCR-to-gene regulatory links (OCR_locate_in edges — but no coordinates)
+- Biological relationships: expression (gene_detected_in, gene_enriched_in), T1D DEG (T1D_DEG_in), QTL signals, GO terms, protein interactions, disease associations
+- OCR peak locations per cell type (OCR_peak_in edges)
+- Gene activity scores per cell type (gene_activity_score_in edges)
 
 ### When to add genomic coordinate steps
 
@@ -481,9 +494,9 @@ have no join_var and no depends_on — they are always independent/parallel.
   "reasoning": "Comprehensive gene lookup: basic info and relationships from KG, chromosomal position from genomic coordinate database.",
   "steps": [
     {"id": 1, "natural_language": "Find gene with name INS", "join_var": null, "depends_on": null},
-    {"id": 2, "natural_language": "Get genes that have expression_level_in relationships with cell types for gene INS", "join_var": null, "depends_on": null},
-    {"id": 3, "natural_language": "Get genes that have DEG_in relationships with cell types for gene INS", "join_var": null, "depends_on": null},
-    {"id": 4, "natural_language": "Get genes that have function_annotation relationships with gene ontology terms for gene INS", "join_var": null, "depends_on": null},
+    {"id": 2, "natural_language": "Get genes that have gene_detected_in relationships with cell types for gene INS", "join_var": null, "depends_on": null},
+    {"id": 3, "natural_language": "Get genes that have T1D_DEG_in relationships with cell types for gene INS", "join_var": null, "depends_on": null},
+    {"id": 4, "natural_language": "Get genes that have function_annotation;GO relationships with gene ontology terms for gene INS", "join_var": null, "depends_on": null},
     {"id": 5, "natural_language": "What is the genomic location of gene INS and what OCR peaks overlap it?", "source": "genomic", "join_var": null, "depends_on": null}
   ]
 }
@@ -549,8 +562,8 @@ Every ssGSEA step MUST have a gene source. One of:
 
 1. **Explicit gene list in the NL** — e.g. `"Run ssGSEA for INS, GCG, SST, PPY"`.
 2. **Genes from an upstream KG step** — add `depends_on: <kg_step_id>` pointing to a
-   step that retrieves genes (e.g., effector_gene_of, function_annotation;GO, DEG_in,
-   gene_enriched_in). The cross-source chain automatically passes `gene_names` through.
+   step that retrieves genes (e.g., effector_gene_of, function_annotation;GO, T1D_DEG_in,
+   gene_enriched_in, gene_detected_in). The cross-source chain automatically passes `gene_names` through.
 
 If the user asks for ssGSEA **without specifying genes**, default to **T1D effector
 genes** by adding a KG step that retrieves `effector_gene_of` relationships and make
@@ -722,7 +735,7 @@ Non-KG steps can consume: gene_names, gene_ids, snv_ids, donor_ids.
 - DO NOT create steps that don't correspond to an edge in the schema.
 - DO NOT output more than 7 steps.
 - DO NOT answer "unique to X" or "specific to X" with a single query for X.
-  BAD: one step "Get OCRs that have OCR_activity in Beta Cell" (no comparison!)
+  BAD: one step "Get OCR peaks that have OCR_peak_in relationships with Beta Cell" (no comparison!)
   GOOD: parallel steps querying Beta Cell + Alpha Cell + Delta Cell + Acinar Cell + Ductal Cell.
 - DO NOT use `"source": "hpap"` — the HPAP database is disabled; donor data lives in the KG as `donor` nodes.
 - DO NOT use `"source": "genomic"` for relationship queries (DEG, expression, QTL associations) — those go to the knowledge graph.
@@ -804,7 +817,7 @@ include these two extra fields:
 
 **When to add genomic steps during revision:**
 - User asks to add "OCR peaks overlapping gene X" or "OCR regions near gene X"
-  → add `"source": "genomic"` step. The knowledge graph has OCR_locate_in edges but
+  → add `"source": "genomic"` step. The knowledge graph has OCR_peak_in edges (linking OCR peaks to cell types) but
   NO genomic coordinates for OCR peaks — only the genomic database has OCR positions.
 - User asks about "genomic location", "coordinates", "chromosome position" of any entity
   → add `"source": "genomic"` step.

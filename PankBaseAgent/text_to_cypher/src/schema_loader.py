@@ -229,26 +229,26 @@ def extract_entities_from_cypher(cypher: str) -> Dict[str, list]:
         
     Returns:
         {
-            'node_labels': ['gene', 'cell_type', ...],
-            'relationship_types': ['DEG_in', 'regulation', ...]
+            'node_labels': ['gene', 'anatomical_structure', ...],
+            'relationship_types': ['T1D_DEG_in', 'physical_interaction', ...]
         }
     """
     import re
-    
+
     node_labels = set()
     relationship_types = set()
-    
+
     # Extract node labels from patterns like (var:Label) or (:Label)
     node_patterns = re.findall(r'\([^)]*:(\w+)[^)]*\)', cypher)
     for label in node_patterns:
         # Handle compound labels like "ontology;gene_ontology" -> extract last part
         simple_label = label.split(';')[-1]
         node_labels.add(simple_label)
-    
+
     # Extract relationship types from patterns like [var:Type] or [:Type]
     rel_patterns = re.findall(r'\[[^]]*:(\w+)[^]]*\]', cypher)
     for rel_type in rel_patterns:
-        # Handle compound types like "interaction;regulation" -> extract last part
+        # Handle compound types like "function_annotation;GO" -> extract last part
         simple_type = rel_type.split(';')[-1]
         relationship_types.add(simple_type)
     

@@ -429,20 +429,28 @@ def _classify_followup(history: list[dict], new_question: str) -> str:
             system=(
                 "You classify follow-up questions in a biomedical Q&A system.\n"
                 "Respond with EXACTLY one word: 'follow_up' or 'new_query'.\n\n"
-                "Reply 'follow_up' if the question is a continuation of the prior "
-                "turn — it asks to explain, expand, reframe, summarise, clarify, "
-                "compare, or add one more dimension to data ALREADY retrieved.\n"
-                "It references the same entities (genes, SNPs, diseases) as before "
-                "and does NOT introduce a new entity or new data source.\n"
-                "Examples: 'what do those GO terms mean', 'summarise this',\n"
-                "'why is that significant', 'rephrase for a clinician',\n"
-                "'which of those has the highest PIP'.\n\n"
-                "Reply 'new_query' if the question:\n"
-                "- Introduces a NEW gene, SNP, disease, or entity not in prior answers\n"
-                "- Needs NEW data types or sources not yet retrieved (ssGSEA,\n"
-                "  genomic coordinates, literature, a different pathway)\n"
-                "- Needs multi-step or cross-source analysis\n"
-                "- Is ambiguous enough that a plan review is warranted"
+                "HARD RULE: 'follow_up' NEVER invokes any tool (no Neo4j/Cypher, "
+                "no PostgreSQL/SQL, no ssGSEA, no HIRN/literature, no gene resolver). "
+                "It can ONLY rephrase, explain, summarise, or reason over text that is "
+                "ALREADY present in the prior assistant answers.\n"
+                "If answering the question would require fetching, retrieving, "
+                "computing, or looking up ANY data not already shown verbatim in the "
+                "prior turns — classify as 'new_query'. When in doubt, choose "
+                "'new_query'.\n\n"
+                "Reply 'follow_up' ONLY if the question is a purely conversational "
+                "continuation that can be answered using facts literally present in "
+                "the prior assistant messages — e.g. 'what do those GO terms mean', "
+                "'summarise this', 'why is that significant', 'rephrase for a "
+                "clinician', 'which of those listed has the highest PIP'.\n\n"
+                "Reply 'new_query' if ANY of these apply:\n"
+                "- Introduces a NEW gene, SNP, disease, cell type, donor, or entity "
+                "not in prior answers.\n"
+                "- Asks for a data dimension or field not literally present in prior "
+                "answers (expression levels, OCR peaks, genomic coords, ssGSEA "
+                "scores, literature, pathway annotations) even if the entity was "
+                "mentioned before.\n"
+                "- Needs multi-step or cross-source analysis.\n"
+                "- Is ambiguous enough that a plan review is warranted."
             ),
             messages=[{
                 "role": "user",
@@ -456,6 +464,23 @@ def _classify_followup(history: list[dict], new_question: str) -> str:
     except Exception as exc:
         logger.warning(f"Follow-up classification failed: {exc}")
         return "new_query"  # safe fallback: always run pipeline
+
+
+def _answer_is_tool_output(text: str) -> bool:
+    """Return True if the follow_up answer looks like raw tool output (Cypher,
+    SQL, etc.) rather than a natural-language response — which means the
+    format/reasoning agent tried to query the DB instead of answering from
+    context. The caller should re-route to new_query in that case."""
+    import re
+    t = text.strip()
+    patterns = [
+        r"(?i)```\s*(cypher|sql|sparql)",   # fenced code block labelled cypher/sql
+        r"(?i)\bMATCH\s*\(",                # bare Cypher MATCH clause
+        r"(?i)^SELECT\s+",                  # bare SQL SELECT
+        r"(?i)^(WITH|UNWIND)\s+",           # Cypher WITH/UNWIND at top level
+        r"\bRETURN\s+\w",                   # Cypher RETURN keyword (uppercase only — avoids English prose)
+    ]
+    return any(re.search(p, t) for p in patterns)
 
 
 # ---------------------------------------------------------------------------
@@ -1222,6 +1247,19 @@ async def chat_message(request: ChatMessageRequest):
                 md = extract_markdown(response)
                 # NOTE: session.last_* fields are NOT updated — same retrieved
                 # data stays active for subsequent follow-ups in this thread.
+                _check_text = md or cleaned
+                _is_tool = _answer_is_tool_output(_check_text)
+                logger.info(
+                    f"[/chat/message] follow_up guard: md_len={len(md)} "
+                    f"cleaned_len={len(cleaned)} is_tool_output={_is_tool} "
+                    f"md_preview={repr(_check_text[:120])}"
+                )
+                if _is_tool:
+                    logger.warning(
+                        "[/chat/message] follow_up answer looks like raw tool "
+                        "output — promoting to new_query"
+                    )
+                    route = "new_query"
             except Exception as e:
                 logger.error(f"[/chat/message] follow_up error: {e}", exc_info=True)
                 raise HTTPException(status_code=500, detail=f"Follow-up failed: {e}")

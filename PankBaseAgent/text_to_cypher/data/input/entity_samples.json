@@ -258,300 +258,6 @@
       "definition": "A chronic condition characterized by minimal or absent production of insulin by the pancreas."
     }
   ],
-  "cell_types": [
-    {
-      "name": "Acinar Cell",
-      "id": "CL_0002064",
-      "definition": "A secretory cell found in pancreatic acini that secretes digestive enzymes and mucins. This cell is a typical zymogenic cell, have a basal nucleus and basophilic cytoplasm consisting of regular arrays"
-    },
-    {
-      "name": "Stellate Cell",
-      "id": "CL_0002410",
-      "definition": "A cell that is found in the periacinar space of the exocrine pancreas and in perivascular and periductal regions of the pancreas, and has long cytoplasmic processes that encircle the base of the acinu"
-    },
-    {
-      "name": "Alpha Cell",
-      "id": "CL_0000171",
-      "definition": "A type A enteroendocrine cell found in the periphery of the islets of Langerhans that secretes glucagon."
-    },
-    {
-      "name": "Beta Cell",
-      "id": "CL_0000169",
-      "definition": "A cell that secretes insulin and is located towards the center of the islets of Langerhans."
-    },
-    {
-      "name": "Delta Cell",
-      "id": "CL_0000173",
-      "definition": "A D cell located in the pancreas. Peripherally placed within the islets like type A cells; contains somatostatin."
-    },
-    {
-      "name": "Ductal Cell",
-      "id": "CL_0002079",
-      "definition": "Epithelial cell found in the ducts of the pancreas. This cell type contributes to the high luminal pH."
-    },
-    {
-      "name": "Endothelial Cell",
-      "id": "CL_0000115",
-      "definition": "An endothelial cell comprises the outermost layer or lining of anatomical structures and can be squamous or cuboidal. In mammals, endothelial cell has vimentin filaments and is derived from the mesode"
-    },
-    {
-      "name": "Macrophage Cell",
-      "id": "CL_0000235",
-      "definition": "A mononuclear phagocyte present in variety of tissues, typically differentiated from monocytes, capable of phagocytosing a variety of extracellular particulate material, including immune complexes, mi"
-    }
-  ],
-  "snps": [
-    {
-      "id": "rs1002658",
-      "chr": "6",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10053411",
-      "chr": "5",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10064755",
-      "chr": "5",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10075801",
-      "chr": "5",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10077384",
-      "chr": "5",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs1008723",
-      "chr": "17",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs1008756",
-      "chr": "5",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10088596",
-      "chr": "8",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10094267",
-      "chr": "8",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs1010599",
-      "chr": "5",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs1010600",
-      "chr": "5",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs1010601",
-      "chr": "5",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10116772",
-      "chr": "9",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10127703",
-      "chr": "1",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10127756",
-      "chr": "1",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10131490",
-      "chr": "14",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10141370",
-      "chr": "14",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10153800",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs1016431",
-      "chr": "7",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs1016432",
-      "chr": "7",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10165451",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10166621",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10169743",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10171117",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10172060",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10172825",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10175599",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10176782",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10180733",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10182181",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10182458",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10185059",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10185143",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10185510",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10186242",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10188318",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs1018941",
-      "chr": "7",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs1018979",
-      "chr": "7",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs1018980",
-      "chr": "7",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10193465",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10197066",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10197237",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10198275",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10198356",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10200566",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10203386",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10203482",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10205490",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10206196",
-      "chr": "2",
-      "type": "sequence_snp"
-    },
-    {
-      "id": "rs10206261",
-      "chr": "2",
-      "type": "sequence_snp"
-    }
-  ],
   "gene_ontology": [
     {
       "name": "protein binding",
@@ -812,5 +518,299 @@
     "gene_function_go": []
   },
   "extracted_at": "2025-11-29T21:20:01.786782",
-  "source_url": "https://nzi5e9mb0f.execute-api.us-east-1.amazonaws.com/production/pankgraph-neo4j"
+  "source_url": "https://nzi5e9mb0f.execute-api.us-east-1.amazonaws.com/production/pankgraph-neo4j",
+  "anatomical_structures": [
+    {
+      "name": "Acinar Cell",
+      "id": "CL_0002064",
+      "definition": "A secretory cell found in pancreatic acini that secretes digestive enzymes and mucins. This cell is a typical zymogenic cell, have a basal nucleus and basophilic cytoplasm consisting of regular arrays"
+    },
+    {
+      "name": "Stellate Cell",
+      "id": "CL_0002410",
+      "definition": "A cell that is found in the periacinar space of the exocrine pancreas and in perivascular and periductal regions of the pancreas, and has long cytoplasmic processes that encircle the base of the acinu"
+    },
+    {
+      "name": "Alpha Cell",
+      "id": "CL_0000171",
+      "definition": "A type A enteroendocrine cell found in the periphery of the islets of Langerhans that secretes glucagon."
+    },
+    {
+      "name": "Beta Cell",
+      "id": "CL_0000169",
+      "definition": "A cell that secretes insulin and is located towards the center of the islets of Langerhans."
+    },
+    {
+      "name": "Delta Cell",
+      "id": "CL_0000173",
+      "definition": "A D cell located in the pancreas. Peripherally placed within the islets like type A cells; contains somatostatin."
+    },
+    {
+      "name": "Ductal Cell",
+      "id": "CL_0002079",
+      "definition": "Epithelial cell found in the ducts of the pancreas. This cell type contributes to the high luminal pH."
+    },
+    {
+      "name": "Endothelial Cell",
+      "id": "CL_0000115",
+      "definition": "An endothelial cell comprises the outermost layer or lining of anatomical structures and can be squamous or cuboidal. In mammals, endothelial cell has vimentin filaments and is derived from the mesode"
+    },
+    {
+      "name": "Macrophage Cell",
+      "id": "CL_0000235",
+      "definition": "A mononuclear phagocyte present in variety of tissues, typically differentiated from monocytes, capable of phagocytosing a variety of extracellular particulate material, including immune complexes, mi"
+    }
+  ],
+  "snvs": [
+    {
+      "id": "rs1002658",
+      "chr": "6",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10053411",
+      "chr": "5",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10064755",
+      "chr": "5",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10075801",
+      "chr": "5",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10077384",
+      "chr": "5",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs1008723",
+      "chr": "17",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs1008756",
+      "chr": "5",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10088596",
+      "chr": "8",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10094267",
+      "chr": "8",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs1010599",
+      "chr": "5",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs1010600",
+      "chr": "5",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs1010601",
+      "chr": "5",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10116772",
+      "chr": "9",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10127703",
+      "chr": "1",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10127756",
+      "chr": "1",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10131490",
+      "chr": "14",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10141370",
+      "chr": "14",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10153800",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs1016431",
+      "chr": "7",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs1016432",
+      "chr": "7",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10165451",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10166621",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10169743",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10171117",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10172060",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10172825",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10175599",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10176782",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10180733",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10182181",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10182458",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10185059",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10185143",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10185510",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10186242",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10188318",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs1018941",
+      "chr": "7",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs1018979",
+      "chr": "7",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs1018980",
+      "chr": "7",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10193465",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10197066",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10197237",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10198275",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10198356",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10200566",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10203386",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10203482",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10205490",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10206196",
+      "chr": "2",
+      "type": "sequence_snv"
+    },
+    {
+      "id": "rs10206261",
+      "chr": "2",
+      "type": "sequence_snv"
+    }
+  ]
 }

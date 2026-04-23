@@ -74,8 +74,11 @@ def get_relationship_directions() -> Dict[str, Dict[str, str]]:
     Returns:
         {rel_type: {'source': 'node_type', 'target': 'node_type'}, ...}
     """
-    from schema_loader import get_schema
-    
+    try:
+        from .schema_loader import get_schema
+    except ImportError:
+        from schema_loader import get_schema
+
     schema = get_schema()
     directions = {}
     
@@ -98,8 +101,11 @@ def get_valid_node_properties() -> Dict[str, Set[str]]:
     Returns:
         {node_label: {'prop1', 'prop2', ...}, ...}
     """
-    from schema_loader import get_schema
-    
+    try:
+        from .schema_loader import get_schema
+    except ImportError:
+        from schema_loader import get_schema
+
     schema = get_schema()
     valid_props = {}
     
@@ -118,8 +124,11 @@ def get_valid_edge_properties() -> Dict[str, Set[str]]:
     Returns:
         {edge_type: {'prop1', 'prop2', ...}, ...}
     """
-    from schema_loader import get_schema
-    
+    try:
+        from .schema_loader import get_schema
+    except ImportError:
+        from schema_loader import get_schema
+
     schema = get_schema()
     valid_props = {}
     
@@ -885,7 +894,10 @@ def fix_cell_type_references(cypher: str) -> str:
     # Fix old label references
     cypher = re.sub(r'\bcell_type\b', 'anatomical_structure', cypher)
 
-    from schema_loader import get_valid_property_values
+    try:
+        from .schema_loader import get_valid_property_values  # package-relative (runtime)
+    except ImportError:
+        from schema_loader import get_valid_property_values  # flat import (tests / direct script)
 
     # Get valid names from schema
     valid_values = get_valid_property_values()
@@ -907,14 +919,20 @@ def fix_cell_type_references(cypher: str) -> str:
     for ct in valid_cell_types:
         plural = ct + "s"  # "Beta Cell" → "Beta Cells"
         plural_to_singular[plural.lower()] = ct
-    
+
     # 2. Case-insensitive mapping
     case_map = {ct.lower(): ct for ct in valid_cell_types}
-    
-    # 3. Combined mapping (handles both plural and case)
+
+    # 3. Short-to-canonical mapping for ADA-schema UBERON/CL long names
+    # (e.g. "Beta Cell" → "type B pancreatic cell (beta cell)")
+    short_to_canonical = name_info.get('short_to_canonical', {}) or {}
+    short_map = {short.lower(): canon for short, canon in short_to_canonical.items()}
+
+    # 4. Combined mapping (handles plural, case, and short→canonical)
     all_fixes = {}
-    all_fixes.update(case_map)  # Add case fixes
-    all_fixes.update(plural_to_singular)  # Add plural fixes (overwrites if needed)
+    all_fixes.update(case_map)
+    all_fixes.update(plural_to_singular)
+    all_fixes.update(short_map)  # short→canonical takes precedence
     
     def fix_cell_type_value_in_braces(match):
         """Fix a cell type value in {name: "value"} pattern."""
@@ -1044,8 +1062,13 @@ def _inject_limit(cypher: str, default_limit: int = 50) -> str:
     """
     collect_match = re.search(r'\bWITH\s+collect\s*\(', cypher, re.IGNORECASE)
     if collect_match:
-        node_vars = set(re.findall(r'\((\w+)(?::\w+)?[^)]*\)', cypher[:collect_match.start()]))
-        rel_vars = set(re.findall(r'\[(\w+):\w+[^\]]*\]', cypher[:collect_match.start()]))
+        prefix = cypher[:collect_match.start()]
+        # Strip string literals so parens/brackets inside e.g. "type B pancreatic cell (beta cell)"
+        # don't get mistaken for Cypher node/rel variables.
+        prefix_no_strings = re.sub(r'"[^"]*"', '""', prefix)
+        prefix_no_strings = re.sub(r"'[^']*'", "''", prefix_no_strings)
+        node_vars = set(re.findall(r'\((\w+)(?::\w+)?[^)]*\)', prefix_no_strings))
+        rel_vars = set(re.findall(r'\[(\w+):\w+[^\]]*\]', prefix_no_strings))
         all_vars = node_vars | rel_vars
         if all_vars:
             vars_str = ', '.join(sorted(all_vars))
@@ -1735,8 +1758,11 @@ def check_property_validity(cypher: str) -> List[str]:
     
     try:
         # Import schema loader to check properties
-        from schema_loader import get_schema, extract_entities_from_cypher
-        
+        try:
+            from .schema_loader import get_schema, extract_entities_from_cypher
+        except ImportError:
+            from schema_loader import get_schema, extract_entities_from_cypher
+
         # Extract entities to know what to validate
         entities = extract_entities_from_cypher(cypher)
         schema = get_schema()
@@ -1797,7 +1823,10 @@ def check_property_value_validity(cypher: str) -> List[str]:
     
     try:
         # Import schema loader to get valid values
-        from schema_loader import get_valid_property_values, extract_entities_from_cypher
+        try:
+            from .schema_loader import get_valid_property_values, extract_entities_from_cypher
+        except ImportError:
+            from schema_loader import get_valid_property_values, extract_entities_from_cypher
         
         valid_values = get_valid_property_values()
         if not valid_values:
@@ -1877,10 +1906,13 @@ def check_relationship_directions(cypher: str) -> List[str]:
     
     try:
         # Import schema loader
-        from schema_loader import get_schema
-        
+        try:
+            from .schema_loader import get_schema
+        except ImportError:
+            from schema_loader import get_schema
+
         schema = get_schema()
-        
+
         # Build a map of relationship types to their expected source/target
         rel_directions = {}
         for rel_key, rel_spec in schema.get("edge_types", {}).items():

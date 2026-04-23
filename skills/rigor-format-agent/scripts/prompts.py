@@ -25,16 +25,21 @@ Key edge types:
 | Edge | Meaning | Key properties |
 |---|---|---|
 | `effector_gene_of` | predicted effector gene of a disease | evidence, data_source, effector_gene_list_url |
-| `DEG_in` | differentially expressed in a cell type | Log2FoldChange, Adjusted_P_value, UpOrDownRegulation |
-| `expression_level_in` | expression summary in a cell type | NonDiabetic__expression_mean, Type1Diabetic__expression_mean |
-| `part_of_QTL_signal` | SNP in a QTL credible set for a gene | pip, tissue_name, slope, data_source |
-| `function_annotation` | gene → GO term | — |
+| `T1D_DEG_in` | differentially expressed in T1D vs non-diabetic in a cell type | Log2FoldChange, Adjusted_P_value, UpOrDownRegulation |
+| `gene_detected_in` | expression detection and statistics per cell type | mean_donor_logCPM, median_pct_cells_expressing, total_cells, cell_type, expression_call |
+| `gene_enriched_in` | cell-type marker genes (ND-only, one-vs-rest DESeq2) | gene_symbol, cell_type_label |
+| `gene_activity_score_in` | gene activity scores from scATAC-seq per cell type | OCR_GeneActivityScore_mean, type_1_diabetes__OCR_GeneActivityScore_mean |
+| `OCR_peak_in` | open chromatin peaks in a cell type | — |
+| `part_of_QTL_signal` | SNV in a QTL credible set for a gene | pip, tissue_name, slope, data_source |
+| `function_annotation;GO` | gene → GO term (backtick-escape in Cypher) | — |
+| `pathway_annotation;KEGG` | gene → KEGG pathway (backtick-escape) | — |
+| `pathway_annotation;reactome` | gene → Reactome pathway (backtick-escape) | — |
 | `physical_interaction` | protein-protein physical interaction | experimental_system, throughput, data_source |
 | `genetic_interaction` | gene-gene genetic interaction | experimental_system, throughput, data_source |
-| `OCR_activity` / `OCR_activity_in` | OCR gene-activity score in a cell type | activity scores per condition |
-| `OCR_locate_in` | OCR localized near a gene | — |
 | `signal_COLOC_with` | QTL/GWAS colocalization | PP.H4.abf, coloc_dataset, data_source |
-| `part_of_GWAS_signal` | SNP in a GWAS credible set | pip, lead_status, p_value, method |
+| `part_of_GWAS_signal` | SNV in a GWAS credible set | pip, lead_status, p_value, method |
+| `fGSEA_gene_enriched_in` | fGSEA: gene enriched in a pathway in a cell type | pathway_id, cell_type_label |
+| `fGSEA_enriched_in` | fGSEA: pathway enriched in a cell type | cell_type_label, pathway_collection |
 
 ### HOW TO READ HPAP METADATA RESULTS
 
@@ -66,13 +71,13 @@ _DATA_CAVEATS = """
 
 #### Edge-Level Rules
 
-- **`DEG_in`**: Treat any endocrine hormone DE signal in non-cognate cell types (e.g., INS outside beta, GCG not in alpha) as a **high-risk technical artefact** unless validated by additional evidence. Human islet droplet scRNA-seq is known to have ambient/cell-free hormone RNA contamination and "conflicted hormone expression" attributable to ambient mRNA/lysis; this can create spurious DEGs and distort cluster/pseudobulk means. DO NOT state "Alpha cells express INS" as biological fact; phrase as: "INS signal in α-cells may reflect ambient RNA / doublets / mixed-hormone artefacts." Always report log2FC direction, padj, and cell type explicitly.
+- **`T1D_DEG_in`**: Treat any endocrine hormone DE signal in non-cognate cell types (e.g., INS outside beta, GCG not in alpha) as a **high-risk technical artefact** unless validated by additional evidence. Human islet droplet scRNA-seq is known to have ambient/cell-free hormone RNA contamination; this can create spurious DEGs and distort cluster/pseudobulk means. DO NOT state "Alpha cells express INS" as biological fact; phrase as: "INS signal in α-cells may reflect ambient RNA / doublets / mixed-hormone artefacts." Always report log2FC direction, padj, and cell type explicitly.
 
-- **`expression_level_in`**: **Current PanKgraph expression data was NOT normalized across cell types — DO NOT make cross-cell-type expression level comparisons.** Treat summary statistics as potentially inflated for strong/dominant genes across multiple cell types. In droplet-based islet data, ambient RNA (INS/GCG-rich background) and mixed/doublet contamination can systematically elevate apparent hormone expression in non-cognate populations because hormone transcripts can dominate libraries. If hormone genes show measurable signal in a non-cognate type (e.g., INS in α cells), annotate as "potential ambient/contamination signal" unless there is strong literature support. Prefer: "INS signal detected in α-cell aggregates may be driven by ambient hormone RNA; avoid interpreting this as true α-cell transcription without additional validation." Avoid absolute "not expressed" claims — pseudobulk aggregation, filtering thresholds, donor imbalance, and normalization choices can reduce sensitivity and mask low-level expression. Check literature for more info. Prefer cautious phrasing: "No robust signal detected under the current pseudobulk/thresholding settings."
+- **`gene_detected_in`**: **Current PanKgraph expression data was NOT normalized across cell types — DO NOT make cross-cell-type expression level comparisons.** Key properties: `mean_donor_logCPM`, `median_donor_logCPM`, `median_pct_cells_expressing`, `total_cells`, `cell_type` (short label, e.g. `"Beta"`), `expression_call`. Treat summary statistics as potentially inflated for strong/dominant genes. Ambient RNA (INS/GCG-rich background) and mixed/doublet contamination can systematically elevate apparent hormone expression in non-cognate populations. Avoid absolute "not expressed" claims — prefer cautious phrasing: "No robust signal detected under the current pseudobulk/thresholding settings."
 
-- **`OCR_locate_in`**: PanKgraph currently uses a single per-gene activity score as a placeholder OCR node, so each gene has only one OCR entry. This does not represent true OCR peak-level data. Until real OCR peaks are integrated, do not interpret OCR count per gene. Only report the gene activity score, and explicitly warn that the current OCR layer is a simplified proxy.
+- **`gene_activity_score_in`**: Chromatin accessibility / gene-activity scores derived from scATAC-seq. **NOT RNA expression** — never call these scores "expression counts" or "expression data." Report OCR_GeneActivityScore_mean and type_1_diabetes__OCR_GeneActivityScore_mean explicitly.
 
-- **`OCR_activity`**: PanKgraph currently uses a single per-gene activity score as a placeholder OCR node, so each gene has only one OCR entry. This does not represent true OCR peak-level data. Until real OCR peaks are integrated, do not interpret OCR count per gene. Only report the gene activity score, and explicitly warn that the current OCR layer is a simplified proxy.
+- **`OCR_peak_in`**: PanKgraph now contains true OCR peak data (5.3M peaks). Report peak IDs and cell type associations. Genomic coordinates are in the genomic coordinate database (not the KG).
 
 - **`effector_gene_of`**: Interpret as a prioritized mapping from a signal/locus to candidate target gene(s), not as definitive mechanistic causality. Report source, version, and any ranking/score fields if present.
 
@@ -92,20 +97,21 @@ _DATA_CAVEATS = """
 
 - **Gene nodes (`coding_elements;gene`)**: Prioritize stable identifiers (HGNC symbol, Ensembl Gene ID). Clearly separate gene-level facts from dataset-derived signals.
 
-- **OCR nodes**: PanKgraph currently uses a single per-gene activity score as a placeholder OCR node, so each gene has only one OCR entry. This does not represent true OCR peak-level data. Until real OCR peaks are integrated, do not interpret OCR count per gene. Only report the gene activity score, and explicitly warn that the current OCR layer is a simplified proxy.
+- **OCR_peak nodes**: PanKgraph now contains true OCR peak data (5.3M peaks) via `OCR_peak_in` edges. Report peak IDs and cell type associations. `gene_activity_score_in` edges store per-gene ATAC-derived activity scores — these are NOT RNA expression.
 
 - **Gene Ontology nodes (`gene_ontology;ontology`)**: Report stable GO ID + term name and treat it as functional vocabulary context. Do not convert term membership into a direct mechanistic claim without supporting evidence.
 
-- **Cell-type nodes (`ontology;cell_type`)**: Treat the label as an annotation that can be imperfect. If contradictory marker patterns appear (e.g., mixed INS/GCG signatures), interpret as potential doublets, ambient RNA, or annotation ambiguity — not a new biology claim. Prefer: "This cluster is annotated as α based on marker panel X; mixed hormone signatures may indicate technical mixture."
+- **anatomical_structure nodes**: Treat the cell type label as an annotation that can be imperfect. If contradictory marker patterns appear (e.g., mixed INS/GCG signatures), interpret as potential doublets, ambient RNA, or annotation ambiguity — not a new biology claim.
 
-#### Multi-Modal Subgraph Rules (DEG_in + expression_level_in + OCR_activity + OCR_locate_in)
+#### Multi-Modal Subgraph Rules (T1D_DEG_in + gene_detected_in + gene_activity_score_in + OCR_peak_in)
 
 When multiple edge types appear, treat them as **MULTI-MODAL signals** from different measurements. Enforce strict modality separation and provenance:
 
-1. **DEG_in** = RNA differential expression — describes change in RNA abundance between conditions (e.g., T1D vs ND) within a specified cell type and analysis design (pseudobulk vs cell-level). Report log2FC direction, padj, and state the cell type explicitly.
-2. **expression_level_in** = within-condition RNA expression summaries (mean/median/percent detected). Can be biased by ambient RNA, doublets, pseudobulk thresholds, donor imbalance, and normalization. **NOT normalized across cell types — no cross-cell-type comparisons.** Avoid absolute presence/absence claims, and flag non-cognate hormone signals as likely artefacts unless supported by literature.
-3. **OCR_activity** = chromatin accessibility / gene-activity derived from ATAC/OCR. **NOT RNA expression** — never call OCR activity "expression counts" or "expression data."
-4. **OCR_locate_in** = genomic/regulatory localization of OCRs (e.g., enhancer/promoter regions). Supports regulatory context, not transcript abundance.
+1. **T1D_DEG_in** = RNA differential expression in T1D vs non-diabetic — describes change in RNA abundance. Report log2FC direction, padj, and state the cell type explicitly.
+2. **gene_detected_in** = within-condition RNA expression summaries (`mean_donor_logCPM`, `median_pct_cells_expressing`, `total_cells`, `cell_type`, `expression_call`). Can be biased by ambient RNA, doublets, pseudobulk thresholds, donor imbalance, and normalization. **NOT normalized across cell types — no cross-cell-type comparisons.** Avoid absolute presence/absence claims; flag non-cognate hormone signals as likely artefacts.
+3. **gene_enriched_in** = cell-type marker genes from ND-only one-vs-rest DESeq2. Indicates specificity, not expression level.
+4. **gene_activity_score_in** = chromatin accessibility / gene-activity derived from scATAC-seq. **NOT RNA expression** — never call gene activity scores "expression counts" or "expression data."
+5. **OCR_peak_in** = open chromatin peak locations per cell type. Supports regulatory context, not transcript abundance.
 
 - **Cross-modality discordance**: If RNA indicates upregulation while OCR activity decreases (or vice versa), do NOT label as a contradiction. Present as "discordant cross-modality signals" and give cautious interpretations: possible regulatory layer differences, timing, cell-state shifts, gene-activity scoring limitations, or sample composition differences.
 - When multi-modal data is present, always output a **4-line structured summary**: (A) Cell type context used for ALL stats (or explicitly mark if mixed/unspecified), (B) RNA-DE result (log2FC, padj, direction), (C) RNA-expression summary (within-condition stats; artefact caveats), (D) ATAC/OCR result (activity stats + OCR locations). Followed by: "These metrics measure different layers and need not match in direction."

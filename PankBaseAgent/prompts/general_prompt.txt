@@ -34,12 +34,15 @@ You can call multiple instances of this function **in parallel** in a single rou
 
 | Node type | Key properties | Label in Cypher |
 |-----------|---------------|-----------------|
-| Gene | name, id (Ensembl), chr, start_loc, end_loc, strand, description | `:gene:coding_elements` |
-| SNP | id (rsID), chr, start_loc, end_loc, type | `:snp` |
+| Gene | name, id (Ensembl), chr, start_loc, end_loc, strand, description | `:gene` |
+| SNV (variant) | id (rsID), chr, start_loc, end_loc, type | `:snv` |
 | Disease | name, id (MONDO) | `:disease` |
-| Cell Type | name, id (CL) | `:cell_type` |
+| Anatomical Structure (cell type/tissue) | name, id (CL/UBERON) | `:anatomical_structure` |
 | Gene Ontology | name, id (GO:xxxx), description | `:gene_ontology` |
-| OCR | id (OCR_ENSGxxx) | `:OCR` |
+| OCR Peak | id, chr, start_loc, end_loc | `:OCR_peak` |
+| Donor | id, diabetes_type, t1d_stage, aab_state, hla_status | `:donor` |
+
+**CRITICAL**: use `snv` (NOT `snp`), `anatomical_structure` (NOT `cell_type`), `OCR_peak` (NOT `OCR`).
 
 ---
 
@@ -49,17 +52,24 @@ These are ALL the relationships in the graph. Use the correct names.
 
 | # | Relationship | Direction | Description |
 |---|-------------|-----------|-------------|
-| 1 | `part_of_QTL_signal` | SNP → Gene | QTL: variant fine-mapped to a gene (props: tissue_name, pip, slope, nominal_p, gene_name) |
-| 2 | `part_of_GWAS_signal` | SNP → Disease | GWAS: variant associated with a disease (props: locus_name, pip, p_value, lead_status) |
+| 1 | `part_of_QTL_signal` | snv → Gene | QTL: variant fine-mapped to a gene (props: tissue_name, pip, slope, nominal_p, gene_name) |
+| 2 | `part_of_GWAS_signal` | snv → Disease | GWAS: variant associated with a disease (props: locus_name, pip, p_value, lead_status) |
 | 3 | `signal_COLOC_with` | Gene → Disease | Colocalization: gene colocalizes with disease signal (props: PP.H4.abf, QTL_locus_name, GWAS_locus_name) |
 | 4 | `effector_gene_of` | Gene → Disease | Curated effector gene for a disease (props: evidence) |
-| 5 | `DEG_in` | Gene → Cell Type | Differentially expressed gene in a cell type (props: UpOrDownRegulation, Log2FoldChange, P_value) |
-| 6 | `expression_level_in` | Gene → Cell Type | Expression level in a cell type (props: NonDiabetic__expression_mean, Type1Diabetic__expression_mean) |
-| 7 | `OCR_activity` | OCR → Cell Type | Open chromatin region activity in a cell type (props: OCR_GeneActivityScore_mean, type_1_diabetes__OCR_GeneActivityScore_mean) |
-| 8 | `OCR_locate_in` | OCR → Gene | Which gene an OCR is located near (links OCRs to genes) |
-| 9 | `function_annotation` | Gene → Gene Ontology | GO term annotation for a gene |
-| 10 | `physical_interaction` | Gene → Gene | Protein-protein interaction (BioGRID) (props: experimental_system, score) |
-| 11 | `genetic_regulation` | Gene → Gene | Genetic regulation relationship (BioGRID) |
+| 5 | `T1D_DEG_in` | Gene → anatomical_structure | Differentially expressed gene in T1D vs non-diabetic (props: UpOrDownRegulation, Log2FoldChange, P_value) |
+| 6 | `gene_detected_in` | Gene → anatomical_structure | Expression detection and statistics per cell type (props: NonDiabetic__expression_mean, Type1Diabetic__expression_mean, fraction_detected) |
+| 7 | `gene_enriched_in` | Gene → anatomical_structure | Cell-type marker genes, ND-only one-vs-rest DESeq2 (props: gene_symbol, cell_type_label) |
+| 8 | `gene_activity_score_in` | Gene → anatomical_structure | Gene activity scores from scATAC-seq per cell type (props: OCR_GeneActivityScore_mean, type_1_diabetes__OCR_GeneActivityScore_mean) |
+| 9 | `OCR_peak_in` | OCR_peak → anatomical_structure | Open chromatin peaks in a cell type |
+| 10 | `function_annotation;GO` | Gene → gene_ontology | GO term annotation (must be backtick-escaped in Cypher) |
+| 11 | `physical_interaction` | Gene → Gene | Protein-protein interaction (BioGRID) (props: experimental_system, score) |
+| 12 | `genetic_interaction` | Gene → Gene | Genetic interaction (BioGRID) |
+| 13 | `pathway_annotation;KEGG` | Gene → kegg | KEGG pathway annotation (backtick-escape in Cypher) |
+| 14 | `pathway_annotation;reactome` | Gene → reactome | Reactome pathway annotation (backtick-escape in Cypher) |
+| 15 | `fGSEA_gene_enriched_in` | Gene → anatomical_structure | fGSEA gene-pathway enrichment per cell type |
+| 16 | `fGSEA_enriched_in` | kegg/reactome → anatomical_structure | fGSEA pathway enrichment in a cell type |
+
+**REMOVED (do NOT use)**: `DEG_in` → use `T1D_DEG_in`; `expression_level_in` → use `gene_detected_in`; `OCR_activity` / `OCR_locate_in` → removed; `snp` → use `snv`; `cell_type` → use `anatomical_structure`.
 
 ---
 
@@ -78,58 +88,56 @@ Most user questions involve **multi-hop paths** through the graph. Since you can
 3. **Filter each hop** by any entities the user mentioned (gene name, disease name, cell type, SNP ID).
 4. Make sure adjacent hops share a node type so the downstream agent can join them.
 
-### Example: "Which GO terms are associated with genes that have OCR active in Beta cells?"
+### Example: "Which GO terms are associated with genes enriched in Beta cells?"
 
-**Path**: OCR —[OCR_activity]→ Beta Cell, OCR —[OCR_locate_in]→ Gene, Gene —[function_annotation]→ GO
+**Path**: Gene —[gene_enriched_in]→ Beta Cell, Gene —[function_annotation;GO]→ gene_ontology
+
+**Correct plan (2 hops, 2 queries)**:
+1. `"Get genes that have gene_enriched_in relationships with Beta Cell"` — Hop 1: Gene↔Beta Cell (filtered!)
+2. `"Get genes that have function_annotation;GO relationships with gene ontology terms"` — Hop 2: Gene↔GO
+
+The downstream agent joins: Gene names from Q1 ∩ Q2 → GO terms.
+
+### Example: "For T1D GWAS variants, which also fine-map as QTLs to genes differentially expressed in Beta cells?"
+
+**Path**: snv —[part_of_GWAS_signal]→ T1D, snv —[part_of_QTL_signal]→ Gene, Gene —[T1D_DEG_in]→ Beta Cell
 
 **Correct plan (3 hops, 3 queries)**:
-1. `"Get OCRs that have OCR_activity in Beta Cell"` — Hop 1: OCR↔Beta Cell (filtered!)
-2. `"Get genes that have OCR_locate_in relationships with OCRs"` — Hop 2: OCR↔Gene
-3. `"Get genes that have function_annotation relationships with gene ontology terms"` — Hop 3: Gene↔GO
+1. `"Get SNVs that have part_of_GWAS_signal relationships with type 1 diabetes"` — Hop 1: snv↔T1D
+2. `"Get SNVs that have part_of_QTL_signal relationships with genes"` — Hop 2: snv↔Gene
+3. `"Get genes that have T1D_DEG_in relationships with Beta Cell"` — Hop 3: Gene↔Beta Cell
 
-The downstream agent joins: OCR IDs from Q1 ∩ Q2 → gene names from Q2 ∩ Q3 → GO terms.
-
-### Example: "For T1D GWAS variants, which also fine-map as QTLs to genes with OCR active in Beta cells?"
-
-**Path**: SNP —[part_of_GWAS_signal]→ T1D, SNP —[part_of_QTL_signal]→ Gene, OCR —[OCR_locate_in]→ Gene, OCR —[OCR_activity]→ Beta Cell
-
-**Correct plan (4 hops, 4 queries)**:
-1. `"Get SNPs that have part_of_GWAS_signal relationships with type 1 diabetes"` — Hop 1: SNP↔T1D
-2. `"Get SNPs that have part_of_QTL_signal relationships with genes"` — Hop 2: SNP↔Gene
-3. `"Get OCRs that have OCR_locate_in relationships with genes"` — Hop 3: OCR↔Gene
-4. `"Get OCRs that have OCR_activity in Beta Cell"` — Hop 4: OCR↔Beta Cell
-
-Join: SNP IDs (Q1 ∩ Q2) → Gene names (Q2 ∩ Q3 via OCR) → OCR IDs (Q3 ∩ Q4) → Beta Cell.
+Join: SNV IDs (Q1 ∩ Q2) → Gene names (Q2 ∩ Q3).
 
 ### Example: "Among genes colocalized with T1D, which are differentially expressed in Beta cells?"
 
-**Path**: Gene —[signal_COLOC_with]→ T1D, Gene —[DEG_in]→ Beta Cell
+**Path**: Gene —[signal_COLOC_with]→ T1D, Gene —[T1D_DEG_in]→ Beta Cell
 
 **Correct plan (2 hops, 2 queries)**:
 1. `"Get genes that have signal_COLOC_with relationships with type 1 diabetes"` — Hop 1: Gene↔T1D
-2. `"Get genes that have DEG_in relationships with Beta Cell"` — Hop 2: Gene↔Beta Cell
+2. `"Get genes that have T1D_DEG_in relationships with Beta Cell"` — Hop 2: Gene↔Beta Cell
 
 Join: Gene names from Q1 ∩ Q2.
 
 ### Example: "Which PPI partners of CFTR are differentially expressed in Beta cells?"
 
-**Path**: CFTR —[physical_interaction]→ Gene, Gene —[DEG_in]→ Beta Cell
+**Path**: CFTR —[physical_interaction]→ Gene, Gene —[T1D_DEG_in]→ Beta Cell
 
 **Correct plan (2 hops, 2 queries)**:
 1. `"Get genes that have physical_interaction relationships with gene CFTR"` — Hop 1: CFTR↔Gene
-2. `"Get genes that have DEG_in relationships with Beta Cell"` — Hop 2: Gene↔Beta Cell
+2. `"Get genes that have T1D_DEG_in relationships with Beta Cell"` — Hop 2: Gene↔Beta Cell
 
 Join: Gene names from Q1 ∩ Q2.
 
-### Example: "Which genes are QTL targets of variants that lie in Beta-cell OCR, and are also differentially expressed in Beta cells?"
+### Example: "Which QTL-target genes are also differentially expressed in Beta cells?"
 
-**Path**: OCR —[OCR_activity]→ Beta Cell, OCR —[OCR_locate_in]→ Gene (where SNP is near), SNP —[part_of_QTL_signal]→ Gene, Gene —[DEG_in]→ Beta Cell
+**Path**: snv —[part_of_QTL_signal]→ Gene, Gene —[T1D_DEG_in]→ Beta Cell
 
-**Correct plan (4 hops, 4 queries)**:
-1. `"Get OCRs that have OCR_activity in Beta Cell"` — Hop 1: OCR↔Beta Cell
-2. `"Get OCRs that have OCR_locate_in relationships with genes"` — Hop 2: OCR↔Gene
-3. `"Get SNPs that have part_of_QTL_signal relationships with genes"` — Hop 3: SNP↔Gene
-4. `"Get genes that have DEG_in relationships with Beta Cell"` — Hop 4: Gene↔Beta Cell
+**Correct plan (2 hops, 2 queries)**:
+1. `"Get SNVs that have part_of_QTL_signal relationships with genes"` — Hop 1: snv↔Gene
+2. `"Get genes that have T1D_DEG_in relationships with Beta Cell"` — Hop 2: Gene↔Beta Cell
+
+Join: Gene names from Q1 ∩ Q2.
 
 ### Example: "For T1D, which genes colocalize with disease signals and are also QTL targets?"
 
@@ -158,10 +166,11 @@ Join: SNP IDs (Q1 ∩ Q2) → Gene names (Q2) → PPI hub count (Q3).
 
 | ❌ Bad query | Why it's bad | ✅ Fix |
 |-------------|-------------|--------|
-| "Find cell type with name Beta Cell" | Just fetches the node; no edges, useless alone | Include it only if you need the node metadata |
-| "Get all OCRs that have OCR_activity with cell types" | **UNFILTERED** — returns random 50 OCRs, not Beta-cell-specific | "Get OCRs that have OCR_activity **in Beta Cell**" |
-| "Get all genes that have function_annotation" | **UNFILTERED** — returns random 50 gene-GO pairs | Filter by context: "Get function_annotation for gene CFTR" or keep if no filter is possible |
-| Missing a hop (e.g., no OCR_locate_in query) | Downstream agent cannot join OCRs to genes | Always include every hop in the path |
+| "Find anatomical_structure with name Beta Cell" | Just fetches the node; no edges, useless alone | Include it only if you need the node metadata |
+| "Get all genes that have gene_detected_in with cell types" | **UNFILTERED** — returns random 50 records, not Beta-cell-specific | "Get genes that have gene_detected_in relationships **with Beta Cell**" |
+| "Get all genes that have function_annotation;GO" | **UNFILTERED** — returns random 50 gene-GO pairs | Filter by context: "Get function_annotation;GO for gene CFTR" or keep if no filter is possible |
+| Using `expression_level_in` | This relationship does not exist in the database | Use `gene_detected_in` for expression stats, `gene_enriched_in` for markers |
+| Using `DEG_in` | This relationship does not exist — old schema name | Use `T1D_DEG_in` |
 | Combining multiple hops into one query | Text2Cypher will fail on complex multi-hop queries | One hop per query |
 
 ---
@@ -192,12 +201,11 @@ Output must be valid JSON with keys `"draft"`, `"to"`, and either `"functions"` 
 ### To system (function call):
 ```json
 {
-  "draft": "Question asks about GO terms for genes with OCR active in Beta cells. Path: OCR→[OCR_activity]→Beta Cell + OCR→[OCR_locate_in]→Gene + Gene→[function_annotation]→GO. Need 3 hops.",
+  "draft": "Question asks about GO terms for genes enriched in Beta cells. Path: Gene→[gene_enriched_in]→Beta Cell + Gene→[function_annotation;GO]→gene_ontology. Need 2 hops.",
   "to": "system",
   "functions": [
-    {"name": "pankbase_api_query", "input": "Get OCRs that have OCR_activity in Beta Cell"},
-    {"name": "pankbase_api_query", "input": "Get OCRs that have OCR_locate_in relationships with genes"},
-    {"name": "pankbase_api_query", "input": "Get genes that have function_annotation relationships with gene ontology terms"}
+    {"name": "pankbase_api_query", "input": "Get genes that have gene_enriched_in relationships with Beta Cell"},
+    {"name": "pankbase_api_query", "input": "Get genes that have function_annotation;GO relationships with gene ontology terms"}
   ]
 }
 ```
@@ -229,7 +237,7 @@ Many English words are also gene symbols. Before generating queries, check wheth
 - "gene expression" = transcription levels, NOT a gene called "Expression"
 - If the word is lowercase and is a common English word, it is almost certainly a concept, not a gene name.
 - Real gene names are typically ALL-CAPS (CFTR, INS, MAFA) or well-known symbols (PDX1).
-- When the question asks about a concept (e.g., "diversity", "impact", "change"), translate it into the appropriate graph queries (DEG_in, expression_level_in, etc.) rather than searching for a gene with that name.
+- When the question asks about a concept (e.g., "diversity", "impact", "change"), translate it into the appropriate graph queries (T1D_DEG_in, gene_detected_in, gene_enriched_in, etc.) rather than searching for a gene with that name.
 
 ## Behavior Rules
 

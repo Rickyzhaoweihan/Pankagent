@@ -1,43 +1,225 @@
 {
-  "description": "Valid values for properties with constrained value sets. Used during refinement to show exact valid values.",
+  "description": "Valid values for properties with constrained value sets in the PanKgraph ADA Neo4j schema. Used during Cypher refinement to show exact valid values and reject hallucinated values.",
   "node_properties": {
-    "cell_type": {
+    "anatomical_structure": {
       "name": {
-        "description": "Valid cell type names - use exact spelling and capitalization",
+        "description": "Valid anatomical structure names. The graph stores ONLY the long UBERON/CL canonical labels. Short synonyms (e.g., 'Beta Cell', 'Alpha Cell') are NOT in anatomical_structure.name — they appear only on expression edges via the edge properties gene_detected_in.cell_type or gene_enriched_in.cell_type_label.",
         "values": [
-          "Acinar Cell",
-          "Alpha Cell",
-          "Beta Cell",
-          "Delta Cell",
-          "Ductal Cell",
-          "Endothelial Cell",
-          "Macrophage Cell",
-          "Stellate Cell"
+          "pancreas",
+          "pancreatic islet (islet of Langerhans)",
+          "exocrine pancreas",
+          "type B pancreatic cell (beta cell)",
+          "pancreatic A cell (alpha cell)",
+          "pancreatic D cell (delta cell)",
+          "pancreatic acinar cell",
+          "pancreatic ductal cell",
+          "pancreatic stellate cell active state",
+          "leukocyte (immune cell)",
+          "endothelial cell"
         ],
-        "note": "Case-sensitive. Use exact spelling as shown."
+        "note": "Case-sensitive, must match the long UBERON/CL form EXACTLY (e.g., 'type B pancreatic cell (beta cell)' NOT 'Beta Cell'). For 'Beta Cell' / 'Alpha Cell' style short labels, use the edge properties: gene_detected_in.cell_type or gene_enriched_in.cell_type_label.",
+        "short_to_canonical": {
+          "Beta Cell": "type B pancreatic cell (beta cell)",
+          "Alpha Cell": "pancreatic A cell (alpha cell)",
+          "Delta Cell": "pancreatic D cell (delta cell)",
+          "Acinar Cell": "pancreatic acinar cell",
+          "Ductal Cell": "pancreatic ductal cell",
+          "Endothelial Cell": "endothelial cell",
+          "Immune Cell": "leukocyte (immune cell)",
+          "Stellate Cell": "pancreatic stellate cell active state"
+        }
+      },
+      "category": {
+        "description": "Category of the anatomical structure",
+        "values": ["cell_type", "region", "tissue"],
+        "note": "Lowercase; choose one of the three."
+      },
+      "source": {
+        "description": "Ontology source the structure was drawn from",
+        "values": ["CL", "UBERON", "UBERON + CL", "local"],
+        "note": "Uppercase."
       }
     },
-    "disease": {
+    "ontology;disease": {
       "name": {
         "description": "Valid disease names",
-        "values": [
-          "type 1 diabetes"
-        ],
+        "values": ["type 1 diabetes", "type 2 diabetes", "healthy"],
         "note": "MUST be lowercase. Do NOT use 'T1D', 'Type 1 Diabetes', or any other variant."
+      },
+      "id": {
+        "description": "Disease identifiers",
+        "values": ["MONDO_0005147", "MONDO_0005148", "healthy"],
+        "note": "MONDO IDs use underscore (not colon) in this schema."
+      }
+    },
+    "donor": {
+      "derived_diabetes_status": {
+        "description": "High-level diabetes status derived from donor metadata",
+        "values": ["Diabetes", "Normal", "Prediabetes"],
+        "note": "Capitalized. Prefer this over diabetes_type for coarse filtering."
+      },
+      "diabetes_type": {
+        "description": "Canonical diabetes classification",
+        "values": ["Control Without Diabetes", "Diabetes (Type I)", "Diabetes (Type II)"],
+        "note": "Use 'Diabetes (Type I)' for T1D queries, 'Diabetes (Type II)' for T2D, 'Control Without Diabetes' for non-diabetic controls."
+      },
+      "t1d_stage": {
+        "description": "T1D staging per the JDRF/Endocrine Society staging system",
+        "values": [
+          "At-risk: single or transient autoantibody, normal glucose level",
+          "Conflicting diabetes evidence",
+          "No sufficient information to derive",
+          "PanKbase",
+          "Stage 1: two or more autoantibodies, normal glucose metabolism level",
+          "Stage 2: two or more autoantibodies, dysglycemia (e.g., HbA1c >= 5.7%)",
+          "Stage 3: one or more autoantibodies and diagnostic hyperglycemia or T1D diagnosis"
+        ],
+        "note": "Use CONTAINS 'Stage 3' style matches in Cypher since the strings are long."
+      },
+      "gender": {
+        "description": "Donor gender",
+        "values": ["Female", "Male"],
+        "note": "Capitalized."
+      },
+      "sex_at_birth": {
+        "description": "Donor sex at birth",
+        "values": ["Female", "Male"],
+        "note": "Capitalized."
+      },
+      "Race": {
+        "description": "Donor race (note: property name is capitalized)",
+        "values": ["African American", "Asian", "Hispanic", "White"],
+        "note": "Property NAME is 'Race' with a capital R."
+      },
+      "hla_status": {
+        "description": "HLA risk genotype",
+        "values": ["DR3/DR4", "DR3/X", "DR4/X", "X/DR3", "X/DR4", "X/X"],
+        "note": "Use slash between alleles; 'X' denotes non-risk."
+      },
+      "donation_type": {
+        "description": "Type of organ donation",
+        "values": ["Donation after brain death", "Donation after circulatory death"],
+        "note": "Full phrases; no abbreviations."
       }
     }
   },
   "relationship_properties": {
-    "DEG_in": {
+    "T1D_DEG_in": {
       "UpOrDownRegulation": {
-        "description": "Direction of differential expression",
+        "description": "Direction of differential expression in T1D vs ND",
+        "values": ["Upregulated in T1D", "Downregulated in T1D"],
+        "note": "Full strings — do NOT use 'up' or 'down'. Case-sensitive."
+      }
+    },
+    "gene_detected_in": {
+      "cell_type": {
+        "description": "Short cell-type label attached to expression edges (different from anatomical_structure.name long form)",
         "values": [
-          "up",
-          "down"
+          "Acinar",
+          "Active Stellate",
+          "Alpha",
+          "Beta",
+          "Cycling Alpha",
+          "Delta",
+          "Ductal",
+          "Endothelial",
+          "Gamma+Epsilon",
+          "Immune",
+          "MUC5B+Ductal",
+          "Quiescent Stellate"
         ],
-        "note": "Lowercase only. 'up' means upregulated, 'down' means downregulated."
+        "note": "Short form (e.g., 'Beta' NOT 'Beta Cell' NOT 'type B pancreatic cell (beta cell)'). This is the property attached to the edge — the target anatomical_structure node still uses the long canonical name."
+      },
+      "condition": {
+        "description": "Donor cohort the expression was computed on",
+        "values": ["ALL"],
+        "note": "Currently a single value."
+      },
+      "expression_call": {
+        "description": "Expression call for the gene in the cell type",
+        "values": ["Expressed"],
+        "note": "Single value — presence of the edge implies expression was detected."
+      }
+    },
+    "gene_enriched_in": {
+      "cell_type_label": {
+        "description": "Short cell-type label on marker-gene edges (note: no spaces in multi-word labels)",
+        "values": [
+          "Acinar",
+          "ActiveStellate",
+          "Alpha",
+          "Beta",
+          "CyclingAlpha",
+          "Delta",
+          "Ductal",
+          "Endothelial",
+          "Gamma+Epsilon",
+          "Immune",
+          "MUC5B+Ductal",
+          "QuiescentStellate"
+        ],
+        "note": "WARNING: labels here have NO spaces (e.g., 'ActiveStellate', 'CyclingAlpha') while gene_detected_in.cell_type uses spaces ('Active Stellate', 'Cycling Alpha'). They are intentionally different."
+      },
+      "condition": {
+        "description": "Condition the marker genes were derived from",
+        "values": ["ND"],
+        "note": "Marker genes were computed on non-diabetic donors only."
+      },
+      "comparison": {
+        "description": "Comparison strategy",
+        "values": ["one_vs_rest"],
+        "note": "One-vs-rest DESeq2."
+      },
+      "effect_direction": {
+        "description": "Direction of the marker enrichment",
+        "values": ["positive"],
+        "note": "Only positive markers are stored."
+      }
+    },
+    "part_of_QTL_signal": {
+      "tissue_name": {
+        "description": "Tissue in which the QTL was fine-mapped",
+        "values": ["Islet", "Pancreas"],
+        "note": "Capitalized."
+      }
+    },
+    "part_of_GWAS_signal": {
+      "lead_status": {
+        "description": "Whether the variant is the lead of its GWAS signal",
+        "values": ["lead", "nonlead"],
+        "note": "Lowercase."
+      },
+      "method": {
+        "description": "Analysis method",
+        "values": ["GWAS"]
+      }
+    },
+    "fGSEA_gene_enriched_in": {
+      "pathway_collection": {
+        "description": "Pathway collection the enriched gene belongs to",
+        "values": ["KEGG", "REACTOME"],
+        "note": "Uppercase."
+      }
+    },
+    "fGSEA_enriched_in": {
+      "pathway_collection": {
+        "description": "Pathway collection of the enriched pathway",
+        "values": ["KEGG", "REACTOME"]
+      }
+    },
+    "physical_interaction": {
+      "experimental_system_type": {
+        "description": "BioGRID interaction type",
+        "values": ["physical"],
+        "note": "Always 'physical' for this edge."
+      }
+    },
+    "genetic_interaction": {
+      "experimental_system_type": {
+        "description": "BioGRID interaction type",
+        "values": ["genetic"],
+        "note": "Always 'genetic' for this edge."
       }
     }
   }
 }
-

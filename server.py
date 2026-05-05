@@ -180,6 +180,21 @@ async def lifespan(app: FastAPI):
             logger.error(f"✗ Session store init / restore failed: {e}", exc_info=True)
             raise
 
+        # 6. Background TTL cleanup — runs every 5 minutes regardless of request rate
+        #    so expired sessions don't accumulate in memory between requests.
+        _stop_cleanup = threading.Event()
+
+        def _cleanup_loop():
+            while not _stop_cleanup.wait(timeout=300):
+                try:
+                    _cleanup_expired_sessions()
+                    _cleanup_expired_chat_sessions()
+                except Exception:
+                    pass
+
+        _cleanup_thread = threading.Thread(target=_cleanup_loop, daemon=True, name="session-cleanup")
+        _cleanup_thread.start()
+
         elapsed = time.time() - start_time
         logger.info(f"✓ All agents initialized in {elapsed:.2f}s")
         logger.info("=" * 60)
@@ -191,6 +206,8 @@ async def lifespan(app: FastAPI):
         raise
 
     yield  # Server runs here
+
+    _stop_cleanup.set()
 
     logger.info("Shutting down server...")
     try:

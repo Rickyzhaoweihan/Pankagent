@@ -54,6 +54,26 @@ NEO4J_DATABASE = os.environ.get("NEO4J_DATABASE", "pankgraph")
 CLAUDE_MODEL = "claude-sonnet-4-6"
 
 # ---------------------------------------------------------------------------
+# Neo4j driver singleton — one driver shared across all threads, never
+# recreated per query.  Creating a new driver per query causes connection-pool
+# thread accumulation that leads to OOM after extended uptime.
+# ---------------------------------------------------------------------------
+_neo4j_driver = None
+_neo4j_driver_lock = threading.Lock()
+
+
+def _get_neo4j_driver():
+    global _neo4j_driver
+    if _neo4j_driver is None:
+        with _neo4j_driver_lock:
+            if _neo4j_driver is None:
+                from neo4j import GraphDatabase
+                _neo4j_driver = GraphDatabase.driver(
+                    NEO4J_BOLT_URI, auth=(NEO4J_USER, NEO4J_PASSWORD)
+                )
+    return _neo4j_driver
+
+# ---------------------------------------------------------------------------
 # Anthropic client (lazy singleton)
 # ---------------------------------------------------------------------------
 
@@ -484,15 +504,17 @@ def _clean_cypher(cypher: str) -> str:
 
 def _execute_cypher(cypher: str, timeout: int = 60) -> dict:
     """Execute a Cypher query against the local Neo4j via Bolt and return structured JSON."""
-    from neo4j import GraphDatabase
+    _MAX_RECORDS = 500  # hard cap — prevents runaway queries from exhausting memory
 
     try:
-        driver = GraphDatabase.driver(NEO4J_BOLT_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
+        driver = _get_neo4j_driver()
         with driver.session(database=NEO4J_DATABASE) as session:
             result = session.run(cypher)
             keys = list(result.keys())
             records = []
             for record in result:
+                if len(records) >= _MAX_RECORDS:
+                    break
                 row = {}
                 for key in keys:
                     val = record[key]
@@ -514,7 +536,7 @@ def _execute_cypher(cypher: str, timeout: int = 60) -> dict:
                                     "element_id": item.element_id,
                                     "type": item.type,
                                     "start_node_element_id": item.start_node.element_id if hasattr(item, 'start_node') else "",
-                                    "end_node_element_id": item.end_node.element_id if hasattr(item, 'end_node') else "",
+                                    "end_node_element_id": item.end_node.element_id if hasattr(item, 'start_node') else "",
                                     "properties": dict(item),
                                 })
                             else:
@@ -522,7 +544,6 @@ def _execute_cypher(cypher: str, timeout: int = 60) -> dict:
                     else:
                         row[key] = val
                 records.append(row)
-        driver.close()
         return {"records": records, "keys": keys}
     except Exception as exc:
         return {"error": str(exc)[:2000], "query": cypher}

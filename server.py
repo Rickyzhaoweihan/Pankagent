@@ -141,6 +141,17 @@ async def lifespan(app: FastAPI):
             sys.path.insert(0, _ssgsea_skill_dir)
         import ssgsea_client as _ssgsea_client  # noqa: F401
 
+        # 3e. Pre-load functional data client
+        logger.info("Pre-loading functional data client...")
+        _functional_skill_dir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "skills", "functional_data",
+        )
+        if _functional_skill_dir not in sys.path:
+            sys.path.insert(0, _functional_skill_dir)
+        import functional_data_client as _functional_data_client  # noqa: F401
+        _functional_data_client._load_specs()  # warm the JSON spec cache at startup
+
         # 4. Load experience buffer (optional — graceful failure)
         try:
             logger.info("Loading experience buffer...")
@@ -433,6 +444,17 @@ class PlanConfirmResponse(BaseModel):
     answer: str = Field(..., description="Full pipeline JSON response")
     answer_markdown: str = Field("", description="Clean Markdown output identical to the CLI printout")
     processing_time_ms: float
+
+
+class FunctionalDataRequest(BaseModel):
+    question: str = Field(..., description="Natural language question about islet functional assay data")
+    donor_ids: Optional[list[str]] = Field(None, description="Optional list of donor IDs to filter by")
+
+
+class FunctionalDataParamsResponse(BaseModel):
+    endpoint: str = Field(..., description="API endpoint path used")
+    url: str = Field(..., description="Full URL including query string")
+    params: dict = Field(..., description="Query parameters sent to the functional data API")
 
 
 # ---------------------------------------------------------------------------
@@ -870,6 +892,7 @@ async def root():
             "plan_start": "POST /plan/start — start interactive plan session (manual confirm)",
             "plan_revise": "POST /plan/revise — revise plan with user prompt",
             "plan_confirm": "POST /plan/confirm — confirm plan and get final answer",
+            "functional_data": "POST /functional-data — resolve NL question to functional data API params (returns endpoint + URL + params only)",
             "health": "GET /health — health check",
             "docs": "GET /docs — interactive API documentation",
         },
@@ -1741,6 +1764,48 @@ async def chat_end(session_id: str):
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
     logger.info(f"[/chat/end] Session {session_id} ended ({len(removed.history) // 2} rounds)")
     return {"status": "ended", "session_id": session_id, "rounds": len(removed.history) // 2}
+
+
+# ---------------------------------------------------------------------------
+# Functional Data API — parameters-only endpoint
+# ---------------------------------------------------------------------------
+
+@app.post("/functional-data", response_model=FunctionalDataParamsResponse)
+async def functional_data_params(request: FunctionalDataRequest):
+    """Resolve a natural language question to a Functional Data API call.
+
+    Returns only the endpoint, full URL, and query parameters that would be
+    sent to the functional data API — not the data itself.
+    """
+    from urllib.parse import urlencode
+    import functional_data_client as _fdc
+
+    prior_donor_ids: list[str] | None = request.donor_ids or None
+
+    loop = asyncio.get_event_loop()
+
+    def _resolve():
+        sel = _fdc.extract_endpoint_and_params(request.question, prior_donor_ids)
+        ok, err = _fdc._validate_selection(sel)
+        if not ok:
+            raise ValueError(f"Invalid endpoint/params: {err}")
+        return sel
+
+    try:
+        sel = await loop.run_in_executor(None, _resolve)
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    endpoint: str = sel["endpoint"]
+    params: dict = sel.get("params") or {}
+    qs = urlencode(params)
+    full_url = f"{_fdc.FUNCTIONAL_BASE_URL}{endpoint}{'?' + qs if qs else ''}"
+
+    return FunctionalDataParamsResponse(
+        endpoint=endpoint,
+        url=full_url,
+        params=params,
+    )
 
 
 @app.exception_handler(Exception)

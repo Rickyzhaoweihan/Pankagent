@@ -91,6 +91,28 @@ def _extract_results_text(result: dict | str) -> str:
 
         return "\n".join(parts)
 
+    # Functional Data API: islet assay measurements
+    if result.get("source") == "functional_data":
+        endpoint = result.get("endpoint", "?")
+        params = result.get("params", {})
+        rows = result.get("rows", [])
+        parts = [f"[Functional Data API — {endpoint}]",
+                 f"Parameters used: {json.dumps(params)}"]
+        # Include the full URL so the FormatAgent can echo it back to the user
+        if result.get("url"):
+            parts.append(f"URL: {result['url']}")
+        # Endpoint-specific extras
+        for key in ("trait", "trace_type", "y_label", "available_donors",
+                    "trace_types", "options", "ranges", "times", "mean", "stimuli"):
+            if key in result and result[key] is not None:
+                parts.append(f"{key}: {json.dumps(result[key], default=str)}")
+        if rows:
+            parts.append(f"\nData ({len(rows)} rows):")
+            parts.append(json.dumps(rows, default=str, indent=2))
+        elif not any(result.get(k) for k in ("options", "ranges", "mean")):
+            return "No results"
+        return "\n".join(parts)
+
     # Genomic coordinate format: tabular rows from PostgreSQL
     if result.get("source") == "genomic":
         rows = result.get("rows", [])
@@ -119,7 +141,7 @@ def _has_useful_data(neo4j_results: list[dict]) -> bool:
         if isinstance(result, dict) and "error" in result:
             continue
         # HPAP/genomic results: check rows directly
-        if isinstance(result, dict) and result.get("source") in ("hpap", "genomic", "ssgsea"):
+        if isinstance(result, dict) and result.get("source") in ("hpap", "genomic", "ssgsea", "functional_data"):
             if result.get("rows"):
                 return True
             continue
@@ -412,7 +434,8 @@ def format_response(
         result = entry.get('result', {})
         results_text = _extract_results_text(result)
         source = result.get("source") if isinstance(result, dict) else None
-        query_label = {"hpap": "SQL (HPAP)", "genomic": "SQL (Genomic)", "ssgsea": "ssGSEA"}.get(source, "Cypher")
+        query_label = {"hpap": "SQL (HPAP)", "genomic": "SQL (Genomic)", "ssgsea": "ssGSEA",
+                       "functional_data": "Functional API"}.get(source, "Cypher")
         neo4j_sections.append(
             f"--- Query {i} ---\n"
             f"{query_label}: {query}\n"
@@ -435,7 +458,8 @@ CRITICAL INSTRUCTIONS:
 - Extract ALL property values from edges (expression means, p-values, fold changes, etc.).
 - If a gene appears in the nodes list, it IS in the data — do NOT say it is missing.
 - Cross-reference: if the user asks about gene X, check if X appears in ANY node's "name" field above.
-- Cross-source chain handling: if an ssGSEA or genomic (SQL) result appears alongside KG results, the two may be linked — the ssGSEA gene set may have come from the KG step's retrieved genes. Join them narratively: "ssGSEA was run on the <N> effector genes retrieved in step 1: ..." When relevant, filter ssGSEA scores to donors that match any cohort filter from another KG step (e.g., female T1D Stage 3 donors)."""
+- Cross-source chain handling: if an ssGSEA or genomic (SQL) result appears alongside KG results, the two may be linked — the ssGSEA gene set may have come from the KG step's retrieved genes. Join them narratively: "ssGSEA was run on the <N> effector genes retrieved in step 1: ..." When relevant, filter ssGSEA scores to donors that match any cohort filter from another KG step (e.g., female T1D Stage 3 donors).
+- Functional Data API: if a Functional Data API result appears, echo back the endpoint and parameters used verbatim (they are included in the result under "Parameters used" and "URL"). If the result came from a chain where donor_ids were passed from a prior KG step, state this explicitly: "Functional data was retrieved for the <N> donors identified in step 1." Interpret traits using domain knowledge (INS = insulin, GCG = glucagon; IEQ = islet equivalent normalization; AUC = integrated secretion; SI = stimulation index; II = inhibition index)."""
 
     if pre_final_answer:
         user_input += f"\n\nPre-Final Answer from Planner: {pre_final_answer}"

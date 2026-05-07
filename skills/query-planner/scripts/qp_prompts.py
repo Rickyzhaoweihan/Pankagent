@@ -747,6 +747,167 @@ Non-KG steps can consume: gene_names, gene_ids, snv_ids, donor_ids.
 
 ---
 
+## Functional Data API (supplementary data source)
+
+The Functional Data API provides **pre-measured islet hormone secretion assay data** for
+HPAP donors. Measurements include insulin (INS) and glucagon (GCG) secretion under
+various stimulation conditions (high glucose, IBMX, adrenaline, KCI depolarization),
+reported as AUC (area under curve), basal rates, stimulation indices (SI), and inhibition
+indices (II) — all normalized to islet equivalents (IEQ).
+
+**This is different from ssGSEA.** ssGSEA computes enrichment of a gene SET in immune
+cells. The Functional Data API returns direct hormone secretion measurements for islet
+donors. Use `source: "functional_data"` — NOT `"ssgsea"` — for questions about insulin
+or glucagon secretion, IEQ-normalized assay values, or islet function traits.
+
+### Functional Data API INPUT/OUTPUT — READ CAREFULLY
+
+The API exposes four GET endpoints:
+
+- `/api/data/summary` — Available donor count, trace types, filter options, trait names.
+  Input: optional `donor_ids` override.
+- `/api/data/donors` — Filtered donor list.
+  Input: any combination of `donor_ids`, `disease`, `sex`, `center`, `race`,
+  `age_min`, `age_max`, `bmi_min`, `bmi_max`.
+- `/api/charts/cohort-traces` — Per-donor hormone secretion time series (+ cohort mean).
+  Input: `trace_type` (default `ins_ieq`; use `gcg_ieq` for glucagon), plus any filter params.
+- `/api/charts/trait-summary` — Top-N donors ranked by a single trait value.
+  Input: `trait` (exact feature name, e.g. `INS-G 16.7 SI`), `limit` (1..8), plus filter params.
+
+**When `donor_ids` is provided (e.g. from a prior KG step), it acts as an override selector
+— all other filters are ignored.**
+
+### Functional Data API — when to use direct filters vs. a KG chain
+
+**The API has its own demographic filters**: `disease`, `sex`, `age_min`, `age_max`,
+`bmi_min`, `bmi_max`, `center`, `race`. Use these directly in the `functional_data`
+step when the filter is purely demographic.
+
+**DO NOT chain a KG step → functional_data just to filter by sex, age, disease, or BMI.**
+These are supported as native API params. A single `functional_data` step handles them.
+
+```
+WRONG (unnecessary KG step):
+  Step 1 KG: "Find female donors age 20-40"
+  Step 2 functional_data: depends_on 1
+
+CORRECT (single step with API params):
+  Step 1 functional_data: "Get cohort traces for female donors age 20-40"
+  → params: {sex: "Female", age_min: 20, age_max: 40}
+```
+
+**ONLY chain KG → functional_data when the KG provides donor IDs that cannot be
+expressed as a simple demographic filter**, for example:
+- "Donors who carry a specific HLA genotype" (requires KG lookup)
+- "Stage 3 T1D donors who also appear in the immune cell dataset" (KG filters by t1d_stage)
+- "T1D donors with a specific aab_state or hla_status combination"
+
+In those cases, set `depends_on` to the KG step so that extracted `donor_ids` flow
+into the `functional_data` step as the override selector.
+
+### What it can / cannot answer
+
+**Can answer:**
+- Insulin or glucagon secretion traits for all or filtered donors
+- Time-series hormone secretion traces across a stimulation protocol
+- Ranking donors by a specific trait (e.g. highest INS-G 16.7 SI)
+- Summary of available cohort options and trait names
+
+**Cannot answer:**
+- Gene expression or pathway data (use KG steps for that)
+- Immune cell enrichment (use ssGSEA for that)
+- Genomic coordinates (use `source: "genomic"` for that)
+
+### When to add functional_data steps
+
+Add a `functional_data` step when:
+- The user asks about insulin or glucagon secretion, IEQ values, SI/II indices, or
+  islet assay data
+- The user asks for hormone traces, cohort-level secretion profiles, or trait summaries
+- The user wants to retrieve assay data for a specific donor cohort (combine with a KG
+  step via `depends_on`)
+
+Do NOT add `functional_data` steps for gene queries, pathway queries, or immune
+enrichment — those go to KG steps or ssGSEA respectively.
+
+### functional_data step format
+
+```
+{"id": N, "natural_language": "...", "source": "functional_data", "join_var": null, "depends_on": null}
+```
+
+The `natural_language` should describe which endpoint and filters to use
+(e.g. "Get cohort traces for insulin secretion in T1D donors",
+"Trait summary for INS-G 16.7 SI top 8 donors",
+"Get functional data summary").
+
+### functional_data Examples
+
+**Example 22 (PARALLEL — standalone trait summary)**
+**Question**: "Show me insulin stimulation index rankings for donors"
+
+```json
+{{
+  "plan_type": "parallel",
+  "reasoning": "Single functional_data step fetches trait summary for INS-G 16.7 SI.",
+  "steps": [
+    {{"id": 1, "natural_language": "Get trait summary for INS-G 16.7 SI, top 8 donors", "source": "functional_data", "join_var": null, "depends_on": null}}
+  ]
+}}
+```
+
+**Example 23a (SINGLE STEP — demographic filters are native API params)**
+**Question**: "Show insulin secretion traces for female donors age 20-40"
+
+```json
+{{
+  "plan_type": "parallel",
+  "reasoning": "Sex and age are native API filters — no KG step needed. Single functional_data step with sex/age params.",
+  "steps": [
+    {{"id": 1, "natural_language": "Get insulin cohort traces for female donors age 20-40", "source": "functional_data", "join_var": null, "depends_on": null}}
+  ]
+}}
+```
+
+**Example 23b (CHAIN — KG-specific filter like t1d_stage → functional_data traces)**
+**Question**: "Show insulin secretion traces for T1D Stage 3 donors"
+
+t1d_stage is a KG-only property — the Functional API does not know it. Retrieve donor IDs from KG first, then pass to functional_data.
+
+```json
+{{
+  "plan_type": "chain",
+  "reasoning": "t1d_stage is only in the KG — retrieve those donor IDs first, then pass to Functional API.",
+  "steps": [
+    {{"id": 1, "natural_language": "Find donors with diabetes_type 'Diabetes (Type I)' and t1d_stage containing 'Stage 3'", "join_var": null, "depends_on": null}},
+    {{"id": 2, "natural_language": "Get insulin cohort traces for the donors from step 1", "source": "functional_data", "join_var": null, "depends_on": 1}}
+  ]
+}}
+```
+
+**Example 24 (PARALLEL — summary + filtered donors)**
+**Question**: "What functional data is available for T1D donors?"
+
+```json
+{{
+  "plan_type": "parallel",
+  "reasoning": "Summary endpoint gives available traits and options; donors endpoint gives the filtered list.",
+  "steps": [
+    {{"id": 1, "natural_language": "Get functional data summary", "source": "functional_data", "join_var": null, "depends_on": null}},
+    {{"id": 2, "natural_language": "Get donors with disease T1D", "source": "functional_data", "join_var": null, "depends_on": null}}
+  ]
+}}
+```
+
+**DISAMBIGUATION — ssGSEA vs functional_data:**
+
+- "Run ssGSEA on INS, GCG" → `source: "ssgsea"` (gene set enrichment in immune cells)
+- "Show insulin secretion for INS-G 16.7 SI" → `source: "functional_data"` (measured islet assay trait)
+- "Immune cell enrichment for T1D effector genes" → `source: "ssgsea"`
+- "Insulin secretion traces for T1D donors" → `source: "functional_data"`
+
+---
+
 ## Anti-Patterns — DO NOT DO
 
 - DO NOT write Cypher yourself.  Output only natural language for text2cypher.

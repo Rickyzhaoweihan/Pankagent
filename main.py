@@ -126,7 +126,7 @@ def _extract_neo4j_from_funcs_result(funcs_result: str) -> tuple[list[dict], lis
             has_data = True
             if isinstance(neo4j_result, dict):
                 # Genomic/HPAP/ssGSEA results: check rows list
-                if neo4j_result.get("source") in ("genomic", "hpap", "ssgsea"):
+                if neo4j_result.get("source") in ("genomic", "hpap", "ssgsea", "functional_data"):
                     has_data = bool(neo4j_result.get("rows"))
                 else:
                     rv = neo4j_result.get("results", "")
@@ -398,7 +398,7 @@ def _count_result_records(res: dict) -> int | None:
         return None
 
     # HPAP/genomic result format: {"rows": [...], "row_count": N, "source": "hpap"|"genomic"}
-    if isinstance(res, dict) and res.get("source") in ("hpap", "genomic", "ssgsea"):
+    if isinstance(res, dict) and res.get("source") in ("hpap", "genomic", "ssgsea", "functional_data"):
         return res.get("row_count", len(res.get("rows", [])))
 
     if isinstance(res, dict) and "records" in res:
@@ -518,6 +518,7 @@ def _build_scope_line(
     has_hpap = False
     has_genomic = False
     has_ssgsea = False
+    has_functional_data = False
     for step in steps:
         if step.get("source") == "hpap":
             has_hpap = True
@@ -527,6 +528,9 @@ def _build_scope_line(
             continue
         if step.get("source") == "ssgsea":
             has_ssgsea = True
+            continue
+        if step.get("source") == "functional_data":
+            has_functional_data = True
             continue
         nl = step.get("natural_language", "").lower()
         for edge_type, display in _EDGE_DISPLAY_NAMES.items():
@@ -541,6 +545,8 @@ def _build_scope_line(
         dimensions.append("genomic coordinates")
     if has_ssgsea:
         dimensions.append("ssGSEA enrichment")
+    if has_functional_data:
+        dimensions.append("islet functional assays")
 
     if use_literature:
         has_lit = literature_result and "Status: success" in literature_result
@@ -568,7 +574,7 @@ def format_plan_as_markdown(
 
     # Detect cross-source chain for display hint
     has_non_kg = any(
-        s.get("source") in ("hpap", "genomic", "ssgsea") for s in steps
+        s.get("source") in ("hpap", "genomic", "ssgsea", "functional_data") for s in steps
     )
     flow_hint = ""
     if plan_type == "chain" and has_non_kg:
@@ -592,7 +598,8 @@ def format_plan_as_markdown(
         dep = step.get("depends_on")
         dep_str = f" *(depends on step {dep})*" if dep else ""
         source = step.get("source")
-        source_tag = {"hpap": "[HPAP] ", "genomic": "[Genomic] ", "ssgsea": "[ssGSEA] "}.get(source, "")
+        source_tag = {"hpap": "[HPAP] ", "genomic": "[Genomic] ", "ssgsea": "[ssGSEA] ",
+                      "functional_data": "[Functional] "}.get(source, "")
 
         status = "pending"
         result_entry = _get_step_result(i, plan, neo4j_results)
@@ -603,9 +610,9 @@ def format_plan_as_markdown(
                 err = res.get("error", "unknown error") if isinstance(res, dict) else "?"
                 status = f"error — {str(err)[:60]}"
             elif rc == 0:
-                status = "0 rows" if step.get("source") in ("hpap", "genomic", "ssgsea") else "0 records"
+                status = "0 rows" if step.get("source") in ("hpap", "genomic", "ssgsea", "functional_data") else "0 records"
             else:
-                status = f"{rc} rows" if step.get("source") in ("hpap", "genomic", "ssgsea") else f"{rc} records"
+                status = f"{rc} rows" if step.get("source") in ("hpap", "genomic", "ssgsea", "functional_data") else f"{rc} records"
                 steps_with_data += 1
 
         parts.append(f"{sid}. {source_tag}{nl}{dep_str} — **{status}**")
@@ -1071,6 +1078,115 @@ def _run_ssgsea_step(question_text: str, prior_entities: dict | None = None) -> 
         }
 
 
+def _run_functional_data_step(question_text: str, prior_entities: dict | None = None) -> dict:
+    """Execute a single functional-data API step.
+
+    If ``prior_entities`` contains ``donor_ids`` from a parent step, those are
+    passed as the donor_ids filter/override selector (cap 200).
+
+    Returns::
+        {"query": "GET /api/...", "result": {"rows": [...], "row_count": N, "source": "functional_data", ...}}
+    """
+    import os as _os
+    from urllib.parse import urlencode as _urlencode
+
+    functional_skill_dir = _os.path.join(
+        _os.path.dirname(_os.path.abspath(__file__)),
+        'skills', 'functional_data',
+    )
+    if functional_skill_dir not in sys.path:
+        sys.path.insert(0, functional_skill_dir)
+
+    from functional_data_client import (
+        FUNCTIONAL_BASE_URL,
+        extract_endpoint_and_params,
+        _validate_selection,
+        call_endpoint,
+        _summarize_summary,
+        _summarize_donors,
+        _summarize_cohort_traces,
+        _summarize_trait_summary,
+    )
+
+    emit("functional_data_start", {"query": question_text[:300]})
+
+    _DONOR_CAP = 200
+
+    try:
+        prior_donor_ids: list[str] = []
+        if prior_entities and isinstance(prior_entities, dict):
+            raw = prior_entities.get("donor_ids", []) or []
+            prior_donor_ids = [str(d) for d in raw[:_DONOR_CAP]]
+            if raw:
+                emit("functional_data_prior_entities", {
+                    "donor_count": len(raw),
+                    "kept": len(prior_donor_ids),
+                    "truncated": len(raw) > _DONOR_CAP,
+                    "source_step_id": prior_entities.get("source_step_id"),
+                })
+
+        selection = extract_endpoint_and_params(question_text, prior_donor_ids or None)
+
+        valid, err_msg = _validate_selection(selection)
+        if not valid:
+            emit("functional_data_done", {"success": False, "error": err_msg})
+            return {
+                "query": question_text,
+                "result": {"error": err_msg, "source": "functional_data"},
+            }
+
+        endpoint = selection["endpoint"]
+        params = selection.get("params", {})
+
+        emit("functional_data_endpoint_selected", {"endpoint": endpoint, "params": params})
+
+        payload = call_endpoint(endpoint, params)
+
+        _SUMMARIZERS = {
+            "/api/data/summary": _summarize_summary,
+            "/api/data/donors": _summarize_donors,
+            "/api/charts/cohort-traces": _summarize_cohort_traces,
+            "/api/charts/trait-summary": _summarize_trait_summary,
+        }
+        summarized = _SUMMARIZERS.get(endpoint, _summarize_summary)(payload)
+
+        qs = _urlencode(params)
+        full_url = f"{FUNCTIONAL_BASE_URL}{endpoint}?{qs}" if qs else f"{FUNCTIONAL_BASE_URL}{endpoint}"
+
+        emit("functional_data_done", {
+            "success": True,
+            "endpoint": endpoint,
+            "row_count": summarized.get("row_count", 0),
+        })
+
+        result: dict = {
+            "rows": summarized.get("rows", []),
+            "row_count": summarized.get("row_count", 0),
+            "source": "functional_data",
+            "endpoint": endpoint,
+            "url": full_url,
+            "params": params,
+        }
+        # Merge endpoint-specific extras
+        for _k in ("trait", "trace_type", "y_label", "times", "mean", "stimuli",
+                   "options", "ranges", "available_donors", "trace_types"):
+            if _k in summarized:
+                result[_k] = summarized[_k]
+
+        return {
+            "query": f"GET {endpoint}?{qs}" if qs else f"GET {endpoint}",
+            "result": result,
+        }
+
+    except Exception:
+        err = traceback.format_exc()
+        emit("functional_data_done", {"success": False, "error": err[:500]})
+        return {
+            "query": question_text,
+            "result": {"error": err[:2000], "source": "functional_data"},
+        }
+
+
 def _filter_empty_steps(plan: dict, neo4j_results: list[dict]) -> tuple[dict, list[dict]]:
     """Remove steps that returned 0 records or errored, then renumber sequentially.
 
@@ -1081,8 +1197,13 @@ def _filter_empty_steps(plan: dict, neo4j_results: list[dict]) -> tuple[dict, li
     steps = plan.get("steps", [])
     plan_type = plan.get("plan_type", "parallel")
 
-    # Chain plans: all-or-nothing based on the single combined result
-    if plan_type == "chain":
+    # Chain plans: all-or-nothing for pure-KG chains; per-step for cross-source chains
+    # (cross-source chains mix KG steps with supplementary steps like functional_data,
+    # and supplementary steps are always kept regardless of whether the KG step has data)
+    has_supplementary_step = any(
+        s.get("source") in ("hpap", "genomic", "ssgsea", "functional_data") for s in steps
+    )
+    if plan_type == "chain" and not has_supplementary_step:
         if neo4j_results:
             rc = _count_result_records(neo4j_results[0].get("result", {}))
             if rc is not None and rc > 0:
@@ -1097,6 +1218,10 @@ def _filter_empty_steps(plan: dict, neo4j_results: list[dict]) -> tuple[dict, li
         new_plan = dict(plan)
         new_plan["steps"] = []
         return new_plan, []
+    elif plan_type == "chain" and has_supplementary_step:
+        # Cross-source chain: evaluate each step individually.
+        # KG steps are kept if they have data; supplementary steps are always kept.
+        pass  # fall through to the per-step parallel logic below
 
     # Parallel plans: per-step filtering
     # HPAP steps are always kept (even with 0 rows) so the user sees them in the plan.
@@ -1107,7 +1232,7 @@ def _filter_empty_steps(plan: dict, neo4j_results: list[dict]) -> tuple[dict, li
     for i, step in enumerate(steps):
         if i >= len(neo4j_results):
             break
-        is_supplementary = step.get("source") in ("hpap", "genomic", "ssgsea")
+        is_supplementary = step.get("source") in ("hpap", "genomic", "ssgsea", "functional_data")
         rc = _count_result_records(neo4j_results[i].get("result", {}))
         if is_supplementary or (rc is not None and rc > 0):
             new_id = len(kept_steps) + 1
@@ -1211,7 +1336,7 @@ def _run_plan_candidate(question: str, candidate_id: int, q: Queue,
             else plan_query(question, chat_history_context=history_context)
         )
         plan = translate_plan(plan)
-        neo4j_results = execute_plan(plan, hpap_handler=None, genomic_handler=_run_genomic_step, ssgsea_handler=_run_ssgsea_step)
+        neo4j_results = execute_plan(plan, hpap_handler=None, genomic_handler=_run_genomic_step, ssgsea_handler=_run_ssgsea_step, functional_data_handler=_run_functional_data_step)
         score = _score_plan_results(plan, neo4j_results)
         q.put((candidate_id, score, plan, neo4j_results, None))
     except Exception:
@@ -1491,7 +1616,7 @@ def run_plan_revise(
         }
 
     new_plan = translate_plan(new_plan)
-    new_results = execute_plan(new_plan, hpap_handler=None, genomic_handler=_run_genomic_step, ssgsea_handler=_run_ssgsea_step)
+    new_results = execute_plan(new_plan, hpap_handler=None, genomic_handler=_run_genomic_step, ssgsea_handler=_run_ssgsea_step, functional_data_handler=_run_functional_data_step)
     new_plan, new_results = _filter_empty_steps(new_plan, new_results)
 
     # Collect HIRN result if we started it

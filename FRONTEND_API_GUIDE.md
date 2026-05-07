@@ -21,13 +21,15 @@ Complete reference for all HTTP endpoints exposed by `server.py`. Aimed at front
    - `DELETE /chat/end` — end a chat session
 5. [Plan Endpoints (Standalone Manual Review)](#5-plan-endpoints-standalone-manual-review)
    - `POST /plan/start`, `POST /plan/revise`, `POST /plan/confirm`
-6. [Data Models Reference](#6-data-models-reference)
-7. [Smart Router — Deep Dive](#7-smart-router-deep-dive)
-8. [Session Lifecycle & TTLs](#8-session-lifecycle-ttls)
-9. [Parsing the Final Answer](#9-parsing-the-final-answer)
-10. [Error Handling](#10-error-handling)
-11. [Full Flow Examples](#11-full-flow-examples)
-12. [Frontend UX Recommendations](#12-frontend-ux-recommendations)
+6. [Functional Data Endpoint](#6-functional-data-endpoint)
+   - `POST /functional-data` — resolve NL question to islet assay API params
+7. [Data Models Reference](#7-data-models-reference)
+8. [Smart Router — Deep Dive](#8-smart-router-deep-dive)
+9. [Session Lifecycle & TTLs](#9-session-lifecycle-ttls)
+10. [Parsing the Final Answer](#10-parsing-the-final-answer)
+11. [Error Handling](#11-error-handling)
+12. [Full Flow Examples](#12-full-flow-examples)
+13. [Frontend UX Recommendations](#13-frontend-ux-recommendations)
 
 ---
 
@@ -67,6 +69,7 @@ Both use the same underlying pipelines. Chat endpoints additionally maintain con
 | `POST` | `/plan/start` | Start a single-shot plan review | `question`, `rigor?`, `use_literature?` | `session_id`, `plan_markdown`, `plan_json` |
 | `POST` | `/plan/revise` | Iterate the plan | `session_id`, `prompt` | Updated plan markdown / JSON |
 | `POST` | `/plan/confirm` | Execute + format the confirmed plan | `session_id` | Final `answer_markdown`, `cypher_queries`, `reasoning_trace`; deletes the `PlanSession` |
+| `POST` | `/functional-data` | Resolve NL question to islet assay API call | `question`, `donor_ids?` | `endpoint`, `url`, `params` — **no data rows returned** |
 
 Quick routing logic:
 
@@ -95,7 +98,7 @@ When you call `POST /chat/message`, a Haiku classifier decides one of two routes
 - **`follow_up`** — the question extends the previous turn. Reuses the session's stored retrieved data. Fast (~5–25 s). No plan review.
 - **`new_query`** — the question is genuinely new. Runs the full planner, creates a pending `PlanSession`, returns the plan for the user to review. You must then call `/chat/plan/confirm` to complete the round.
 
-See [§7](#7-smart-router-deep-dive) for details.
+See [§8](#8-smart-router-deep-dive) for details.
 
 ### 2.5 History compression
 The full dialogue is sent to the format agent for `follow_up` rounds. If the history exceeds ~25 KB, older turns are summarised via Haiku before being passed. The API signals this via `history_compressed: true` in the response — show a visual indicator to the user.
@@ -466,7 +469,105 @@ After confirmation the session is deleted.
 
 ---
 
-## 6. Data Models Reference
+## 6. Functional Data Endpoint
+
+A lightweight utility endpoint that resolves a **natural language question about islet functional assay data** to the exact REST call that would be made against `https://functional.pankgraph.org`. It returns only the call parameters — not the data itself — so the frontend can display or audit what the system asked the upstream API.
+
+This endpoint is stateless and session-free. It does not require a `session_id`.
+
+### 6.1 `POST /functional-data`
+
+**When to use:** when the user asks a question specifically about islet functional assay measurements (insulin/glucagon secretion traces, per-donor cohort data, trait summaries). This endpoint is distinct from the chat pipeline — it is a direct parameter-resolution tool, not a full Q&A round.
+
+**Request body (`FunctionalDataRequest`):**
+```json
+{
+  "question": "Show insulin secretion traces for female T1D Stage 3 donors",
+  "donor_ids": ["HPAP-001", "HPAP-002"]
+}
+```
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `question` | string | required | Natural language question about islet functional data. |
+| `donor_ids` | string[] \| null | `null` | Optional list of donor IDs to restrict the query. When provided, overrides any donor-ID inference from the question text. |
+
+**Response 200 (`FunctionalDataParamsResponse`):**
+```json
+{
+  "endpoint": "/api/charts/cohort-traces",
+  "url": "https://functional.pankgraph.org/api/charts/cohort-traces?trace_type=ins_ieq&disease=T1D",
+  "params": {
+    "trace_type": "ins_ieq",
+    "disease": "T1D"
+  }
+}
+```
+| Field | Type | Notes |
+|---|---|---|
+| `endpoint` | string | One of `/api/data/summary`, `/api/data/donors`, `/api/charts/cohort-traces`, `/api/charts/trait-summary`. |
+| `url` | string | Full URL including base (`https://functional.pankgraph.org`) and query string. Ready to copy and paste. |
+| `params` | object | Key-value query parameters sent to the upstream API. Empty object `{}` if no params apply. |
+
+**The four upstream endpoints the system can select:**
+
+| Upstream endpoint | Purpose |
+|---|---|
+| `/api/data/summary` | Overview of available donors and traits |
+| `/api/data/donors` | Donor metadata with optional demographic filters |
+| `/api/charts/cohort-traces` | Time-series secretion traces (insulin or glucagon) |
+| `/api/charts/trait-summary` | Per-donor values for a specific assay trait |
+
+**Common query parameters returned in `params`:**
+- `disease` — e.g. `"T1D"`, `"ND"` (non-diabetic)
+- `sex` — `"M"` or `"F"`
+- `age_min` / `age_max` — numeric age bounds
+- `bmi_min` / `bmi_max` — numeric BMI bounds
+- `center` — collection center name
+- `trace_type` — `"ins_ieq"` (insulin, default) or `"gcg_ieq"` (glucagon)
+- `trait` — exact trait name string (e.g. `"INS-G 16.7 SI"`) for `/api/charts/trait-summary`
+- `donor_ids` — comma-separated donor IDs (present when `donor_ids` was passed in the request)
+
+**Errors:**
+- `422` — the system could not resolve the question to a valid endpoint/params combination (e.g., ambiguous or nonsense question). `detail` contains the validation message.
+- `500` — Claude API or internal failure.
+
+**JavaScript example:**
+```js
+const res = await fetch("https://jieliulab3.dcmb.med.umich.edu/pankgraph-agent/functional-data", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    question: "Show me the insulin secretion trace for donors aged 20-40 with T1D"
+  })
+}).then(r => r.json());
+
+// res.endpoint  === "/api/charts/cohort-traces"
+// res.url       === "https://functional.pankgraph.org/api/charts/cohort-traces?trace_type=ins_ieq&disease=T1D&age_min=20.0&age_max=40.0"
+// res.params    === { trace_type: "ins_ieq", disease: "T1D", age_min: 20.0, age_max: 40.0 }
+
+// Display the URL in an audit/debug panel:
+showApiCallAudit({ endpoint: res.endpoint, url: res.url, params: res.params });
+```
+
+**TypeScript types:**
+```ts
+interface FunctionalDataRequest {
+  question: string;
+  donor_ids?: string[] | null;
+}
+
+interface FunctionalDataParamsResponse {
+  endpoint: string;
+  url: string;
+  params: Record<string, string | number>;
+}
+```
+
+> **Note:** This endpoint resolves the *parameters* only. To get the actual data (rows, traces, etc.) the frontend must make a separate GET request to `res.url` directly, or route the question through the full chat pipeline where the planner will call the functional data API and format the result into prose.
+
+---
+
+## 7. Data Models Reference
 
 Pydantic models defined in `server.py`. All JSON keys are `snake_case`.
 
@@ -519,11 +620,11 @@ created_at ─┬── last_active updated on every /chat/* call
 }
 ```
 
-`source` is `null` for knowledge-graph (Neo4j) steps, `"genomic"` for PostgreSQL genomic-coordinate steps, `"ssgsea"` for immune enrichment steps.
+`source` is `null` for knowledge-graph (Neo4j) steps, `"genomic"` for PostgreSQL genomic-coordinate steps, `"ssgsea"` for immune enrichment steps, and `"functional_data"` for islet assay REST API steps.
 
 ---
 
-## 7. Smart Router — Deep Dive
+## 8. Smart Router — Deep Dive
 
 ### How the classifier decides
 
@@ -557,7 +658,7 @@ Treat `new_query_pending` as a **two-stage** `new_query`.
 
 ---
 
-## 8. Session Lifecycle & TTLs
+## 9. Session Lifecycle & TTLs
 
 | Session | TTL | Measured from | Cleanup trigger |
 |---|---|---|---|
@@ -585,7 +686,7 @@ Nothing in this section changes the HTTP contract — it's an internal durabilit
 
 ---
 
-## 9. Parsing the Final Answer
+## 10. Parsing the Final Answer
 
 The `answer` field contains the raw pipeline JSON (stringified). 99% of frontends should use `answer_markdown` directly. Parse `answer` only if you need structured sub-fields.
 
@@ -633,7 +734,7 @@ const suggestedQuestions = parsed.text.follow_up_questions;
 
 ---
 
-## 10. Error Handling
+## 11. Error Handling
 
 All errors return JSON of the form:
 ```json
@@ -655,7 +756,7 @@ Unhandled server exceptions are caught by `global_exception_handler` and returne
 
 ---
 
-## 11. Full Flow Examples
+## 12. Full Flow Examples
 
 ### Example A — Default chat (plan review on first turn, then a follow-up)
 
@@ -788,6 +889,48 @@ renderAnswer(answer.answer_markdown);
 // session is auto-deleted after confirm
 ```
 
+### Example E — Resolving functional data API parameters
+
+Use this when you need to show the user exactly which API call will be made — for an audit panel, a "what data will I fetch?" preview, or a custom data-fetch layer.
+
+```js
+// Resolve question → params (no data rows returned)
+const res = await fetch("https://jieliulab3.dcmb.med.umich.edu/pankgraph-agent/functional-data", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    question: "Trait summary for INS-G 16.7 SI in T1D donors"
+  })
+}).then(r => r.json());
+
+// res === {
+//   endpoint: "/api/charts/trait-summary",
+//   url: "https://functional.pankgraph.org/api/charts/trait-summary?trait=INS-G+16.7+SI&disease=T1D&limit=8",
+//   params: { trait: "INS-G 16.7 SI", disease: "T1D", limit: 8 }
+// }
+
+showApiAuditCard(res);  // show endpoint + URL to the user
+
+// Optionally fetch the data directly from the upstream API:
+const data = await fetch(res.url).then(r => r.json());
+```
+
+With donor IDs from a prior step:
+```js
+const res = await fetch("https://jieliulab3.dcmb.med.umich.edu/pankgraph-agent/functional-data", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    question: "Show cohort traces for these donors",
+    donor_ids: ["HPAP-001", "HPAP-002", "HPAP-045"]
+  })
+}).then(r => r.json());
+
+// res.params.donor_ids === "HPAP-001,HPAP-002,HPAP-045"
+```
+
+---
+
 ### Example D — Dealing with a revision on the last confirmed answer
 
 ```js
@@ -807,7 +950,7 @@ replaceLastAssistant(revised.answer_markdown);
 
 ---
 
-## 12. Frontend UX Recommendations
+## 13. Frontend UX Recommendations
 
 ### 12.1 Three distinct UI states for `/chat/message`
 
@@ -891,6 +1034,7 @@ The server serialises all pipeline calls under a single internal request lock. D
 | `POST` | `/plan/start` | `PlanStartRequest` | Standalone plan start |
 | `POST` | `/plan/revise` | `PlanReviseRequest` | Revise standalone plan |
 | `POST` | `/plan/confirm` | `PlanConfirmRequest` | Confirm standalone plan |
+| `POST` | `/functional-data` | `FunctionalDataRequest` | Resolve NL question → islet assay API params (returns `endpoint`, `url`, `params` only) |
 
 ---
 
